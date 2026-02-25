@@ -516,7 +516,7 @@
       border: 1px solid #f39c12;
     }
     .botones-cantador {
-      display: fixed;
+      display: flex;
       flex-wrap: wrap;
       gap: 5px;
       margin: 8px 0;
@@ -645,19 +645,19 @@
             </div>
             <button class="banco mt-6" onclick="generarReporteFinal()" style="width: 100%;">📊 Generar Reporte Final</button>
           </div>
-          <h3 style="margin-bottom: 8px; font-size: 1em;">🎤 Panel del Cantador</h3>
-          <div class="botones-cantador">
-            <button class="cantador" onclick="cantarCartaAleatoria()">🃏 Cantar</button>
-            <button class="cantador" onclick="iniciarJuego()">▶️ Iniciar</button>
-            <button class="cantador" onclick="toggleFaseSeleccion()">🔄 Selección</button>
-            <button class="cantador" onclick="siguientePartida()">➡️ Siguiente</button>
-            <button class="cantador" onclick="reiniciarJuego()">🔄 Reiniciar</button>
-          </div>
-
         </div>
+          
+          <div style="position: fixed; top: 0; width: 100%;">
+           <h3 style="margin-bottom: 8px; font-size: 1em;">🎤 Panel del Cantador</h3>
+            <div class="botones-cantador">
+              <button class="cantador" onclick="cantarCartaAleatoria()">🃏 Cantar</button>
+              <button class="cantador" onclick="iniciarJuego()">▶️ Iniciar</button>
+              <button class="cantador" onclick="toggleFaseSeleccion()">🔄 Selección</button>
+              <button class="cantador" onclick="siguientePartida()">➡️ Siguiente</button>
+              <button class="cantador" onclick="reiniciarJuego()">🔄 Reiniciar</button>
+            </div> 
+          </div>
       </div>
-
-      
 
       <div id="alertaGanador" class="alerta-ganador hidden">
         <h2>🏆 ¡GANADOR!</h2>
