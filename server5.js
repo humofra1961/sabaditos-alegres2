@@ -1,7 +1,7 @@
 // ============================================================================
 // 🎪 BINGO POKER - SABADITO ALEGRE - SERVIDOR PRINCIPAL
 // ============================================================================
-// Versión: 8.0 (CORRECCIÓN: Reconexión inteligente del cantador)
+// Versión: 9.0 (CON SISTEMA DE BANCO Y ESTADÍSTICAS COMPLETAS)
 // ============================================================================
 
 const express = require('express');
@@ -79,6 +79,12 @@ const pozosConfig = {
     tipo: 'cartonLleno'
   }
 };
+
+// ============================================================================
+// 💰 CONFIGURACIÓN DEL BANCO
+// ============================================================================
+
+const VALOR_FICHA = 50; // Cada ficha vale $50 COP
 
 // ============================================================================
 // 🎴 GENERACIÓN DE MAZO Y CARTONES
@@ -240,7 +246,7 @@ const gameState = {
   jugadores: {},
   cartasCantadas: [],
   cantador: null,
-  cantadorAnterior: null, // ✅ NUEVO: Para reconexión
+  cantadorAnterior: null,
   faseJuego: 'seleccion',
   ultimaCarta: null,
   solicitudes: [],
@@ -251,7 +257,13 @@ const gameState = {
   partidaActual: 1,
   totalPartidas: 6,
   estadisticas: {},
-  premiosPendientes: []
+  premiosPendientes: [],
+  // ✅ NUEVO: Sistema de Banco
+  banco: {
+    totalRecaudado: 0,
+    totalPagado: 0,
+    transacciones: []
+  }
 };
 
 // ============================================================================
@@ -277,12 +289,10 @@ io.on('connection', (socket) => {
     console.log(`👤 Jugador registrado: ${nombre} (${email})`);
     
     if (gameState.jugadores[email]) {
-      // ✅ RECONEXIÓN: Restaurar socket ID y verificar si era cantador
       gameState.jugadores[email].socketId = socket.id;
       gameState.jugadores[email].timestamp = Date.now();
       gameState.jugadores[email].desconectado = false;
       
-      // ✅ Si era el cantador y se desconectó, restaurar su posición
       if (gameState.cantadorAnterior === email && !gameState.cantador) {
         gameState.cantador = email;
         io.emit('updateCantador', email);
@@ -303,26 +313,74 @@ io.on('connection', (socket) => {
         });
       }
     } else {
-      // Nuevo jugador
       gameState.jugadores[email] = { 
         nombre, 
         timestamp: Date.now(), 
         socketId: socket.id,
         cartones: [],
-        monedas: 40,
+        monedas: 0, // ✅ Inicia con 0 fichas (debe comprar)
+        fichasCompradas: 0,
+        fichasGanadas: 0,
+        pozosGanados: [],
+        historialTransacciones: [],
         desconectado: false,
         estadisticas: { ganadas: 0, perdidas: 0, pozosGanados: [], historial: [] }
       };
       
       if (!gameState.estadisticas[email]) {
         gameState.estadisticas[email] = {
-          nombre, monedas: 40, ganadas: 0, perdidas: 0, pozosGanados: [], historial: []
+          nombre, monedas: 0, ganadas: 0, perdidas: 0, pozosGanados: [], historial: [],
+          fichasCompradas: 0, fichasGanadas: 0, balanceFinal: 0
         };
       }
     }
     
     io.emit('updateJugadores', gameState.jugadores);
     io.emit('updateEstadisticas', gameState.estadisticas);
+    io.emit('updateBanco', gameState.banco);
+  });
+  
+  // ✅ NUEVO: Comprar fichas
+  socket.on('comprarFichas', (email, cantidadFichas) => {
+    if (!gameState.jugadores[email]) {
+      socket.emit('error', 'Jugador no encontrado.');
+      return;
+    }
+    
+    const costoTotal = cantidadFichas * VALOR_FICHA;
+    
+    gameState.jugadores[email].monedas += cantidadFichas;
+    gameState.jugadores[email].fichasCompradas += cantidadFichas;
+    gameState.jugadores[email].historialTransacciones.push({
+      tipo: 'COMPRA',
+      fichas: cantidadFichas,
+      valor: costoTotal,
+      fecha: new Date().toISOString(),
+      partida: gameState.partidaActual
+    });
+    
+    gameState.banco.totalRecaudado += costoTotal;
+    gameState.banco.transacciones.push({
+      tipo: 'COMPRA',
+      jugador: email,
+      nombre: gameState.jugadores[email].nombre,
+      fichas: cantidadFichas,
+      valor: costoTotal,
+      fecha: new Date().toISOString(),
+      partida: gameState.partidaActual
+    });
+    
+    io.emit('updateJugadores', gameState.jugadores);
+    io.emit('updateEstadisticas', gameState.estadisticas);
+    io.emit('updateBanco', gameState.banco);
+    io.emit('fichasCompradas', {
+      jugador: gameState.jugadores[email].nombre,
+      fichas: cantidadFichas,
+      valor: costoTotal,
+      total: gameState.jugadores[email].monedas
+    });
+    
+    console.log(`💰 ${gameState.jugadores[email].nombre} compró ${cantidadFichas} fichas por $${costoTotal} COP`);
   });
   
   socket.on('agregarMonedas', (emailJugador, cantidad, emailCantador) => {
@@ -381,9 +439,19 @@ io.on('connection', (socket) => {
         gameState.jugadores[email].cartones.push(numero);
       }
       
-      gameState.jugadores[email].monedas -= 6;
-      gameState.estadisticas[email].monedas -= 6;
-      gameState.estadisticas[email].perdidas += 6;
+      const costoCarton = 6;
+      gameState.jugadores[email].monedas -= costoCarton;
+      gameState.jugadores[email].historialTransacciones.push({
+        tipo: 'APUESTA_CARTON',
+        fichas: costoCarton,
+        valor: costoCarton * VALOR_FICHA,
+        fecha: new Date().toISOString(),
+        partida: gameState.partidaActual,
+        carton: numero
+      });
+      
+      gameState.estadisticas[email].monedas -= costoCarton;
+      gameState.estadisticas[email].perdidas += costoCarton;
       
       console.log(`✅ Cartón ${numero} asignado a ${email}`);
       
@@ -403,9 +471,10 @@ io.on('connection', (socket) => {
     
     const carton = gameState.cartones.find(c => c.numero === numero);
     if (carton && carton.dueño === email) {
-      gameState.jugadores[email].monedas += 6;
-      gameState.estadisticas[email].monedas += 6;
-      gameState.estadisticas[email].perdidas -= 6;
+      const reembolso = 6;
+      gameState.jugadores[email].monedas += reembolso;
+      gameState.estadisticas[email].monedas += reembolso;
+      gameState.estadisticas[email].perdidas -= reembolso;
       
       carton.dueño = null;
       gameState.jugadores[email].cartones = gameState.jugadores[email].cartones.filter(n => n !== numero);
@@ -510,19 +579,17 @@ io.on('connection', (socket) => {
   });
   
   socket.on('establecerCantador', (email) => {
-    // ✅ PERMITIR QUE EL CANTADOR ANTERIOR SE RECONNECTE
     if (gameState.cantador && gameState.cantador !== email) {
       socket.emit('error', 'Ya hay un cantador en esta partida.');
       return;
     }
     
     gameState.cantador = email;
-    gameState.cantadorAnterior = email; // ✅ Guardar para reconexión
+    gameState.cantadorAnterior = email;
     io.emit('updateCantador', email);
     io.emit('updateJugadores', gameState.jugadores);
     console.log(`🎤 Cantador establecido: ${email}`);
     
-    // ✅ Enviar premios pendientes al nuevo cantador
     if (gameState.premiosPendientes.length > 0) {
       socket.emit('premiosParaVerificar', {
         premios: gameState.premiosPendientes,
@@ -628,7 +695,7 @@ io.on('connection', (socket) => {
     if (valido) {
       carton.pozos[pozo] = true;
       const premio = pozosConfig[pozo].premioBase;
-      const monedasGanadas = Math.floor(premio / 50);
+      const monedasGanadas = Math.floor(premio / VALOR_FICHA);
       
       gameState.pozosGanados.push({ 
         carton: numeroCarton, 
@@ -645,25 +712,56 @@ io.on('connection', (socket) => {
       
       if (gameState.jugadores[emailGanador]) {
         gameState.jugadores[emailGanador].monedas += monedasGanadas;
-        gameState.jugadores[emailGanador].estadisticas.ganadas += monedasGanadas;
+        gameState.jugadores[emailGanador].fichasGanadas += monedasGanadas;
+        gameState.jugadores[emailGanador].pozosGanados.push({
+          pozo: pozosConfig[pozo].nombre,
+          premio: premio,
+          fichas: monedasGanadas,
+          partida: gameState.partidaActual,
+          fecha: new Date().toISOString()
+        });
+        gameState.jugadores[emailGanador].historialTransacciones.push({
+          tipo: 'PREMIO',
+          pozo: pozosConfig[pozo].nombre,
+          fichas: monedasGanadas,
+          valor: premio,
+          fecha: new Date().toISOString(),
+          partida: gameState.partidaActual
+        });
       }
       
       if (gameState.estadisticas[emailGanador]) {
         gameState.estadisticas[emailGanador].monedas += monedasGanadas;
         gameState.estadisticas[emailGanador].ganadas += monedasGanadas;
+        gameState.estadisticas[emailGanador].fichasGanadas += monedasGanadas;
         if (!gameState.estadisticas[emailGanador].pozosGanados) {
           gameState.estadisticas[emailGanador].pozosGanados = [];
         }
         gameState.estadisticas[emailGanador].pozosGanados.push({
           pozo: pozosConfig[pozo].nombre,
           partida: gameState.partidaActual,
-          premio: monedasGanadas
+          premio: premio,
+          fichas: monedasGanadas
         });
       }
+      
+      // ✅ Actualizar banco
+      gameState.banco.totalPagado += premio;
+      gameState.banco.transacciones.push({
+        tipo: 'PREMIO',
+        jugador: emailGanador,
+        nombre: gameState.jugadores[emailGanador]?.nombre || emailGanador,
+        pozo: pozosConfig[pozo].nombre,
+        fichas: monedasGanadas,
+        valor: premio,
+        fecha: new Date().toISOString(),
+        partida: gameState.partidaActual
+      });
       
       io.emit('updateCartones', gameState.cartones);
       io.emit('updateJugadores', gameState.jugadores);
       io.emit('updateEstadisticas', gameState.estadisticas);
+      io.emit('updateBanco', gameState.banco);
       io.emit('premioConfirmado', {
         carton: numeroCarton,
         pozo: pozosConfig[pozo].nombre,
@@ -695,6 +793,39 @@ io.on('connection', (socket) => {
         mensaje: '❌ NO válido - El cantador rechazó el premio' 
       });
     }
+  });
+  
+  // ✅ NUEVO: Generar reporte final del banco
+  socket.on('generarReporteFinal', (emailCantador) => {
+    if (gameState.cantador !== emailCantador) {
+      socket.emit('error', 'Solo el cantador puede generar el reporte.');
+      return;
+    }
+    
+    const reporte = {
+      fecha: new Date().toISOString(),
+      partida: gameState.partidaActual,
+      resumen: {
+        totalRecaudado: gameState.banco.totalRecaudado,
+        totalPagado: gameState.banco.totalPagado,
+        balance: gameState.banco.totalRecaudado - gameState.banco.totalPagado
+      },
+      jugadores: Object.values(gameState.jugadores).map(j => ({
+        nombre: j.nombre,
+        email: j.email,
+        fichasCompradas: j.fichasCompradas,
+        valorInvertido: j.fichasCompradas * VALOR_FICHA,
+        fichasGanadas: j.fichasGanadas,
+        valorGanado: j.fichasGanadas * VALOR_FICHA,
+        fichasActuales: j.monedas,
+        valorDevolver: j.monedas * VALOR_FICHA,
+        pozosGanados: j.pozosGanados,
+        balance: (j.fichasGanadas - j.fichasCompradas) * VALOR_FICHA
+      }))
+    };
+    
+    socket.emit('reporteFinalGenerado', reporte);
+    console.log('📊 Reporte final generado para el cantador');
   });
   
   socket.on('toggleFaseSeleccion', (email) => {
@@ -771,7 +902,14 @@ io.on('connection', (socket) => {
     gameState.indiceMazo = 0;
     gameState.mazo = barajarMazo(generarMazo());
     gameState.cantador = null;
-    gameState.cantadorAnterior = null; // ✅ Resetear también
+    gameState.cantadorAnterior = null;
+    
+    // ✅ Resetear banco
+    gameState.banco = {
+      totalRecaudado: 0,
+      totalPagado: 0,
+      transacciones: []
+    };
     
     gameState.cartones.forEach(carton => {
       carton.dueño = null;
@@ -788,12 +926,18 @@ io.on('connection', (socket) => {
     
     for (const email in gameState.jugadores) {
       gameState.jugadores[email].cartones = [];
+      gameState.jugadores[email].monedas = 0;
+      gameState.jugadores[email].fichasCompradas = 0;
+      gameState.jugadores[email].fichasGanadas = 0;
+      gameState.jugadores[email].pozosGanados = [];
+      gameState.jugadores[email].historialTransacciones = [];
     }
     
     io.emit('gameState', gameState);
     io.emit('updateFaseJuego', 'seleccion');
     io.emit('updateCantador', null);
     io.emit('updateCartones', gameState.cartones);
+    io.emit('updateBanco', gameState.banco);
     
     console.log('🔄 Juego reiniciado completamente');
   });
@@ -834,7 +978,6 @@ io.on('connection', (socket) => {
     }
   });
   
-  // ✅ CORRECCIÓN CRÍTICA: Manejo de desconexión del cantador
   socket.on('disconnect', () => {
     console.log('❌ Jugador desconectado:', socket.id);
     
@@ -845,14 +988,12 @@ io.on('connection', (socket) => {
         gameState.jugadores[email].desconectado = true;
         gameState.jugadores[email].timestamp = Date.now();
         
-        // ✅ Si el cantador se desconecta, guardar su identidad pero liberar posición
         if (gameState.cantador === email) {
           gameState.cantadorAnterior = email;
-          gameState.cantador = null; // ✅ Liberar posición para reconexión
+          gameState.cantador = null;
           cantadorDesconectado = true;
           console.log(`🎤 Cantador ${email} se desconectó. Posición liberada para reconexión.`);
           
-          // ✅ Notificar a todos que el cantador se desconectó
           io.emit('updateCantador', null);
           io.emit('updateJugadores', gameState.jugadores);
           io.emit('cantadorDesconectado', {
@@ -865,7 +1006,6 @@ io.on('connection', (socket) => {
     }
     
     if (!cantadorDesconectado) {
-      // Actualizar solo jugadores si no era el cantador
       io.emit('updateJugadores', gameState.jugadores);
     }
   });
@@ -1018,28 +1158,11 @@ server.listen(PORT, '0.0.0.0', () => {
   console.log('║  🎪 BINGO POKER - SABADITO ALEGRE - SERVIDOR ACTIVO      ║');
   console.log('╠═══════════════════════════════════════════════════════════╣');
   console.log(`║  📡 Puerto: ${PORT}                                        `);
-  console.log(`║  🌐 URL: https://sabadito-alegre.onrender.com              `);
+  console.log(`║  🌐 URL: https://sabaditos-alegres.onrender.com            `);
   console.log('║  🎴 13 cartones fijos con 25 cartas cada uno             ║');
   console.log('║  🏆 6 Pozos: POKINO, 4 ESQUINAS, FULL, POKER, CENTRO, ESPECIAL ║');
   console.log('║  ⭐ ESPECIAL: 25 cartas (CARTÓN LLENO)                   ║');
-  console.log('║  🌍 Accesible desde cualquier parte del mundo            ║');
+  console.log('║  💰 VALOR FICHA: $50 COP                                  ║');
+  console.log('║  🏦 SISTEMA DE BANCO: ACTIVO                              ║');
   console.log('╚═══════════════════════════════════════════════════════════╝');
 });
-
-/*const PORT = process.env.PORT || 8000;
-
-server.listen(PORT, '0.0.0.0', () => {
-  console.log('╔═══════════════════════════════════════════════════════════╗');
-  console.log('║  🎪 BINGO POKER - SABADITO ALEGRE - SERVIDOR ACTIVO      ║');
-  console.log('╠═══════════════════════════════════════════════════════════╣');
-  console.log(`║  📡 Puerto: ${PORT}                                        `);
-  console.log(`║  🌐 URL Local: http://localhost:${PORT}                    `);
-  console.log(`║  🌐 URL Red: http://<TU-IP>:${PORT}                        `);
-  console.log('║  🎴 13 cartones fijos con 25 cartas cada uno             ║');
-  console.log('║  🏆 6 Pozos: POKINO, 4 ESQUINAS, FULL, POKER, CENTRO, ESPECIAL ║');
-  console.log('║  ⭐ ESPECIAL: 25 cartas (CARTÓN LLENO)                   ║');
-  console.log('║  🎊 PARTIDA 6: ESPECIAL CON MÚLTIPLES GANADORES          ║');
-  console.log('║  🔍 Premios completados: SOLO VISIBLE PARA CANTADOR      ║');
-  console.log('║  🔄 Reconexión de cantador: HABilitada                   ║');
-  console.log('╚═══════════════════════════════════════════════════════════╝');
-});*/
