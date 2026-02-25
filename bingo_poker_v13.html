@@ -162,7 +162,7 @@
       background: rgba(255,255,255,0.08);
       padding: 10px;
       border-radius: 8px;
-      max-height: 500px;
+      max-height: 800px;
       overflow-y: auto;
       border: 1px solid rgba(255,255,255,0.15);
     }
@@ -644,10 +644,6 @@
             <button class="banco mt-6" onclick="generarReporteFinal()" style="width: 100%;">📊 Generar Reporte Final</button>
           </div>
         </div>
-        <div id="ultimaCartaPanel" class="ultima-carta-panel">
-          <div class="ultima-carta-label">Última Carta</div>
-          <div id="ultimaCartaDisplay" class="ultima-carta-display">-</div>
-        </div>
       </div>
 
       <div class="invitar-familiares-panel">
@@ -671,6 +667,10 @@
 
       <div class="layout-principal">
         <div class="columna">
+          <div id="ultimaCartaPanel" class="ultima-carta-panel">
+          <div class="ultima-carta-label">Última Carta Cantada</div>
+          <div id="ultimaCartaDisplay" class="ultima-carta-display">-</div>
+        </div>  
           <h3 style="margin-bottom: 8px;">🃏 Cartas Cantadas (<span id="contadorCartas">0</span>)</h3>
           <div id="cartasPorPintas" class="cartas-por-pintas"></div>
           <h3 style="margin: 12px 0 8px 0;">🏆 Los 6 Pozos</h3>
