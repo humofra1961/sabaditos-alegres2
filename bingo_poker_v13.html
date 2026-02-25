@@ -7,7 +7,6 @@
   <script src="/socket.io/socket.io.js"></script>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    
     body {
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
@@ -16,9 +15,7 @@
       padding: 10px;
       font-size: 13px;
     }
-    
     .container { max-width: 1400px; margin: 0 auto; }
-    
     header {
       text-align: center;
       margin-bottom: 10px;
@@ -27,12 +24,10 @@
       border-radius: 10px;
       border: 3px solid #f39c12;
     }
-    
     header h1 { font-size: 1.4em; margin-bottom: 5px; color: #f39c12; }
     .suites { font-size: 1.2em; letter-spacing: 5px; }
     .red { color: #e74c3c; }
     .black { color: #ecf0f1; }
-    
     .login-section, .game-section {
       background: rgba(255,255,255,0.1);
       padding: 15px;
@@ -40,9 +35,7 @@
       margin-bottom: 10px;
       border: 1px solid rgba(255,255,255,0.2);
     }
-    
     .hidden { display: none; }
-    
     input, button, select {
       padding: 8px 12px;
       margin: 5px;
@@ -50,20 +43,17 @@
       border-radius: 5px;
       font-size: 0.9em;
     }
-    
     input {
       background: rgba(255,255,255,0.2);
       color: #fff;
       width: 200px;
     }
-    
     button {
       background: #3498db;
       color: #fff;
       cursor: pointer;
       transition: all 0.3s;
     }
-    
     button:hover { background: #2980b9; transform: translateY(-2px); }
     button.cantador { background: #e74c3c; }
     button.cantador:hover { background: #c0392b; }
@@ -71,10 +61,12 @@
     button.premio:hover { background: #d68910; }
     button.verde { background: #27ae60; }
     button.verde:hover { background: #219a52; }
-    button.especial { background: linear-gradient(135deg, #f39c12 0%, #e74c3c 100%); animation: pulse 2s infinite; }
-    
-    @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }
-    
+    button.whatsapp { background: #25D366; }
+    button.whatsapp:hover { background: #128C7E; }
+    button.email { background: #EA4335; }
+    button.email:hover { background: #B92B1F; }
+    button.banco { background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%); }
+    button.banco:hover { background: linear-gradient(135deg, #d68910 0%, #c0392b 100%); }
     .status {
       padding: 6px 10px;
       border-radius: 5px;
@@ -83,25 +75,21 @@
     }
     .status.connected { background: #27ae60; }
     .status.disconnected { background: #e74c3c; }
-    
-    /* ✅ NUEVA ESTRUCTURA: Panel Cantador + Última Carta en una sola fila */
     .panel-superior {
       display: grid;
       grid-template-columns: 2fr 1fr;
       gap: 10px;
       margin-bottom: 10px;
     }
-    
     .panel-cantador {
       background: rgba(231, 76, 60, 0.25);
       padding: 10px;
       border-radius: 8px;
       border: 2px solid #e74c3c;
     }
-    
     .ultima-carta-panel {
       background: linear-gradient(135deg, #f39c12 0%, #d68910 100%);
-      padding: 2px;
+      padding: 10px;
       border-radius: 8px;
       border: 2px solid #e67e22;
       display: flex;
@@ -109,22 +97,18 @@
       align-items: center;
       justify-content: center;
     }
-    
     .ultima-carta-display {
       font-size: 2.5em;
       font-weight: bold;
       color: #000;
       text-align: center;
     }
-    
     .ultima-carta-label {
       font-size: 0.75em;
       color: #000;
       margin-bottom: 5px;
     }
-    
-    /* ✅ Premios pendientes panel */
-    .premios-pendientes-panel {
+    .premios-pendientes-panel, .banco-panel {
       background: rgba(241, 196, 15, 0.25);
       padding: 8px;
       border-radius: 6px;
@@ -133,8 +117,11 @@
       max-height: 120px;
       overflow-y: auto;
     }
-    
-    .premio-pendiente-item {
+    .banco-panel {
+      background: rgba(243, 156, 18, 0.35);
+      border-color: #e67e22;
+    }
+    .premio-pendiente-item, .banco-item {
       background: rgba(255,255,255,0.1);
       padding: 6px;
       border-radius: 4px;
@@ -142,50 +129,61 @@
       font-size: 0.8em;
       border-left: 3px solid #f39c12;
     }
-    
     .premio-pendiente-item.especial {
       border-left-color: #e74c3c;
       background: rgba(231, 76, 60, 0.25);
     }
-    
-    /* ✅ Layout principal de 3 columnas */
+    .invitar-familiares-panel {
+      background: rgba(39, 174, 96, 0.25);
+      padding: 10px;
+      border-radius: 8px;
+      margin: 10px 0;
+      border: 2px solid #27ae60;
+    }
+    .invitar-familiares-panel h4 {
+      margin-bottom: 8px;
+      color: #2ecc71;
+    }
+    .botones-invitar {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .botones-invitar button {
+      flex: 1;
+      min-width: 140px;
+    }
     .layout-principal {
       display: grid;
       grid-template-columns: 1fr 1.3fr 1fr;
       gap: 10px;
     }
-    
     .columna {
       background: rgba(255,255,255,0.08);
-      padding: 2px;
+      padding: 10px;
       border-radius: 8px;
-      max-height: 800px;
+      max-height: 500px;
       overflow-y: auto;
       border: 1px solid rgba(255,255,255,0.15);
     }
-    
     .cartas-por-pintas { margin: 8px 0; }
-    
     .pinta-grupo {
       margin: 6px 0;
       padding: 6px;
       background: rgba(255,255,255,0.05);
       border-radius: 6px;
     }
-    
     .pinta-titulo {
       font-weight: bold;
       margin-bottom: 4px;
       font-size: 0.8em;
       color: #f39c12;
     }
-    
     .cartas-cantadas-grid {
       display: flex;
       flex-wrap: wrap;
       gap: 3px;
     }
-    
     .carta-cantada {
       width: 30px;
       height: 42px;
@@ -200,9 +198,7 @@
       border: 2px solid #3498db;
       animation: aparecer 0.3s ease;
     }
-    
     @keyframes aparecer { from { transform: scale(0); } to { transform: scale(1); } }
-    
     .carton-bingo-pro {
       background: linear-gradient(135deg, #fff 0%, #f8f9fa 100%);
       border: 4px solid #3498db;
@@ -212,7 +208,6 @@
       color: #000;
       box-shadow: 0 4px 15px rgba(0,0,0,0.3);
     }
-    
     .carton-header-pro {
       text-align: center;
       background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
@@ -223,7 +218,6 @@
       font-weight: bold;
       font-size: 1em;
     }
-    
     .carton-info-pro {
       display: flex;
       justify-content: space-around;
@@ -232,7 +226,6 @@
       color: #e74c3c;
       font-weight: bold;
     }
-    
     .carton-board-pro {
       display: grid;
       grid-template-columns: repeat(5, 1fr);
@@ -242,7 +235,6 @@
       border-radius: 6px;
       border: 2px solid #2980b9;
     }
-    
     .carta-pro {
       aspect-ratio: 3/4;
       background: #fff;
@@ -263,13 +255,11 @@
       position: relative;
       z-index: 1;
     }
-    
     .carta-pro:hover { 
       transform: scale(1.1); 
       box-shadow: 0 4px 8px rgba(0,0,0,0.3);
       z-index: 20;
     }
-    
     .carta-pro.tapada { 
       background: linear-gradient(135deg, #34495e 0%, #2c3e50 100%) !important;
       color: transparent !important;
@@ -278,7 +268,6 @@
       pointer-events: auto !important;
       z-index: 10 !important;
     }
-    
     .carta-pro.poker:not(.tapada) { 
       border: 3px solid #f39c12; 
       background: linear-gradient(135deg, #fef9e7 0%, #fcf3cf 100%); 
@@ -286,7 +275,6 @@
       pointer-events: auto !important;
       z-index: 5;
     }
-    
     .carta-pro.full:not(.tapada) { 
       border: 3px solid #9b59b6; 
       background: linear-gradient(135deg, #f5eef8 0%, #ebdef0 100%); 
@@ -294,7 +282,6 @@
       pointer-events: auto !important;
       z-index: 5;
     }
-    
     .carta-pro.especial:not(.tapada) { 
       border: 3px solid #e74c3c; 
       background: linear-gradient(135deg, #fdedec 0%, #fadbd8 100%); 
@@ -302,7 +289,6 @@
       pointer-events: auto !important;
       z-index: 5;
     }
-    
     .carta-pro.centro:not(.tapada) { 
       border: 3px solid #27ae60; 
       background: linear-gradient(135deg, #e9f7ef 0%, #d5f5e3 100%); 
@@ -310,7 +296,6 @@
       pointer-events: auto !important;
       z-index: 5;
     }
-    
     .carta-pro.poker.tapada,
     .carta-pro.full.tapada,
     .carta-pro.especial.tapada,
@@ -319,14 +304,12 @@
       color: transparent !important;
       border: 3px solid #f39c12 !important;
     }
-    
     .pozos-container {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
       gap: 6px;
       margin: 8px 0;
     }
-    
     .pozo-item {
       background: linear-gradient(135deg, rgba(241, 196, 15, 0.25) 0%, rgba(241, 196, 15, 0.15) 100%);
       padding: 8px;
@@ -335,19 +318,15 @@
       border: 2px solid #f39c12;
       font-size: 0.75em;
     }
-    
     .pozo-item.ganado {
       background: linear-gradient(135deg, rgba(39, 174, 96, 0.5) 0%, rgba(39, 174, 96, 0.4) 100%);
       border-color: #27ae60;
       animation: celebrar 0.5s ease;
     }
-    
     @keyframes celebrar { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.08); } }
-    
     .pozo-nombre { font-weight: bold; margin-bottom: 3px; color: #f39c12; }
     .pozo-premio { color: #27ae60; font-size: 0.9em; font-weight: bold; }
     .pozo-cartas { font-size: 0.7em; opacity: 0.9; margin-top: 2px; }
-    
     .alerta-ganador {
       position: fixed;
       top: 50%;
@@ -363,21 +342,17 @@
       max-width: 90%;
       border: 3px solid #fff;
     }
-    
     .alerta-ganador.especial {
       background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
       animation: pulseAlert 1s infinite;
     }
-    
     @keyframes pulseAlert { 0%, 100% { transform: translate(-50%, -50%) scale(1); } 50% { transform: translate(-50%, -50%) scale(1.05); } }
-    
     .alerta-ganador h2 {
       font-size: 1.8em;
       margin-bottom: 18px;
       color: #c0392b;
     }
-    
-    .estadisticas-panel {
+    .estadisticas-panel, .banco-estadisticas-panel {
       background: rgba(52, 152, 219, 0.25);
       padding: 10px;
       border-radius: 8px;
@@ -385,7 +360,10 @@
       font-size: 0.8em;
       border: 1px solid rgba(52, 152, 219, 0.4);
     }
-    
+    .banco-estadisticas-panel {
+      background: rgba(243, 156, 18, 0.25);
+      border: 1px solid rgba(243, 156, 18, 0.4);
+    }
     .stats-row {
       display: flex;
       justify-content: space-between;
@@ -393,7 +371,6 @@
       padding: 3px 0;
       border-bottom: 1px solid rgba(255,255,255,0.15);
     }
-    
     .grid-cartones {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
@@ -402,7 +379,6 @@
       max-height: 300px;
       overflow-y: auto;
     }
-    
     .carton-item {
       background: linear-gradient(135deg, rgba(52, 152, 219, 0.35) 0%, rgba(52, 152, 219, 0.25) 100%);
       padding: 8px;
@@ -413,11 +389,9 @@
       font-size: 0.8em;
       transition: all 0.3s;
     }
-    
     .carton-item:hover { transform: translateY(-3px); background: rgba(52, 152, 219, 0.5); }
     .carton-item.seleccionado { border-color: #27ae60; background: linear-gradient(135deg, rgba(39, 174, 96, 0.5) 0%, rgba(39, 174, 96, 0.4) 100%); }
     .carton-item.bloqueado { border-color: #e74c3c; opacity: 0.65; cursor: not-allowed; background: rgba(231, 76, 60, 0.25); }
-    
     .jugadores-lista {
       background: rgba(255,255,255,0.1);
       padding: 8px;
@@ -426,7 +400,6 @@
       max-height: 150px;
       overflow-y: auto;
     }
-    
     .jugador-item {
       padding: 4px;
       border-bottom: 1px solid rgba(255,255,255,0.15);
@@ -435,9 +408,7 @@
       justify-content: space-between;
       align-items: center;
     }
-    
     .jugador-item.cantador { background: rgba(231, 76, 60, 0.35); font-weight: bold; border-radius: 4px; }
-    
     .fase-indicator {
       padding: 5px 12px;
       border-radius: 15px;
@@ -446,30 +417,25 @@
       font-weight: bold;
       font-size: 0.85em;
     }
-    
     .fase-seleccion { background: linear-gradient(135deg, #27ae60 0%, #219a52 100%); }
     .fase-jugando { background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%); }
     .fase-especial { background: linear-gradient(135deg, #f39c12 0%, #e74c3c 100%); animation: pulse 2s infinite; }
-    
     .botones-pozos {
       display: flex;
       flex-wrap: wrap;
       gap: 3px;
       margin: 6px 0;
     }
-    
     .boton-pozo {
       padding: 4px 6px;
       font-size: 0.7em;
       background: linear-gradient(135deg, #f39c12 0%, #d68910 100%);
       border-radius: 4px;
     }
-    
     .boton-pozo.reclamado {
       background: linear-gradient(135deg, #27ae60 0%, #219a52 100%);
       cursor: default;
     }
-    
     .monedas-display {
       background: linear-gradient(135deg, rgba(241, 196, 15, 0.35) 0%, rgba(241, 196, 15, 0.25) 100%);
       padding: 6px 12px;
@@ -480,7 +446,6 @@
       border: 2px solid #f39c12;
       font-size: 0.9em;
     }
-    
     .modal {
       position: fixed;
       top: 0; left: 0;
@@ -491,20 +456,21 @@
       justify-content: center;
       z-index: 1000;
     }
-    
     .modal-content {
       background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
       padding: 25px;
       border-radius: 12px;
-      max-width: 480px;
+      max-width: 600px;
       width: 90%;
       border: 2px solid #3498db;
       max-height: 80vh;
       overflow-y: auto;
     }
-    
+    .modal-content.banco {
+      border-color: #f39c12;
+      max-width: 800px;
+    }
     .modal.active { display: flex; }
-    
     .notificacion {
       position: fixed;
       top: 18px;
@@ -518,15 +484,12 @@
       box-shadow: 0 5px 20px rgba(0,0,0,0.4);
       animation: slideIn 0.3s ease;
     }
-    
-    .notificacion.especial {
+    .notificacion.especial, .notificacion.banco {
       background: linear-gradient(135deg, #f39c12 0%, #e74c3c 100%);
       font-size: 1.1em;
       animation: slideIn 0.3s ease, pulse 1s infinite;
     }
-    
     @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
-    
     .partida-info {
       background: rgba(241, 196, 15, 0.25);
       padding: 6px 12px;
@@ -537,43 +500,60 @@
       font-weight: bold;
       font-size: 0.85em;
     }
-    
     .partida-info.especial {
       background: linear-gradient(135deg, rgba(241, 196, 15, 0.5) 0%, rgba(231, 76, 60, 0.5) 100%);
       animation: pulse 2s infinite;
     }
-    
-    .agregar-monedas-panel {
+    .agregar-monedas-panel, .comprar-fichas-panel {
       background: rgba(39, 174, 96, 0.25);
       padding: 8px;
       border-radius: 6px;
       margin: 8px 0;
       border: 1px solid #27ae60;
     }
-    
+    .comprar-fichas-panel {
+      background: rgba(243, 156, 18, 0.25);
+      border: 1px solid #f39c12;
+    }
     .botones-cantador {
       display: flex;
       flex-wrap: wrap;
       gap: 5px;
       margin: 8px 0;
     }
-    
     .botones-cantador button {
       flex: 1;
       min-width: 100px;
       font-size: 0.8em;
       padding: 6px 10px;
     }
-    
+    .tabla-reporte {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 15px 0;
+      font-size: 0.85em;
+    }
+    .tabla-reporte th, .tabla-reporte td {
+      padding: 8px;
+      text-align: left;
+      border-bottom: 1px solid rgba(255,255,255,0.15);
+    }
+    .tabla-reporte th {
+      background: rgba(243, 156, 18, 0.35);
+      color: #f39c12;
+    }
+    .tabla-reporte tr:hover {
+      background: rgba(255,255,255,0.05);
+    }
+    .balance-positivo { color: #27ae60; font-weight: bold; }
+    .balance-negativo { color: #e74c3c; font-weight: bold; }
     ::-webkit-scrollbar { width: 6px; height: 6px; }
     ::-webkit-scrollbar-track { background: rgba(255,255,255,0.1); border-radius: 3px; }
     ::-webkit-scrollbar-thumb { background: #3498db; border-radius: 3px; }
-    
     @media (max-width: 1024px) { 
       .panel-superior { grid-template-columns: 1fr; }
       .layout-principal { grid-template-columns: 1fr 1fr; } 
     }
-    
     @media (max-width: 768px) {
       .panel-superior { grid-template-columns: 1fr; }
       .layout-principal { grid-template-columns: 1fr; }
@@ -583,7 +563,6 @@
       button { width: 100%; margin: 3px 0; }
       .botones-cantador button { min-width: 100%; }
     }
-    
     .text-center { text-align: center; }
     .mb-6 { margin-bottom: 6px; }
     .mt-6 { margin-top: 6px; }
@@ -611,17 +590,14 @@
     <div id="loginSection" class="login-section">
       <h3>👤 Iniciar Sesión</h3>
       <p style="margin: 10px 0; font-size: 0.9em;">Ingresa tu correo para unirte al juego</p>
-      
       <div style="background: rgba(255,255,255,0.08); padding: 10px; border-radius: 6px; margin: 10px 0; font-size: 0.85em;">
         <p>📧 Correos registrados:</p>
         <p>humofra@yahoo.com.co | tatica2463@gmail.com | diana.molina7@gmail.com</p>
         <p>caromolina87@gmail.com | jmolinam@celsia.com</p>
       </div>
-      
       <input type="email" id="emailInput" placeholder="Correo Electrónico">
       <input type="text" id="nombreInput" placeholder="Tu Nombre">
       <button onclick="iniciarSesion()">Entrar al Juego</button>
-      
       <div id="estadoConexion" class="status disconnected">❌ Desconectado</div>
     </div>
 
@@ -629,58 +605,59 @@
       <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
         <div>
           <h3>👤 <span id="jugadorNombre">-</span></h3>
-          <div class="monedas-display">💰 Monedas: <span id="misMonedas">40</span></div>
+          <div class="monedas-display">💰 Fichas: <span id="misMonedas">0</span> ($<span id="misMonedasValor">0</span> COP)</div>
           <span id="faseJuego" class="fase-indicator fase-seleccion">Fase: Selección</span>
           <div class="partida-info" id="partidaInfo">Partida: <span id="partidaActual">1</span>/6</div>
         </div>
         <button onclick="cerrarSesion()">Salir</button>
       </div>
 
-      <!-- ✅ NUEVA ESTRUCTURA: Panel Superior (Cantador + Última Carta) -->
       <div class="panel-superior">
-        <!-- Panel del Cantador -->
         <div id="panelCantador" class="panel-cantador hidden">
           <h3 style="margin-bottom: 8px; font-size: 1em;">🎤 Panel del Cantador</h3>
-          
-          <!--<div class="botones-cantador">
-            <button class="cantador" onclick="cantarCartaAleatoria()">🃏 Cantar</button>
-            <button class="cantador" onclick="iniciarJuego()">▶️ Iniciar</button>
-            <button class="cantador" onclick="toggleFaseSeleccion()">🔄 Selección</button>
-            <button class="cantador" onclick="siguientePartida()">➡️ Siguiente</button>
-            <button class="cantador" onclick="reiniciarJuego()">🔄 Reiniciar</button>
-          </div>-->
-          
-          <!-- Premios pendientes -->
-          <div class="premios-pendientes-panel">
-            <h4 style="font-size: 0.85em; margin-bottom: 6px;">🔍 Premios Completados (Para Verificar)</h4>
-            <div id="premiosPendientesLista">
-              <p style="font-size: 0.75em; opacity: 0.7;">No hay premios pendientes</p>
-            </div>
-          </div>
-          
-          <!-- Agregar monedas -->
-          <div class="agregar-monedas-panel">
-            <h4 style="font-size: 0.85em; margin-bottom: 6px;">💵 Agregar Monedas</h4>
-            <div class="flex gap-5" style="align-items: center;">
-              <select id="selectJugadorMonedas" style="flex: 1;"></select>
-              <input type="number" id="cantidadMonedas" placeholder="Cantidad" style="width: 80px;" min="1" max="100">
-              <button class="verde" onclick="agregarMonedas()">Agregar</button>
-            </div>
-          </div>
           <div class="botones-cantador">
             <button class="cantador" onclick="cantarCartaAleatoria()">🃏 Cantar</button>
             <button class="cantador" onclick="iniciarJuego()">▶️ Iniciar</button>
             <button class="cantador" onclick="toggleFaseSeleccion()">🔄 Selección</button>
             <button class="cantador" onclick="siguientePartida()">➡️ Siguiente</button>
             <button class="cantador" onclick="reiniciarJuego()">🔄 Reiniciar</button>
-          </div>          
+          </div>
+          <div class="premios-pendientes-panel">
+            <h4 style="font-size: 0.85em; margin-bottom: 6px;">🔍 Premios Completados (Para Verificar)</h4>
+            <div id="premiosPendientesLista">
+              <p style="font-size: 0.75em; opacity: 0.7;">No hay premios pendientes</p>
+            </div>
+          </div>
+          <div class="comprar-fichas-panel">
+            <h4 style="font-size: 0.85em; margin-bottom: 6px;">💵 Agregar Fichas (Cantador)</h4>
+            <div class="flex gap-5" style="align-items: center;">
+              <select id="selectJugadorMonedas" style="flex: 1;"></select>
+              <input type="number" id="cantidadMonedas" placeholder="Fichas" style="width: 80px;" min="1" max="100">
+              <button class="verde" onclick="agregarMonedas()">Agregar</button>
+            </div>
+          </div>
+          <div class="banco-panel">
+            <h4 style="font-size: 0.85em; margin-bottom: 6px;">🏦 Banco del Juego</h4>
+            <div id="bancoResumen">
+              <p style="font-size: 0.75em;">Recaudado: $<span id="bancoRecaudado">0</span> | Pagado: $<span id="bancoPagado">0</span></p>
+            </div>
+            <button class="banco mt-6" onclick="generarReporteFinal()" style="width: 100%;">📊 Generar Reporte Final</button>
+          </div>
         </div>
-
-        <!-- Última Carta Cantada -->
-        <!--<div id="ultimaCartaPanel" class="ultima-carta-panel">
+        <div id="ultimaCartaPanel" class="ultima-carta-panel">
           <div class="ultima-carta-label">Última Carta</div>
           <div id="ultimaCartaDisplay" class="ultima-carta-display">-</div>
-        </div>-->
+        </div>
+      </div>
+
+      <div class="invitar-familiares-panel">
+        <h4>📢 Invitar Familiares al Sabadito Alegre</h4>
+        <p style="font-size: 0.8em; margin-bottom: 8px; opacity: 0.9;">Comparte el enlace con tu familia por WhatsApp o Email</p>
+        <div class="botones-invitar">
+          <button class="whatsapp" onclick="invitarWhatsApp()">📱 Invitar por WhatsApp</button>
+          <button class="email" onclick="invitarEmail()">📧 Invitar por Email</button>
+          <button class="verde" onclick="copiarEnlace()">🔗 Copiar Enlace</button>
+        </div>
       </div>
 
       <div id="alertaGanador" class="alerta-ganador hidden">
@@ -692,19 +669,10 @@
         </div>
       </div>
 
-      <!-- ✅ Layout Principal de 3 Columnas -->
       <div class="layout-principal">
         <div class="columna">
-
-        <!-- Última Carta Cantada -->
-        <div id="ultimaCartaPanel" class="ultima-carta-panel">
-          <div class="ultima-carta-label">Última Carta Cantada</div>
-          <div id="ultimaCartaDisplay" class="ultima-carta-display">-</div>
-        </div>
-
           <h3 style="margin-bottom: 8px;">🃏 Cartas Cantadas (<span id="contadorCartas">0</span>)</h3>
           <div id="cartasPorPintas" class="cartas-por-pintas"></div>
-          
           <h3 style="margin: 12px 0 8px 0;">🏆 Los 6 Pozos</h3>
           <div class="pozos-container">
             <div class="pozo-item" id="pozo-pokino"><div class="pozo-nombre">POKINO</div><div class="pozo-premio">$50</div><div class="pozo-cartas">5</div></div>
@@ -715,31 +683,40 @@
             <div class="pozo-item" id="pozo-especial"><div class="pozo-nombre">ESP.</div><div class="pozo-premio">$500</div><div class="pozo-cartas">25</div></div>
           </div>
         </div>
-
         <div class="columna">
           <h3 style="margin-bottom: 8px;">🎯 Mis Cartones</h3>
           <div id="misCartones"></div>
+          <div class="comprar-fichas-panel mt-6">
+            <h4 style="font-size: 0.85em; margin-bottom: 6px;">🏦 Comprar Fichas</h4>
+            <p style="font-size: 0.75em; margin-bottom: 6px;">Valor por ficha: $50 COP</p>
+            <div class="flex gap-5" style="align-items: center;">
+              <input type="number" id="cantidadFichasComprar" placeholder="Cantidad" style="flex: 1;" min="1" max="100">
+              <button class="banco" onclick="comprarFichas()">Comprar</button>
+            </div>
+          </div>
         </div>
-
         <div class="columna">
           <h3 style="margin-bottom: 8px;">👥 Jugadores (<span id="contadorJugadores">0</span>)</h3>
           <div id="listaJugadores" class="jugadores-lista"></div>
-          
           <div class="estadisticas-panel">
             <h4 style="margin-bottom: 6px;">📊 Tus Estadísticas</h4>
             <div id="estadisticas"></div>
           </div>
-          
+          <div class="banco-estadisticas-panel">
+            <h4 style="margin-bottom: 6px;">🏦 Tu Balance</h4>
+            <div id="bancoPersonal"></div>
+          </div>
           <h3 style="margin: 12px 0 8px 0;">⚙️ Opciones</h3>
           <button onclick="mostrarModalSolicitud()" style="width: 100%; margin: 4px 0;">📝 Solicitar Cambio</button>
           <button id="btnSerCantador" onclick="establecerseCantador()" style="width: 100%; margin: 4px 0;">🎤 Ser Cantador</button>
           <button class="verde mt-6" onclick="verificarEspecialManual()" style="width: 100%;">🔍 Verificar Especial</button>
+          <button class="banco mt-6" onclick="verBalancePersonal()" style="width: 100%;">📊 Ver Balance Personal</button>
         </div>
       </div>
 
       <div id="seleccionCartones">
         <h3 style="margin-bottom: 8px;">🎯 Selecciona tus Cartones (Máx 3)</h3>
-        <p style="font-size: 0.8em; margin: 6px 0;">13 cartones disponibles | 6 monedas por cartón</p>
+        <p style="font-size: 0.8em; margin: 6px 0;">13 cartones disponibles | 6 fichas por cartón</p>
         <div id="gridCartones" class="grid-cartones"></div>
       </div>
     </div>
@@ -756,14 +733,36 @@
     </div>
   </div>
 
+  <div id="modalReporte" class="modal">
+    <div class="modal-content banco">
+      <h3>🏦 Reporte Final del Banco - Sabadito Alegre</h3>
+      <div id="reporteContenido"></div>
+      <div class="flex gap-5 justify-center mt-6">
+        <button class="verde" onclick="imprimirReporte()">🖨️ Imprimir</button>
+        <button onclick="cerrarModalReporte()">Cerrar</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="modalBalance" class="modal">
+    <div class="modal-content">
+      <h3>📊 Balance Personal Detallado</h3>
+      <div id="balanceContenido"></div>
+      <div class="flex gap-5 justify-center mt-6">
+        <button onclick="cerrarModalBalance()">Cerrar</button>
+      </div>
+    </div>
+  </div>
+
   <script>
     let socket;
     let emailActual = '';
     let nombreActual = '';
     let gameState = {};
     let premioPendiente = null;
+    let reporteActual = null;
     const colores = {'♠': 'black', '♣': 'black', '♥': 'red', '♦': 'red'};
-    
+    const VALOR_FICHA = 50;
     const pozosInfo = {
       pokino: { nombre: 'POKINO', premio: 50 },
       cuatroEsquinas: { nombre: '4 ESQUINAS', premio: 150 },
@@ -773,19 +772,38 @@
       especial: { nombre: 'ESPECIAL', premio: 500 }
     };
 
+    function invitarWhatsApp() {
+      const url = window.location.href;
+      const mensaje = `🎊 ¡SABADITO ALEGRE EN LÍNEA! 🎊%0A%0A¡Ya podemos jugar Bingo Poker desde cualquier lugar del mundo! 🃏%0A%0A🌐 URL: ${url}%0A%0A📱 Instrucciones:%0A1. Abre el enlace en tu celular o computador%0A2. Ingresa tu correo y nombre%0A3. ¡Empieza a jugar!%0A%0A🏆 Pozos disponibles:%0A- POKINO: $50%0A- 4 ESQUINAS: $150%0A- FULL: $200%0A- POKER: $300%0A- CENTRO: $250%0A- ESPECIAL: $500 (cartón lleno)%0A%0A¡Nos vemos en el juego! 🎉`;
+      window.open(`https://wa.me/?text=${mensaje}`, '_blank');
+    }
+
+    function invitarEmail() {
+      const url = window.location.href;
+      const asunto = '🎊 Invitación al Sabadito Alegre en Línea';
+      const cuerpo = `¡Hola!%0D%0A%0D%0ATe invito a jugar al SABADITO ALEGRE en línea. 🃏%0D%0A%0D%0A🌐 URL: ${url}%0D%0A%0D%0A📱 Instrucciones:%0D%0A1. Abre el enlace en tu celular o computador%0D%0A2. Ingresa tu correo y nombre%0D%0A3. ¡Empieza a jugar!%0D%0A%0D%0A🏆 Pozos disponibles:%0D%0A- POKINO: $50%0D%0A- 4 ESQUINAS: $150%0D%0A- FULL: $200%0D%0A- POKER: $300%0D%0A- CENTRO: $250%0D%0A- ESPECIAL: $500 (cartón lleno)%0D%0A%0D%0A¡Nos vemos en el juego! 🎉`;
+      window.open(`mailto:?subject=${asunto}&body=${cuerpo}`, '_blank');
+    }
+
+    function copiarEnlace() {
+      const url = window.location.href;
+      navigator.clipboard.writeText(url).then(() => {
+        mostrarNotificacion('🔗 Enlace copiado al portapapeles', 'success');
+      }).catch(() => {
+        mostrarNotificacion('❌ No se pudo copiar el enlace', 'error');
+      });
+    }
+
     function conectarSocket() {
       socket = io();
-      
       socket.on('connect', () => {
         document.getElementById('estadoConexion').className = 'status connected';
         document.getElementById('estadoConexion').innerHTML = '✅ Conectado';
       });
-      
       socket.on('disconnect', () => {
         document.getElementById('estadoConexion').className = 'status disconnected';
         document.getElementById('estadoConexion').innerHTML = '❌ Desconectado';
       });
-      
       socket.on('gameState', (state) => {
         console.log('📊 Recibiendo gameState:', state);
         gameState = state;
@@ -795,7 +813,6 @@
           actualizarIndicadorPartida(state.partidaActual);
         }
       });
-      
       socket.on('updateJugadores', (jugadores) => {
         console.log('👥 Actualizando jugadores:', jugadores);
         gameState.jugadores = jugadores;
@@ -803,27 +820,25 @@
         actualizarSelectJugadores();
         if (jugadores[emailActual]) {
           document.getElementById('misMonedas').textContent = jugadores[emailActual].monedas;
+          document.getElementById('misMonedasValor').textContent = jugadores[emailActual].monedas * VALOR_FICHA;
+          actualizarBalancePersonal(jugadores[emailActual]);
         }
       });
-      
       socket.on('updateCartones', (cartones) => {
         console.log('🎴 Actualizando cartones:', cartones);
         gameState.cartones = cartones;
         renderizarGridCartones();
         renderizarMisCartones();
       });
-      
       socket.on('updateCartasCantadas', (cartas) => {
         gameState.cartasCantadas = cartas;
         renderizarCartasPorPintas();
         document.getElementById('contadorCartas').textContent = cartas.length;
-        
         if (cartas.length >= 52) {
           mostrarNotificacion('⚠️ ¡MAZO COMPLETO! Verifiquen el ESPECIAL', 'error');
           verificarEspecialManual();
         }
       });
-      
       socket.on('updateUltimaCarta', (carta) => {
         const display = document.getElementById('ultimaCartaDisplay');
         if (carta) {
@@ -832,7 +847,6 @@
           display.textContent = '-';
         }
       });
-      
       socket.on('updateFaseJuego', (fase) => {
         gameState.faseJuego = fase;
         const indicator = document.getElementById('faseJuego');
@@ -847,25 +861,30 @@
           seleccion.classList.add('hidden');
         }
       });
-      
       socket.on('updateCantador', (email) => {
         gameState.cantador = email;
         document.getElementById('panelCantador').classList.toggle('hidden', email !== emailActual);
         document.getElementById('btnSerCantador').style.display = email ? 'none' : 'inline-block';
         renderizarJugadores();
       });
-      
       socket.on('updateEstadisticas', (estadisticas) => {
         gameState.estadisticas = estadisticas;
         renderizarEstadisticas();
       });
-      
+      socket.on('updateBanco', (banco) => {
+        gameState.banco = banco;
+        document.getElementById('bancoRecaudado').textContent = banco.totalRecaudado;
+        document.getElementById('bancoPagado').textContent = banco.totalPagado;
+      });
       socket.on('premiosParaVerificar', (data) => {
         console.log('🔍 Premios para verificar:', data);
         renderizarPremiosPendientes(data.premios);
         mostrarNotificacion(data.mensaje, 'success', true);
       });
-      
+      socket.on('cantadorDesconectado', (data) => {
+        mostrarNotificacion(data.mensaje, 'error', true);
+        console.log('🎤 Cantador desconectado:', data.cantadorAnterior);
+      });
       socket.on('alertaGanador', (data) => {
         if (gameState.cantador === emailActual) {
           premioPendiente = data;
@@ -882,31 +901,32 @@
           mostrarNotificacion(data.mensaje, 'success');
         }
       });
-      
       socket.on('premioConfirmado', (data) => {
         mostrarNotificacion(`✅ ${data.jugador} ganó ${data.pozo} ($${data.premio})`, 'success');
         document.getElementById('alertaGanador').classList.add('hidden');
         premioPendiente = null;
       });
-      
       socket.on('premioRechazado', (data) => {
         mostrarNotificacion(data.mensaje, 'error');
         document.getElementById('alertaGanador').classList.add('hidden');
         premioPendiente = null;
       });
-      
       socket.on('monedasAgregadas', (data) => {
-        mostrarNotificacion(`💰 ${data.cantidad} monedas agregadas a ${data.jugador}`, 'success');
+        mostrarNotificacion(`💰 ${data.cantidad} fichas agregadas a ${data.jugador}`, 'success');
       });
-      
+      socket.on('fichasCompradas', (data) => {
+        mostrarNotificacion(`✅ ${data.jugador} compró ${data.fichas} fichas por $${data.valor} COP`, 'success', true);
+      });
       socket.on('error', (mensaje) => {
         mostrarNotificacion('❌ ' + mensaje, 'error');
       });
-      
       socket.on('reconexionExitosa', (data) => {
         mostrarNotificacion('✅ ' + data.mensaje, 'success');
+        if (data.esCantador) {
+          document.getElementById('panelCantador').classList.remove('hidden');
+          document.getElementById('btnSerCantador').style.display = 'none';
+        }
       });
-      
       socket.on('juegoIniciado', (data) => {
         if (data.esEspecial) {
           mostrarNotificacion('🎊 ' + data.mensaje, 'success', true);
@@ -915,27 +935,27 @@
           mostrarNotificacion(data.mensaje, 'success');
         }
       });
-      
       socket.on('siguientePartida', (data) => {
         document.getElementById('partidaActual').textContent = data.partida;
         actualizarIndicadorPartida(data.partida, data.esEspecial);
         mostrarNotificacion(data.mensaje, 'success', data.esEspecial);
       });
-      
       socket.on('mazoAgotado', (data) => {
         mostrarNotificacion(data.mensaje, 'error');
         verificarEspecialManual();
+      });
+      socket.on('reporteFinalGenerado', (reporte) => {
+        reporteActual = reporte;
+        mostrarReporteFinal(reporte);
       });
     }
 
     function renderizarPremiosPendientes(premios) {
       const container = document.getElementById('premiosPendientesLista');
-      
       if (!premios || premios.length === 0) {
         container.innerHTML = '<p style="font-size: 0.75em; opacity: 0.7;">No hay premios pendientes</p>';
         return;
       }
-      
       container.innerHTML = premios.map(premio => `
         <div class="premio-pendiente-item ${premio.pozo === 'especial' ? 'especial' : ''}">
           <strong style="color: #f39c12;">${premio.nombrePozo}</strong> - 
@@ -958,15 +978,12 @@
 
     function verificarEspecialManual() {
       const cartones = gameState.cartones || [];
-      const cartasCantadas = gameState.cartasCantadas || [];
-      
       cartones.forEach(carton => {
         if (carton.dueño === emailActual) {
           let tapadasCount = 0;
           for (let i = 0; i < 25; i++) {
             if (carton.tapadas[i]) tapadasCount++;
           }
-          
           if (tapadasCount === 25) {
             mostrarNotificacion(`🏆 ¡CARTÓN ${carton.nombre} LLENO! (${tapadasCount}/25) Reclama ESPECIAL`, 'success', true);
           }
@@ -1002,6 +1019,10 @@
       renderizarCartasPorPintas();
       renderizarEstadisticas();
       actualizarIndicadorPartida(gameState.partidaActual, gameState.partidaActual === 6);
+      if (gameState.cantador === emailActual) {
+        document.getElementById('panelCantador').classList.remove('hidden');
+        document.getElementById('btnSerCantador').style.display = 'none';
+      }
     }
 
     function renderizarJugadores() {
@@ -1027,25 +1048,177 @@
     function agregarMonedas() {
       const emailJugador = document.getElementById('selectJugadorMonedas').value;
       const cantidad = parseInt(document.getElementById('cantidadMonedas').value);
-      
       if (!cantidad || cantidad < 1 || cantidad > 100) {
         mostrarNotificacion('Ingresa cantidad válida (1-100)', 'error');
         return;
       }
-      
       socket.emit('agregarMonedas', emailJugador, cantidad, emailActual);
       document.getElementById('cantidadMonedas').value = '';
+    }
+
+    function comprarFichas() {
+      const cantidad = parseInt(document.getElementById('cantidadFichasComprar').value);
+      if (!cantidad || cantidad < 1 || cantidad > 100) {
+        mostrarNotificacion('Ingresa cantidad válida (1-100)', 'error');
+        return;
+      }
+      socket.emit('comprarFichas', emailActual, cantidad);
+      document.getElementById('cantidadFichasComprar').value = '';
+    }
+
+    function generarReporteFinal() {
+      socket.emit('generarReporteFinal', emailActual);
+    }
+
+    function mostrarReporteFinal(reporte) {
+      const contenido = document.getElementById('reporteContenido');
+      const fecha = new Date(reporte.fecha).toLocaleString();
+      
+      let html = `
+        <div style="margin-bottom: 20px;">
+          <p><strong>📅 Fecha:</strong> ${fecha}</p>
+          <p><strong>🎮 Partida:</strong> ${reporte.partida}</p>
+        </div>
+        
+        <div style="background: rgba(243, 156, 18, 0.25); padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+          <h4 style="color: #f39c12; margin-bottom: 10px;">📊 Resumen del Banco</h4>
+          <div class="stats-row"><span>Total Recaudado:</span><span style="color: #27ae60;">$${reporte.resumen.totalRecaudado} COP</span></div>
+          <div class="stats-row"><span>Total Pagado:</span><span style="color: #e74c3c;">$${reporte.resumen.totalPagado} COP</span></div>
+          <div class="stats-row"><span>Balance:</span><span class="${reporte.resumen.balance >= 0 ? 'balance-positivo' : 'balance-negativo'}">$${reporte.resumen.balance} COP</span></div>
+        </div>
+        
+        <h4 style="color: #f39c12; margin-bottom: 10px;">👥 Detalle por Jugador</h4>
+        <table class="tabla-reporte">
+          <thead>
+            <tr>
+              <th>Jugador</th>
+              <th>Invertido</th>
+              <th>Ganado</th>
+              <th>Fichas Actuales</th>
+              <th>Balance</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${reporte.jugadores.map(j => `
+              <tr>
+                <td>${j.nombre}</td>
+                <td>$${j.valorInvertido}</td>
+                <td>$${j.valorGanado}</td>
+                <td>${j.fichasActuales}</td>
+                <td class="${j.balance >= 0 ? 'balance-positivo' : 'balance-negativo'}">$${j.balance}</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+        
+        <div style="margin-top: 20px; padding: 15px; background: rgba(39, 174, 96, 0.25); border-radius: 8px;">
+          <p style="font-size: 0.9em;"><strong>💵 Total para Devolver (Cambiar Fichas):</strong></p>
+          <p style="font-size: 1.2em; color: #27ae60; font-weight: bold;">$${reporte.jugadores.reduce((sum, j) => sum + j.valorDevolver, 0)} COP</p>
+        </div>
+      `;
+      
+      contenido.innerHTML = html;
+      document.getElementById('modalReporte').classList.add('active');
+    }
+
+    function verBalancePersonal() {
+      const jugador = gameState.jugadores[emailActual];
+      if (!jugador) return;
+      
+      const contenido = document.getElementById('balanceContenido');
+      const totalInvertido = jugador.fichasCompradas * VALOR_FICHA;
+      const totalGanado = jugador.fichasGanadas * VALOR_FICHA;
+      const balance = totalGanado - totalInvertido;
+      
+      let html = `
+        <div style="margin-bottom: 20px;">
+          <p><strong>👤 Jugador:</strong> ${jugador.nombre}</p>
+          <p><strong>📧 Email:</strong> ${emailActual}</p>
+        </div>
+        
+        <div class="stats-row"><span>Fichas Compradas:</span><span>${jugador.fichasCompradas}</span></div>
+        <div class="stats-row"><span>Valor Invertido:</span><span style="color: #e74c3c;">$${totalInvertido} COP</span></div>
+        <div class="stats-row"><span>Fichas Ganadas:</span><span>${jugador.fichasGanadas}</span></div>
+        <div class="stats-row"><span>Valor Ganado:</span><span style="color: #27ae60;">$${totalGanado} COP</span></div>
+        <div class="stats-row"><span>Fichas Actuales:</span><span>${jugador.monedas}</span></div>
+        <div class="stats-row"><span>Balance Final:</span><span class="${balance >= 0 ? 'balance-positivo' : 'balance-negativo'}">$${balance} COP</span></div>
+        
+        <h4 style="margin-top: 20px; color: #f39c12;">🏆 Pozos Ganados</h4>
+        ${jugador.pozosGanados && jugador.pozosGanados.length > 0 ? `
+          <table class="tabla-reporte">
+            <thead><tr><th>Pozo</th><th>Premio</th><th>Fichas</th><th>Partida</th></tr></thead>
+            <tbody>
+              ${jugador.pozosGanados.map(p => `
+                <tr>
+                  <td>${p.pozo}</td>
+                  <td>$${p.premio}</td>
+                  <td>${p.fichas}</td>
+                  <td>${p.partida}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        ` : '<p style="opacity: 0.7;">No has ganado pozos aún</p>'}
+        
+        <div style="margin-top: 20px; padding: 15px; background: rgba(39, 174, 96, 0.25); border-radius: 8px;">
+          <p style="font-size: 0.9em;"><strong>💵 Valor para Cambiar Fichas:</strong></p>
+          <p style="font-size: 1.2em; color: #27ae60; font-weight: bold;">$${jugador.monedas * VALOR_FICHA} COP</p>
+        </div>
+      `;
+      
+      contenido.innerHTML = html;
+      document.getElementById('modalBalance').classList.add('active');
+    }
+
+    function actualizarBalancePersonal(jugador) {
+      const container = document.getElementById('bancoPersonal');
+      if (!jugador) {
+        container.innerHTML = '<p>Sin datos</p>';
+        return;
+      }
+      const totalInvertido = jugador.fichasCompradas * VALOR_FICHA;
+      const totalGanado = jugador.fichasGanadas * VALOR_FICHA;
+      const balance = totalGanado - totalInvertido;
+      
+      container.innerHTML = `
+        <div class="stats-row"><span>Invertido:</span><span style="color: #e74c3c;">$${totalInvertido}</span></div>
+        <div class="stats-row"><span>Ganado:</span><span style="color: #27ae60;">$${totalGanado}</span></div>
+        <div class="stats-row"><span>Balance:</span><span class="${balance >= 0 ? 'balance-positivo' : 'balance-negativo'}">$${balance}</span></div>
+        <div class="stats-row"><span>Para Cambiar:</span><span style="color: #f39c12;">$${jugador.monedas * VALOR_FICHA}</span></div>
+      `;
+    }
+
+    function imprimirReporte() {
+      const contenido = document.getElementById('reporteContenido').innerHTML;
+      const ventana = window.open('', '_blank');
+      ventana.document.write(`
+        <html>
+          <head><title>Reporte Sabadito Alegre</title></head>
+          <body style="font-family: Arial; padding: 20px; background: #1a1a2e; color: #fff;">
+            <h2 style="color: #f39c12;">🏦 Reporte Final del Banco - Sabadito Alegre</h2>
+            ${contenido}
+            <script>window.print();<\/script>
+          </body>
+        </html>
+      `);
+      ventana.document.close();
+    }
+
+    function cerrarModalReporte() {
+      document.getElementById('modalReporte').classList.remove('active');
+    }
+
+    function cerrarModalBalance() {
+      document.getElementById('modalBalance').classList.remove('active');
     }
 
     function renderizarGridCartones() {
       const grid = document.getElementById('gridCartones');
       const cartones = gameState.cartones || [];
-      
       if (!cartones || cartones.length === 0) {
         grid.innerHTML = '<p>Cargando cartones...</p>';
         return;
       }
-      
       grid.innerHTML = cartones.map(carton => {
         const seleccionado = carton.dueño === emailActual;
         const bloqueado = carton.dueño && carton.dueño !== emailActual;
@@ -1072,24 +1245,19 @@
     function renderizarMisCartones() {
       const container = document.getElementById('misCartones');
       const cartones = gameState.cartones || [];
-      
       if (!cartones || cartones.length === 0) {
         container.innerHTML = '<p style="text-align: center; padding: 30px; color: #95a5a6;">Cargando cartones...</p>';
         return;
       }
-      
       const misCartones = cartones.filter(c => c.dueño === emailActual);
-      
       if (!misCartones || misCartones.length === 0) {
         container.innerHTML = '<p style="text-align: center; padding: 30px; color: #95a5a6; font-size: 0.9em;">Selecciona cartones arriba para jugar</p>';
         return;
       }
-      
       container.innerHTML = misCartones.map(carton => {
         if (!carton.cartas || !Array.isArray(carton.cartas) || carton.cartas.length !== 25) {
           return `<div class="carton-bingo-pro"><p style="color: #e74c3c; text-align: center;">Error en cartón ${carton.numero}</p></div>`;
         }
-        
         return `
         <div class="carton-bingo-pro">
           <div class="carton-header-pro">${carton.nombre}</div>
@@ -1102,7 +1270,6 @@
               if (!carta) return `<div class="carta-pro">?</div>`;
               const estaTapada = carton.tapadas && carton.tapadas[index] ? 'tapada' : '';
               const tipoClase = carta.tipo || '';
-              
               return `
               <div class="carta-pro ${tipoClase} ${estaTapada}" 
                    onclick="taparCarta(${carton.numero}, ${index})"
@@ -1134,15 +1301,12 @@
     function renderizarCartasPorPintas() {
       const container = document.getElementById('cartasPorPintas');
       const cartas = gameState.cartasCantadas || [];
-      
       const porPintas = { '♠': [], '♥': [], '♦': [], '♣': [] };
-      
       cartas.forEach(carta => {
         if (carta && carta.palo) {
           porPintas[carta.palo].push(carta);
         }
       });
-      
       container.innerHTML = Object.entries(porPintas).map(([palo, cartasPalo]) => `
         <div class="pinta-grupo">
           <div class="pinta-titulo" style="color: ${colores[palo]}">${palo} (${cartasPalo.length})</div>
@@ -1161,14 +1325,12 @@
     function renderizarEstadisticas() {
       const container = document.getElementById('estadisticas');
       const stats = gameState.estadisticas ? gameState.estadisticas[emailActual] : null;
-      
       if (!stats) {
         container.innerHTML = '<p>Sin datos</p>';
         return;
       }
-      
       container.innerHTML = `
-        <div class="stats-row"><span>💰 Monedas:</span><span style="color: #f39c12; font-weight: bold;">${stats.monedas}</span></div>
+        <div class="stats-row"><span>💰 Fichas:</span><span style="color: #f39c12; font-weight: bold;">${stats.monedas}</span></div>
         <div class="stats-row"><span>🏆 Ganadas:</span><span style="color: #27ae60;">${stats.ganadas}</span></div>
         <div class="stats-row"><span>📉 Perdidas:</span><span style="color: #e74c3c;">${stats.perdidas}</span></div>
         <div class="stats-row"><span>🎯 Pozos:</span><span>${stats.pozosGanados ? stats.pozosGanados.length : 0}</span></div>
@@ -1249,6 +1411,8 @@
       conectarSocket();
       window.onclick = (event) => {
         if (event.target.id === 'modalSolicitud') cerrarModalSolicitud();
+        if (event.target.id === 'modalReporte') cerrarModalReporte();
+        if (event.target.id === 'modalBalance') cerrarModalBalance();
       };
     });
   </script>
