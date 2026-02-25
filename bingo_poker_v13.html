@@ -612,16 +612,18 @@
         <button onclick="cerrarSesion()">Salir</button>
       </div>
 
+      <div class="invitar-familiares-panel">
+        <h4>📢 Invitar Familiares al Sabadito Alegre</h4>
+        <p style="font-size: 0.8em; margin-bottom: 8px; opacity: 0.9;">Comparte el enlace con tu familia por WhatsApp o Email</p>
+        <div class="botones-invitar">
+          <button class="whatsapp" onclick="invitarWhatsApp()">📱 Invitar por WhatsApp</button>
+          <button class="email" onclick="invitarEmail()">📧 Invitar por Email</button>
+          <button class="verde" onclick="copiarEnlace()">🔗 Copiar Enlace</button>
+        </div>
+      </div>
+
       <div class="panel-superior">
         <div id="panelCantador" class="panel-cantador hidden">
-          <h3 style="margin-bottom: 8px; font-size: 1em;">🎤 Panel del Cantador</h3>
-          <div class="botones-cantador">
-            <button class="cantador" onclick="cantarCartaAleatoria()">🃏 Cantar</button>
-            <button class="cantador" onclick="iniciarJuego()">▶️ Iniciar</button>
-            <button class="cantador" onclick="toggleFaseSeleccion()">🔄 Selección</button>
-            <button class="cantador" onclick="siguientePartida()">➡️ Siguiente</button>
-            <button class="cantador" onclick="reiniciarJuego()">🔄 Reiniciar</button>
-          </div>
           <div class="premios-pendientes-panel">
             <h4 style="font-size: 0.85em; margin-bottom: 6px;">🔍 Premios Completados (Para Verificar)</h4>
             <div id="premiosPendientesLista">
@@ -643,18 +645,19 @@
             </div>
             <button class="banco mt-6" onclick="generarReporteFinal()" style="width: 100%;">📊 Generar Reporte Final</button>
           </div>
+          <h3 style="margin-bottom: 8px; font-size: 1em;">🎤 Panel del Cantador</h3>
+          <div class="botones-cantador">
+            <button class="cantador" onclick="cantarCartaAleatoria()">🃏 Cantar</button>
+            <button class="cantador" onclick="iniciarJuego()">▶️ Iniciar</button>
+            <button class="cantador" onclick="toggleFaseSeleccion()">🔄 Selección</button>
+            <button class="cantador" onclick="siguientePartida()">➡️ Siguiente</button>
+            <button class="cantador" onclick="reiniciarJuego()">🔄 Reiniciar</button>
+          </div>
+
         </div>
       </div>
 
-      <div class="invitar-familiares-panel">
-        <h4>📢 Invitar Familiares al Sabadito Alegre</h4>
-        <p style="font-size: 0.8em; margin-bottom: 8px; opacity: 0.9;">Comparte el enlace con tu familia por WhatsApp o Email</p>
-        <div class="botones-invitar">
-          <button class="whatsapp" onclick="invitarWhatsApp()">📱 Invitar por WhatsApp</button>
-          <button class="email" onclick="invitarEmail()">📧 Invitar por Email</button>
-          <button class="verde" onclick="copiarEnlace()">🔗 Copiar Enlace</button>
-        </div>
-      </div>
+      
 
       <div id="alertaGanador" class="alerta-ganador hidden">
         <h2>🏆 ¡GANADOR!</h2>
