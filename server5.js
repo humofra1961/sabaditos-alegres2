@@ -270,45 +270,45 @@ const gameState = {
   // ✅ Pozos Dinámicos con Mecánica Correcta
   pozosDinamicos: {
     pokino: { 
-      valorBase: 50, 
+      valorBase: 0, 
       acumulado: 0, 
-      total: 50, 
-      fichas: 1,
+      total: 0, 
+      fichas: 0,
       acumula: false
     },
     cuatroEsquinas: { 
-      valorBase: 50, 
+      valorBase: 0, 
       acumulado: 0, 
-      total: 50, 
-      fichas: 1,
+      total: 0, 
+      fichas: 0,
       acumula: true
     },
     full: { 
-      valorBase: 50, 
+      valorBase: 0, 
       acumulado: 0, 
-      total: 50, 
-      fichas: 1,
+      total: 0, 
+      fichas: 0,
       acumula: true
     },
     poker: { 
-      valorBase: 50, 
+      valorBase: 0, 
       acumulado: 0, 
-      total: 50, 
-      fichas: 1,
+      total: 0, 
+      fichas: 0,
       acumula: true
     },
     centro: { 
-      valorBase: 50, 
+      valorBase: 0, 
       acumulado: 0, 
-      total: 50, 
-      fichas: 1,
+      total: 0, 
+      fichas: 0,
       acumula: true
     },
     especial: { 
-      valorBase: 50, 
+      valorBase: 0, 
       acumulado: 0, 
-      total: 50, 
-      fichas: 1,
+      total: 0, 
+      fichas: 0,
       acumula: true,
       acumulaPartidas: true
     }
