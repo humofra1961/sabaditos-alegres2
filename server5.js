@@ -505,61 +505,52 @@ io.on('connection', (socket) => {
   });
   
   socket.on('seleccionarCarton', (numero, email, nombre) => {
-    console.log(`🎴 Intentando seleccionar cartón ${numero} para ${email}`);
+  console.log(`🎴 Intentando seleccionar cartón ${numero} para ${email}`);
+  
+  if (gameState.faseJuego !== 'seleccion') {
+    socket.emit('error', 'La selección está cerrada.');
+    return;
+  }
+  
+  const carton = gameState.cartones.find(c => c.numero === numero);
+  
+  if (!carton) {
+    socket.emit('error', 'Cartón no encontrado.');
+    return;
+  }
+  
+  if (!carton.cartas || !Array.isArray(carton.cartas) || carton.cartas.length !== 25) {
+    console.error(`❌ Cartón ${numero} inválido:`, carton);
+    socket.emit('error', 'Cartón inválido.');
+    return;
+  }
+  
+  if (gameState.jugadores[email].cartones.length >= 3 && !carton.dueño) {
+    socket.emit('error', 'Máximo 3 cartones por jugador.');
+    return;
+  }
+  
+  if (!carton.dueño || carton.dueño === email) {
+    carton.dueño = email;
     
-    if (gameState.faseJuego !== 'seleccion') {
-      socket.emit('error', 'La selección está cerrada.');
-      return;
+    if (!gameState.jugadores[email].cartones.includes(numero)) {
+      gameState.jugadores[email].cartones.push(numero);
     }
     
-    const carton = gameState.cartones.find(c => c.numero === numero);
+    // ✅ ELIMINADO: Ya NO se descuentan fichas al seleccionar cartón
+    // Las 6 fichas se descuentan cuando el jugador hace la apuesta
+    // al iniciar la partida (cuando el cantador cambia a "Jugando")
     
-    if (!carton) {
-      socket.emit('error', 'Cartón no encontrado.');
-      return;
-    }
+    console.log(`✅ Cartón ${numero} asignado a ${email} (sin costo)`);
     
-    if (!carton.cartas || !Array.isArray(carton.cartas) || carton.cartas.length !== 25) {
-      console.error(`❌ Cartón ${numero} inválido:`, carton);
-      socket.emit('error', 'Cartón inválido.');
-      return;
-    }
-    
-    if (gameState.jugadores[email].cartones.length >= 3 && !carton.dueño) {
-      socket.emit('error', 'Máximo 3 cartones por jugador.');
-      return;
-    }
-    
-    if (!carton.dueño || carton.dueño === email) {
-      carton.dueño = email;
-      
-      if (!gameState.jugadores[email].cartones.includes(numero)) {
-        gameState.jugadores[email].cartones.push(numero);
-      }
-      
-      const costoCarton = 6; // 6 fichas por cartón
-      gameState.jugadores[email].monedas -= costoCarton;
-      gameState.jugadores[email].historialTransacciones.push({
-        tipo: 'COMPRA_CARTON',
-        fichas: costoCarton,
-        valor: costoCarton * VALOR_FICHA,
-        fecha: new Date().toISOString(),
-        partida: gameState.partidaActual,
-        carton: numero
-      });
-      
-      gameState.estadisticas[email].monedas -= costoCarton;
-      gameState.estadisticas[email].perdidas += costoCarton;
-      
-      console.log(`✅ Cartón ${numero} asignado a ${email}`);
-      
-      io.emit('updateCartones', gameState.cartones);
-      io.emit('updateJugadores', gameState.jugadores);
-      io.emit('updateEstadisticas', gameState.estadisticas);
-    } else {
-      socket.emit('cartonBloqueado', numero);
-    }
-  });
+    io.emit('updateCartones', gameState.cartones);
+    io.emit('updateJugadores', gameState.jugadores);
+    io.emit('updateEstadisticas', gameState.estadisticas);
+    // ✅ ELIMINADO: No se actualizan pozos dinámicos aquí
+  } else {
+    socket.emit('cartonBloqueado', numero);
+  }
+});
   
   socket.on('liberarCarton', (numero, email) => {
     if (gameState.faseJuego !== 'seleccion') {
