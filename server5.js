@@ -1,7 +1,7 @@
 // ============================================================================
 // 🎪 BINGO POKER - SABADITO ALEGRE - SERVIDOR PRINCIPAL
 // ============================================================================
-// Versión: 9.0 (CON SISTEMA DE BANCO Y ESTADÍSTICAS COMPLETAS)
+// Versión: 10.0 (CON POZOS DINÁMICOS ACUMULATIVOS)
 // ============================================================================
 
 const express = require('express');
@@ -33,36 +33,42 @@ const colores = {
 };
 
 // ============================================================================
-// 🏆 CONFIGURACIÓN DE LOS 6 POZOS
+// 🏆 CONFIGURACIÓN DE LOS 6 POZOS DINÁMICOS
 // ============================================================================
+
+const VALOR_FICHA = 50; // Cada ficha vale $50 COP
 
 const pozosConfig = {
   pokino: { 
     nombre: 'POKINO', 
     cartas: 5, 
     premioBase: 50, 
-    tipo: 'linea'
+    tipo: 'linea',
+    porcentajeAcumulado: 10 // 10% de cada carton va a este pozo
   },
   cuatroEsquinas: { 
     nombre: '4 ESQUINAS', 
     cartas: 4, 
     premioBase: 150, 
     indices: [0, 4, 20, 24],
-    tipo: 'indices'
+    tipo: 'indices',
+    porcentajeAcumulado: 15
   },
   full: { 
     nombre: 'FULL', 
     cartas: 5, 
     premioBase: 200, 
     indices: [5, 6, 7, 8, 9],
-    tipo: 'indices'
+    tipo: 'indices',
+    porcentajeAcumulado: 20
   },
   poker: { 
     nombre: 'POKER', 
     cartas: 4, 
     premioBase: 300, 
     indices: [15, 16, 17, 18],
-    tipo: 'indices'
+    tipo: 'indices',
+    porcentajeAcumulado: 25
   },
   centro: { 
     nombre: 'CENTRO', 
@@ -70,21 +76,18 @@ const pozosConfig = {
     premioBase: 250, 
     indices: [12], 
     tipo: 'centro',
-    maxCartas: 5
+    maxCartas: 5,
+    porcentajeAcumulado: 10
   },
   especial: { 
     nombre: 'ESPECIAL', 
     cartas: 25, 
     premioBase: 500, 
-    tipo: 'cartonLleno'
+    tipo: 'cartonLleno',
+    porcentajeAcumulado: 20,
+    acumulaPartidas: true // Este acumula entre partidas
   }
 };
-
-// ============================================================================
-// 💰 CONFIGURACIÓN DEL BANCO
-// ============================================================================
-
-const VALOR_FICHA = 50; // Cada ficha vale $50 COP
 
 // ============================================================================
 // 🎴 GENERACIÓN DE MAZO Y CARTONES
@@ -263,6 +266,15 @@ const gameState = {
     totalRecaudado: 0,
     totalPagado: 0,
     transacciones: []
+  },
+  // ✅ NUEVO: Pozos Dinámicos Acumulativos
+  pozosDinamicos: {
+    pokino: { valor: 50, acumulado: 0, total: 50 },
+    cuatroEsquinas: { valor: 150, acumulado: 0, total: 150 },
+    full: { valor: 200, acumulado: 0, total: 200 },
+    poker: { valor: 300, acumulado: 0, total: 300 },
+    centro: { valor: 250, acumulado: 0, total: 250 },
+    especial: { valor: 500, acumulado: 0, total: 500 }
   }
 };
 
@@ -318,7 +330,7 @@ io.on('connection', (socket) => {
         timestamp: Date.now(), 
         socketId: socket.id,
         cartones: [],
-        monedas: 0, // ✅ Inicia con 0 fichas (debe comprar)
+        monedas: 0,
         fichasCompradas: 0,
         fichasGanadas: 0,
         pozosGanados: [],
@@ -338,6 +350,7 @@ io.on('connection', (socket) => {
     io.emit('updateJugadores', gameState.jugadores);
     io.emit('updateEstadisticas', gameState.estadisticas);
     io.emit('updateBanco', gameState.banco);
+    io.emit('updatePozosDinamicos', gameState.pozosDinamicos);
   });
   
   // ✅ NUEVO: Comprar fichas
@@ -439,7 +452,11 @@ io.on('connection', (socket) => {
         gameState.jugadores[email].cartones.push(numero);
       }
       
-      const costoCarton = 6;
+      const costoCarton = 6; // 6 fichas por cartón
+      
+      // ✅ ACTUALIZAR POZOS DINÁMICOS
+      actualizarPozosDinamicos(costoCarton * VALOR_FICHA);
+      
       gameState.jugadores[email].monedas -= costoCarton;
       gameState.jugadores[email].historialTransacciones.push({
         tipo: 'APUESTA_CARTON',
@@ -458,10 +475,38 @@ io.on('connection', (socket) => {
       io.emit('updateCartones', gameState.cartones);
       io.emit('updateJugadores', gameState.jugadores);
       io.emit('updateEstadisticas', gameState.estadisticas);
+      io.emit('updatePozosDinamicos', gameState.pozosDinamicos); // ✅ Enviar actualización de pozos
     } else {
       socket.emit('cartonBloqueado', numero);
     }
   });
+  
+  // ✅ NUEVA FUNCIÓN: Actualizar pozos dinámicos
+  function actualizarPozosDinamicos(valorCarton) {
+    Object.keys(pozosConfig).forEach(pozo => {
+      const porcentaje = pozosConfig[pozo].porcentajeAcumulado / 100;
+      const acumulado = Math.floor(valorCarton * porcentaje);
+      
+      gameState.pozosDinamicos[pozo].acumulado += acumulado;
+      gameState.pozosDinamicos[pozo].total = gameState.pozosDinamicos[pozo].valor + gameState.pozosDinamicos[pozo].acumulado;
+    });
+    
+    console.log('🏆 Pozos actualizados:', gameState.pozosDinamicos);
+  }
+  
+  // ✅ NUEVA FUNCIÓN: Resetear pozos (excepto ESPECIAL)
+  function resetearPozos(exceptoEspecial = true) {
+    Object.keys(gameState.pozosDinamicos).forEach(pozo => {
+      if (exceptoEspecial && pozo === 'especial') {
+        // ESPECIAL no se resetea entre partidas
+        return;
+      }
+      gameState.pozosDinamicos[pozo].acumulado = 0;
+      gameState.pozosDinamicos[pozo].total = gameState.pozosDinamicos[pozo].valor;
+    });
+    
+    console.log('🔄 Pozos reseteados (excepto ESPECIAL)');
+  }
   
   socket.on('liberarCarton', (numero, email) => {
     if (gameState.faseJuego !== 'seleccion') {
@@ -544,7 +589,7 @@ io.on('connection', (socket) => {
             nombrePozo: pozosConfig[pozo].nombre,
             jugador: jugador?.nombre || carton.dueño,
             email: carton.dueño,
-            premio: pozosConfig[pozo].premioBase,
+            premio: gameState.pozosDinamicos[pozo].total, // ✅ Usar valor dinámico
             timestamp: Date.now()
           });
           
@@ -611,7 +656,7 @@ io.on('connection', (socket) => {
     
     if (gameState.partidaActual === 6) {
       io.emit('juegoIniciado', { 
-        mensaje: `🎊 ESPECIAL INICIADO - PARTIDA 6: ¡LLENAR CARTÓN! ($500)`, 
+        mensaje: `🎊 ESPECIAL INICIADO - PARTIDA 6: ¡LLENAR CARTÓN! ($${gameState.pozosDinamicos.especial.total})`, 
         partida: gameState.partidaActual,
         esEspecial: true
       });
@@ -672,8 +717,8 @@ io.on('connection', (socket) => {
         pozo: pozosConfig[pozo].nombre,
         jugador: gameState.jugadores[email]?.nombre || email,
         email: email,
-        premio: pozosConfig[pozo].premioBase,
-        mensaje: `🏆 ¡${gameState.jugadores[email]?.nombre || email} RECLAMA ${pozosConfig[pozo].nombre}!`,
+        premio: gameState.pozosDinamicos[pozo].total, // ✅ Usar valor dinámico
+        mensaje: `🏆 ¡${gameState.jugadores[email]?.nombre || email} RECLAMA ${pozosConfig[pozo].nombre}! ($${gameState.pozosDinamicos[pozo].total})`,
         esEspecial: pozo === 'especial'
       });
       console.log(`🏆 Premio reclamado: ${pozo} por ${email}`);
@@ -694,7 +739,7 @@ io.on('connection', (socket) => {
     
     if (valido) {
       carton.pozos[pozo] = true;
-      const premio = pozosConfig[pozo].premioBase;
+      const premio = gameState.pozosDinamicos[pozo].total; // ✅ Usar valor dinámico
       const monedasGanadas = Math.floor(premio / VALOR_FICHA);
       
       gameState.pozosGanados.push({ 
@@ -745,6 +790,12 @@ io.on('connection', (socket) => {
         });
       }
       
+      // ✅ Resetear pozo ganado (excepto ESPECIAL)
+      if (pozo !== 'especial') {
+        gameState.pozosDinamicos[pozo].acumulado = 0;
+        gameState.pozosDinamicos[pozo].total = gameState.pozosDinamicos[pozo].valor;
+      }
+      
       // ✅ Actualizar banco
       gameState.banco.totalPagado += premio;
       gameState.banco.transacciones.push({
@@ -762,6 +813,7 @@ io.on('connection', (socket) => {
       io.emit('updateJugadores', gameState.jugadores);
       io.emit('updateEstadisticas', gameState.estadisticas);
       io.emit('updateBanco', gameState.banco);
+      io.emit('updatePozosDinamicos', gameState.pozosDinamicos); // ✅ Enviar actualización
       io.emit('premioConfirmado', {
         carton: numeroCarton,
         pozo: pozosConfig[pozo].nombre,
@@ -793,39 +845,6 @@ io.on('connection', (socket) => {
         mensaje: '❌ NO válido - El cantador rechazó el premio' 
       });
     }
-  });
-  
-  // ✅ NUEVO: Generar reporte final del banco
-  socket.on('generarReporteFinal', (emailCantador) => {
-    if (gameState.cantador !== emailCantador) {
-      socket.emit('error', 'Solo el cantador puede generar el reporte.');
-      return;
-    }
-    
-    const reporte = {
-      fecha: new Date().toISOString(),
-      partida: gameState.partidaActual,
-      resumen: {
-        totalRecaudado: gameState.banco.totalRecaudado,
-        totalPagado: gameState.banco.totalPagado,
-        balance: gameState.banco.totalRecaudado - gameState.banco.totalPagado
-      },
-      jugadores: Object.values(gameState.jugadores).map(j => ({
-        nombre: j.nombre,
-        email: j.email,
-        fichasCompradas: j.fichasCompradas,
-        valorInvertido: j.fichasCompradas * VALOR_FICHA,
-        fichasGanadas: j.fichasGanadas,
-        valorGanado: j.fichasGanadas * VALOR_FICHA,
-        fichasActuales: j.monedas,
-        valorDevolver: j.monedas * VALOR_FICHA,
-        pozosGanados: j.pozosGanados,
-        balance: (j.fichasGanadas - j.fichasCompradas) * VALOR_FICHA
-      }))
-    };
-    
-    socket.emit('reporteFinalGenerado', reporte);
-    console.log('📊 Reporte final generado para el cantador');
   });
   
   socket.on('toggleFaseSeleccion', (email) => {
@@ -868,15 +887,19 @@ io.on('connection', (socket) => {
       };
     });
     
+    // ✅ RESETear pozos (excepto ESPECIAL que acumula)
+    resetearPozos(true);
+    
     gameState.partidaActual++;
     
     let mensajePartida = `➡️ Partida ${gameState.partidaActual} iniciada`;
     if (gameState.partidaActual === 6) {
-      mensajePartida = `🎊 PARTIDA 6: ESPECIAL INICIADO - ¡LLENAR CARTÓN! ($500)`;
+      mensajePartida = `🎊 PARTIDA 6: ESPECIAL INICIADO - ¡LLENAR CARTÓN! ($${gameState.pozosDinamicos.especial.total})`;
     }
     
     io.emit('gameState', gameState);
     io.emit('updateFaseJuego', 'seleccion');
+    io.emit('updatePozosDinamicos', gameState.pozosDinamicos); // ✅ Enviar pozos actualizados
     io.emit('siguientePartida', { 
       partida: gameState.partidaActual,
       esEspecial: gameState.partidaActual === 6,
@@ -911,6 +934,12 @@ io.on('connection', (socket) => {
       transacciones: []
     };
     
+    // ✅ Resetear TODOS los pozos (incluido ESPECIAL)
+    Object.keys(gameState.pozosDinamicos).forEach(pozo => {
+      gameState.pozosDinamicos[pozo].acumulado = 0;
+      gameState.pozosDinamicos[pozo].total = gameState.pozosDinamicos[pozo].valor;
+    });
+    
     gameState.cartones.forEach(carton => {
       carton.dueño = null;
       carton.tapadas = Array(25).fill(false);
@@ -938,6 +967,7 @@ io.on('connection', (socket) => {
     io.emit('updateCantador', null);
     io.emit('updateCartones', gameState.cartones);
     io.emit('updateBanco', gameState.banco);
+    io.emit('updatePozosDinamicos', gameState.pozosDinamicos); // ✅ Enviar pozos reseteados
     
     console.log('🔄 Juego reiniciado completamente');
   });
@@ -1164,5 +1194,6 @@ server.listen(PORT, '0.0.0.0', () => {
   console.log('║  ⭐ ESPECIAL: 25 cartas (CARTÓN LLENO)                   ║');
   console.log('║  💰 VALOR FICHA: $50 COP                                  ║');
   console.log('║  🏦 SISTEMA DE BANCO: ACTIVO                              ║');
+  console.log('║  🏆 POZOS DINÁMICOS: ACTIVO                               ║');
   console.log('╚═══════════════════════════════════════════════════════════╝');
 });
