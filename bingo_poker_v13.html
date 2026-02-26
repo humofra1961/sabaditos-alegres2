@@ -692,8 +692,43 @@ z-index: 2000;
 </div>
 <h3 style="margin-bottom: 8px;">🃏 Cartas Cantadas (<span id="contadorCartas">0</span>)</h3>
 <div id="cartasPorPintas" class="cartas-por-pintas"></div>
+
 <h3 style="margin: 12px 0 8px 0;">🏆 Los 6 Pozos</h3>
 <div class="pozos-container">
+  <div class="pozo-item" id="pozo-pokino">
+    <div class="pozo-nombre">POKINO</div>
+    <div class="pozo-premio">$50 (1 ficha)</div>
+    <div class="pozo-cartas">5 cartas</div>
+  </div>
+  <div class="pozo-item" id="pozo-cuatroEsquinas">
+    <div class="pozo-nombre">4 ESQ.</div>
+    <div class="pozo-premio">$150 (3 fichas)</div>
+    <div class="pozo-cartas">4 cartas</div>
+  </div>
+  <div class="pozo-item" id="pozo-full">
+    <div class="pozo-nombre">FULL</div>
+    <div class="pozo-premio">$200 (4 fichas)</div>
+    <div class="pozo-cartas">5 cartas</div>
+  </div>
+  <div class="pozo-item" id="pozo-poker">
+    <div class="pozo-nombre">POKER</div>
+    <div class="pozo-premio">$300 (6 fichas)</div>
+    <div class="pozo-cartas">4 cartas</div>
+  </div>
+  <div class="pozo-item" id="pozo-centro">
+    <div class="pozo-nombre">CENTRO</div>
+    <div class="pozo-premio">$250 (5 fichas)</div>
+    <div class="pozo-cartas">1 carta</div>
+  </div>
+  <div class="pozo-item" id="pozo-especial">
+    <div class="pozo-nombre">ESP.</div>
+    <div class="pozo-premio">$500 (10 fichas)</div>
+    <div class="pozo-cartas">25 cartas</div>
+  </div>
+</div>
+
+
+<!--<div class="pozos-container">
 <div class="pozo-item" id="pozo-pokino"><div class="pozo-nombre">POKINO</div><div class="pozo-premio">$50</div><div class="pozo-cartas">5</div></div>
 <div class="pozo-item" id="pozo-cuatroEsquinas"><div class="pozo-nombre">4 ESQ.</div><div class="pozo-premio">$150</div><div class="pozo-cartas">4</div></div>
 <div class="pozo-item" id="pozo-full"><div class="pozo-nombre">FULL</div><div class="pozo-premio">$200</div><div class="pozo-cartas">5</div></div>
@@ -701,7 +736,7 @@ z-index: 2000;
 <div class="pozo-item" id="pozo-centro"><div class="pozo-nombre">CENTRO</div><div class="pozo-premio">$250</div><div class="pozo-cartas">1</div></div>
 <div class="pozo-item" id="pozo-especial"><div class="pozo-nombre">ESP.</div><div class="pozo-premio">$500</div><div class="pozo-cartas">25</div></div>
 </div>
-</div>
+</div>-->
 
 <div class="columna">
 <h3 style="margin-bottom: 8px;">🎯 Mis Cartones</h3>
@@ -930,6 +965,11 @@ if (recaudadoEl) recaudadoEl.textContent = banco.totalRecaudado;
 if (pagadoEl) pagadoEl.textContent = banco.totalPagado;
 });
 
+socket.on('updatePozosDinamicos', (pozos) => {
+  gameState.pozosDinamicos = pozos;
+  actualizarPozosVisuales(pozos);
+});
+
 socket.on('premiosParaVerificar', (data) => {
 console.log('🔍 Premios para verificar:', data);
 renderizarPremiosPendientes(data.premios);
@@ -1024,6 +1064,30 @@ socket.on('reporteFinalGenerado', (reporte) => {
 reporteActual = reporte;
 mostrarReporteFinal(reporte);
 });
+}
+
+function actualizarPozosVisuales(pozos) {
+  Object.keys(pozos).forEach(pozo => {
+    const elemento = document.getElementById(`pozo-${pozo}`);
+    if (elemento) {
+      const pozoData = pozos[pozo];
+      const fichas = Math.floor(pozoData.total / VALOR_FICHA);
+      
+      // Actualizar el premio mostrado
+      const premioEl = elemento.querySelector('.pozo-premio');
+      if (premioEl) {
+        premioEl.textContent = `$${pozoData.total} (${fichas} fichas)`;
+      }
+      
+      // Si está ganado, marcar visualmente
+      if (pozoData.total === pozoData.valor) {
+        elemento.style.opacity = '0.7';
+      } else {
+        elemento.style.opacity = '1';
+        elemento.style.animation = 'pulse 2s infinite';
+      }
+    }
+  });
 }
 
 // ... (resto de las funciones permanecen igual) ...
