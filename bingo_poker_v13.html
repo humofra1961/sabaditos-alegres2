@@ -67,6 +67,8 @@ button.email { background: #EA4335; }
 button.email:hover { background: #B92B1F; }
 button.banco { background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%); }
 button.banco:hover { background: linear-gradient(135deg, #d68910 0%, #c0392b 100%); }
+button.apostar { background: linear-gradient(135deg, #9b59b6 0%, #8e44ad 100%); }
+button.apostar:hover { background: linear-gradient(135deg, #8e44ad 0%, #7d3c98 100%); }
 .status {
 padding: 6px 10px;
 border-radius: 5px;
@@ -317,15 +319,22 @@ border-radius: 6px;
 text-align: center;
 border: 2px solid #f39c12;
 font-size: 0.75em;
+transition: all 0.3s;
 }
 .pozo-item.ganado {
 background: linear-gradient(135deg, rgba(39, 174, 96, 0.5) 0%, rgba(39, 174, 96, 0.4) 100%);
 border-color: #27ae60;
 animation: celebrar 0.5s ease;
 }
+.pozo-item.acumulado {
+animation: pulse 2s infinite;
+border-color: #e74c3c;
+}
 @keyframes celebrar { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.08); } }
+@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.7; } }
 .pozo-nombre { font-weight: bold; margin-bottom: 3px; color: #f39c12; }
-.pozo-premio { color: #27ae60; font-size: 0.9em; font-weight: bold; }
+.pozo-premio { color: #27ae60; font-size: 0.85em; font-weight: bold; margin: 4px 0; }
+.pozo-fichas { color: #3498db; font-size: 0.75em; margin: 2px 0; }
 .pozo-cartas { font-size: 0.7em; opacity: 0.9; margin-top: 2px; }
 .alerta-ganador {
 position: fixed;
@@ -470,6 +479,10 @@ overflow-y: auto;
 border-color: #f39c12;
 max-width: 800px;
 }
+.modal-content.apuesta {
+border-color: #9b59b6;
+max-width: 500px;
+}
 .modal.active { display: flex; }
 .notificacion {
 position: fixed;
@@ -504,7 +517,7 @@ font-size: 0.85em;
 background: linear-gradient(135deg, rgba(241, 196, 15, 0.5) 0%, rgba(231, 76, 60, 0.5) 100%);
 animation: pulse 2s infinite;
 }
-.agregar-monedas-panel, .comprar-fichas-panel {
+.agregar-monedas-panel, .comprar-fichas-panel, .apostar-panel {
 background: rgba(39, 174, 96, 0.25);
 padding: 8px;
 border-radius: 6px;
@@ -514,6 +527,10 @@ border: 1px solid #27ae60;
 .comprar-fichas-panel {
 background: rgba(243, 156, 18, 0.25);
 border: 1px solid #f39c12;
+}
+.apostar-panel {
+background: rgba(155, 89, 182, 0.25);
+border: 1px solid #9b59b6;
 }
 .botones-cantador {
 display: flex;
@@ -573,7 +590,7 @@ button { width: 100%; margin: 3px 0; }
 .align-center { align-items: center; }
 .justify-center { justify-content: center; }
 
-/* ✅ TU MODIFICACIÓN: Panel fijo en esquina inferior derecha */
+/* ✅ TU PANEL FIJO - Esquina Inferior Derecha */
 .panel-cantador-fijo {
 position: fixed;
 bottom: 0;
@@ -586,6 +603,7 @@ border: 5px solid #e74c3c;
 border-radius: 8px;
 background-color: #e0b046;
 z-index: 2000;
+padding: 10px;
 }
 </style>
 </head>
@@ -637,6 +655,14 @@ z-index: 2000;
 </div>
 </div>
 
+<!-- ✅ Panel de Apuestas para Jugadores -->
+<div id="panelApuestas" class="apostar-panel hidden" style="text-align: center; padding: 15px;">
+<h4 style="color: #9b59b6; margin-bottom: 10px;">🎰 ¡Haz tu apuesta para esta partida!</h4>
+<p style="font-size: 0.85em; margin-bottom: 10px;">6 fichas ($300 COP) - 1 ficha para cada uno de los 6 pozos</p>
+<button class="apostar" onclick="apostarEnPozos()" style="font-size: 1em; padding: 10px 20px;">🎰 APOSTAR 6 FICHAS</button>
+<p id="estadoApuesta" style="font-size: 0.8em; margin-top: 10px; opacity: 0.8;"></p>
+</div>
+
 <div class="panel-superior">
 <div id="panelCantador" class="panel-cantador hidden">
 <div class="premios-pendientes-panel">
@@ -662,7 +688,7 @@ z-index: 2000;
 </div>
 </div>
 
-<!-- ✅ TU PANEL FIJO - CORREGIDO -->
+<!-- ✅ TU PANEL FIJO - CORREGIDO CON ID -->
 <div id="panelCantadorFijo" class="panel-cantador-fijo hidden">
 <h3 style="margin-bottom: 5px; font-size: 1.2em;">🎤 Panel del Cantador</h3>
 <div class="botones-cantador">
@@ -692,51 +718,46 @@ z-index: 2000;
 </div>
 <h3 style="margin-bottom: 8px;">🃏 Cartas Cantadas (<span id="contadorCartas">0</span>)</h3>
 <div id="cartasPorPintas" class="cartas-por-pintas"></div>
-
-<h3 style="margin: 12px 0 8px 0;">🏆 Los 6 Pozos</h3>
+<h3 style="margin: 12px 0 8px 0;">🏆 Los 6 Pozos (Valores Dinámicos)</h3>
 <div class="pozos-container">
-  <div class="pozo-item" id="pozo-pokino">
-    <div class="pozo-nombre">POKINO</div>
-    <div class="pozo-premio">$50 (1 ficha)</div>
-    <div class="pozo-cartas">5 cartas</div>
-  </div>
-  <div class="pozo-item" id="pozo-cuatroEsquinas">
-    <div class="pozo-nombre">4 ESQ.</div>
-    <div class="pozo-premio">$150 (3 fichas)</div>
-    <div class="pozo-cartas">4 cartas</div>
-  </div>
-  <div class="pozo-item" id="pozo-full">
-    <div class="pozo-nombre">FULL</div>
-    <div class="pozo-premio">$200 (4 fichas)</div>
-    <div class="pozo-cartas">5 cartas</div>
-  </div>
-  <div class="pozo-item" id="pozo-poker">
-    <div class="pozo-nombre">POKER</div>
-    <div class="pozo-premio">$300 (6 fichas)</div>
-    <div class="pozo-cartas">4 cartas</div>
-  </div>
-  <div class="pozo-item" id="pozo-centro">
-    <div class="pozo-nombre">CENTRO</div>
-    <div class="pozo-premio">$250 (5 fichas)</div>
-    <div class="pozo-cartas">1 carta</div>
-  </div>
-  <div class="pozo-item" id="pozo-especial">
-    <div class="pozo-nombre">ESP.</div>
-    <div class="pozo-premio">$500 (10 fichas)</div>
-    <div class="pozo-cartas">25 cartas</div>
-  </div>
+<div class="pozo-item" id="pozo-pokino">
+<div class="pozo-nombre">POKINO</div>
+<div class="pozo-premio">$50</div>
+<div class="pozo-fichas">1 ficha</div>
+<div class="pozo-cartas">5 cartas</div>
 </div>
-
-
-<!--<div class="pozos-container">
-<div class="pozo-item" id="pozo-pokino"><div class="pozo-nombre">POKINO</div><div class="pozo-premio">$50</div><div class="pozo-cartas">5</div></div>
-<div class="pozo-item" id="pozo-cuatroEsquinas"><div class="pozo-nombre">4 ESQ.</div><div class="pozo-premio">$150</div><div class="pozo-cartas">4</div></div>
-<div class="pozo-item" id="pozo-full"><div class="pozo-nombre">FULL</div><div class="pozo-premio">$200</div><div class="pozo-cartas">5</div></div>
-<div class="pozo-item" id="pozo-poker"><div class="pozo-nombre">POKER</div><div class="pozo-premio">$300</div><div class="pozo-cartas">4</div></div>
-<div class="pozo-item" id="pozo-centro"><div class="pozo-nombre">CENTRO</div><div class="pozo-premio">$250</div><div class="pozo-cartas">1</div></div>
-<div class="pozo-item" id="pozo-especial"><div class="pozo-nombre">ESP.</div><div class="pozo-premio">$500</div><div class="pozo-cartas">25</div></div>
+<div class="pozo-item" id="pozo-cuatroEsquinas">
+<div class="pozo-nombre">4 ESQ.</div>
+<div class="pozo-premio">$50</div>
+<div class="pozo-fichas">1 ficha</div>
+<div class="pozo-cartas">4 cartas</div>
 </div>
-</div>-->
+<div class="pozo-item" id="pozo-full">
+<div class="pozo-nombre">FULL</div>
+<div class="pozo-premio">$50</div>
+<div class="pozo-fichas">1 ficha</div>
+<div class="pozo-cartas">5 cartas</div>
+</div>
+<div class="pozo-item" id="pozo-poker">
+<div class="pozo-nombre">POKER</div>
+<div class="pozo-premio">$50</div>
+<div class="pozo-fichas">1 ficha</div>
+<div class="pozo-cartas">4 cartas</div>
+</div>
+<div class="pozo-item" id="pozo-centro">
+<div class="pozo-nombre">CENTRO</div>
+<div class="pozo-premio">$50</div>
+<div class="pozo-fichas">1 ficha</div>
+<div class="pozo-cartas">1 carta</div>
+</div>
+<div class="pozo-item" id="pozo-especial">
+<div class="pozo-nombre">ESP.</div>
+<div class="pozo-premio">$50</div>
+<div class="pozo-fichas">1 ficha</div>
+<div class="pozo-cartas">25 cartas</div>
+</div>
+</div>
+</div>
 
 <div class="columna">
 <h3 style="margin-bottom: 8px;">🎯 Mis Cartones</h3>
@@ -817,6 +838,7 @@ let nombreActual = '';
 let gameState = {};
 let premioPendiente = null;
 let reporteActual = null;
+let yaAposto = false;
 const colores = {'♠': 'black', '♣': 'black', '♥': 'red', '♦': 'red'};
 const VALOR_FICHA = 50;
 const pozosInfo = {
@@ -878,6 +900,9 @@ const partidaEl = document.getElementById('partidaActual');
 if (partidaEl) partidaEl.textContent = state.partidaActual;
 actualizarIndicadorPartida(state.partidaActual);
 }
+// Resetear estado de apuesta al cargar nueva partida
+yaAposto = false;
+actualizarPanelApuestas();
 });
 
 socket.on('updateJugadores', (jugadores) => {
@@ -938,6 +963,7 @@ indicator.textContent = 'Fase: Jugando';
 seleccion.classList.add('hidden');
 }
 }
+actualizarPanelApuestas();
 });
 
 socket.on('updateCantador', (email) => {
@@ -965,9 +991,17 @@ if (recaudadoEl) recaudadoEl.textContent = banco.totalRecaudado;
 if (pagadoEl) pagadoEl.textContent = banco.totalPagado;
 });
 
+// ✅ NUEVO: Evento para actualizar pozos dinámicos
 socket.on('updatePozosDinamicos', (pozos) => {
-  gameState.pozosDinamicos = pozos;
-  actualizarPozosVisuales(pozos);
+console.log('🏆 Actualizando pozos dinámicos:', pozos);
+gameState.pozosDinamicos = pozos;
+actualizarPozosVisuales(pozos);
+});
+
+socket.on('pokinoIniciado', (data) => {
+mostrarNotificacion(`🎰 ${data.mensaje}`, 'success', true);
+yaAposto = false;
+actualizarPanelApuestas();
 });
 
 socket.on('premiosParaVerificar', (data) => {
@@ -1002,7 +1036,7 @@ mostrarNotificacion(data.mensaje, 'success');
 });
 
 socket.on('premioConfirmado', (data) => {
-mostrarNotificacion(`✅ ${data.jugador} ganó ${data.pozo} ($${data.premio})`, 'success');
+mostrarNotificacion(`✅ ${data.jugador} ganó ${data.pozo} ($${data.premio} - ${data.fichas} fichas)`, 'success');
 const alerta = document.getElementById('alertaGanador');
 if (alerta) alerta.classList.add('hidden');
 premioPendiente = null;
@@ -1046,6 +1080,7 @@ actualizarIndicadorPartida(gameState.partidaActual, true);
 } else {
 mostrarNotificacion(data.mensaje, 'success');
 }
+actualizarPanelApuestas();
 });
 
 socket.on('siguientePartida', (data) => {
@@ -1053,6 +1088,8 @@ const partidaEl = document.getElementById('partidaActual');
 if (partidaEl) partidaEl.textContent = data.partida;
 actualizarIndicadorPartida(data.partida, data.esEspecial);
 mostrarNotificacion(data.mensaje, 'success', data.esEspecial);
+yaAposto = false;
+actualizarPanelApuestas();
 });
 
 socket.on('mazoAgotado', (data) => {
@@ -1066,31 +1103,69 @@ mostrarReporteFinal(reporte);
 });
 }
 
+// ✅ NUEVA FUNCIÓN: Actualizar visualización de pozos
 function actualizarPozosVisuales(pozos) {
-  Object.keys(pozos).forEach(pozo => {
-    const elemento = document.getElementById(`pozo-${pozo}`);
-    if (elemento) {
-      const pozoData = pozos[pozo];
-      const fichas = Math.floor(pozoData.total / VALOR_FICHA);
-      
-      // Actualizar el premio mostrado
-      const premioEl = elemento.querySelector('.pozo-premio');
-      if (premioEl) {
-        premioEl.textContent = `$${pozoData.total} (${fichas} fichas)`;
-      }
-      
-      // Si está ganado, marcar visualmente
-      if (pozoData.total === pozoData.valor) {
-        elemento.style.opacity = '0.7';
-      } else {
-        elemento.style.opacity = '1';
-        elemento.style.animation = 'pulse 2s infinite';
-      }
-    }
-  });
+if (!pozos) return;
+
+Object.keys(pozos).forEach(pozo => {
+const elemento = document.getElementById(`pozo-${pozo}`);
+if (elemento) {
+const pozoData = pozos[pozo];
+const premioEl = elemento.querySelector('.pozo-premio');
+const fichasEl = elemento.querySelector('.pozo-fichas');
+
+if (premioEl) {
+premioEl.textContent = `$${pozoData.total} (${pozoData.fichas} fichas)`;
+}
+if (fichasEl) {
+fichasEl.textContent = `${pozoData.fichas} ficha${pozoData.fichas > 1 ? 's' : ''}`;
 }
 
-// ... (resto de las funciones permanecen igual) ...
+// Si tiene acumulado, agregar animación
+if (pozoData.acumulado > 0) {
+elemento.classList.add('acumulado');
+} else {
+elemento.classList.remove('acumulado');
+}
+}
+});
+}
+
+// ✅ NUEVA FUNCIÓN: Actualizar panel de apuestas
+function actualizarPanelApuestas() {
+const panel = document.getElementById('panelApuestas');
+const estadoEl = document.getElementById('estadoApuesta');
+
+if (!panel || !gameState.faseJuego) return;
+
+// Solo mostrar en fase de juego y si no ha apostado
+if (gameState.faseJuego === 'jugando' && !yaAposto) {
+panel.classList.remove('hidden');
+if (estadoEl) {
+estadoEl.textContent = 'Haz tu apuesta antes de que comience el juego';
+}
+} else if (yaAposto) {
+panel.classList.add('hidden');
+if (estadoEl) {
+estadoEl.textContent = '✅ Ya apostaste en esta partida';
+estadoEl.style.color = '#27ae60';
+}
+} else {
+panel.classList.add('hidden');
+}
+}
+
+// ✅ NUEVA FUNCIÓN: Apostar en pozos
+function apostarEnPozos() {
+if (yaAposto) {
+mostrarNotificacion('❌ Ya apostaste en esta partida', 'error');
+return;
+}
+
+socket.emit('apostarEnPozos', emailActual);
+yaAposto = true;
+actualizarPanelApuestas();
+}
 
 function renderizarPremiosPendientes(premios) {
 const container = document.getElementById('premiosPendientesLista');
@@ -1104,6 +1179,7 @@ container.innerHTML = premios.map(premio => `
 <strong style="color: #f39c12;">${premio.nombrePozo}</strong> -
 <span style="color: #27ae60;">${premio.nombreCarton}</span> -
 <span>${premio.jugador}</span>
+<div style="font-size: 0.75em; color: #2ecc71; margin-top: 3px;">$${premio.premio} (${premio.fichas} fichas)</div>
 </div>
 `).join('');
 }
@@ -1171,6 +1247,10 @@ const btnSerCantador = document.getElementById('btnSerCantador');
 if (panel) panel.classList.remove('hidden');
 if (panelFijo) panelFijo.classList.remove('hidden');
 if (btnSerCantador) btnSerCantador.style.display = 'none';
+}
+actualizarPanelApuestas();
+if (gameState.pozosDinamicos) {
+actualizarPozosVisuales(gameState.pozosDinamicos);
 }
 }
 
