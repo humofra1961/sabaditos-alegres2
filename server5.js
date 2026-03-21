@@ -137,7 +137,7 @@ function generarCartonesFijos() {
   // ✅ CARTÓN 13: Generado por código (para completar)
   const distribuciones = [
     // Cartón 1 - PDF Oficial
-    { poker: 'A', full2: '8', full3: 'V' },
+    { poker: 'A', full2: 'K', full3: '5' },
     
     // Cartón 2 - PDF Oficial
     { poker: '8', full2: '10', full3: '7' },
@@ -158,7 +158,7 @@ function generarCartonesFijos() {
     { poker: 'K', full2: '8', full3: '10' },
     
     // Cartón 8 - PDF Oficial
-    { poker: '8', full2: '5', full3: 'J' },
+    { poker: '8', full2: '5', full3: 'K' },
     
     // Cartón 9 - PDF Oficial
     { poker: 'Q', full2: '10', full3: '2' },
