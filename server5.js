@@ -1,7 +1,7 @@
 // ============================================================================
 // 🎪 BINGO POKER - SABADITO ALEGRE - SERVIDOR PRINCIPAL
 // ============================================================================
-// Versión: 12.0 (MECÁNICA DE APUESTAS CORRECTA - 6 FICHAS POR JUGADOR)
+// Versión: 12.0 (CARTONES OFICIALES PDF + POZOS DINÁMICOS)
 // ============================================================================
 
 const express = require('express');
@@ -43,7 +43,7 @@ const pozosConfig = {
     nombre: 'POKINO', 
     cartas: 5, 
     tipo: 'linea',
-    acumula: false, // POKINO NO acumula entre partidas
+    acumula: false,
     fichasPorJugador: 1
   },
   cuatroEsquinas: { 
@@ -84,7 +84,7 @@ const pozosConfig = {
     cartas: 25, 
     tipo: 'cartonLleno',
     acumula: true,
-    acumulaPartidas: true, // ESPECIAL acumula las 6 partidas
+    acumulaPartidas: true,
     fichasPorJugador: 1
   }
 };
@@ -133,20 +133,47 @@ function generarCartonesFijos() {
     }
   }
   
+  // ✅ CARTONES 1-12: Datos extraídos de los PDFs oficiales
+  // ✅ CARTÓN 13: Generado por código (para completar)
   const distribuciones = [
-    { poker: 'A', full2: '10', full3: '4' },
-    { poker: '2', full2: 'J', full3: '6' },
-    { poker: '3', full2: '8', full3: 'K' },
-    { poker: '4', full2: 'Q', full3: '5' },
-    { poker: '5', full2: '6', full3: 'K' },
-    { poker: '6', full2: '9', full3: '7' },
-    { poker: '7', full2: '8', full3: '10' },
+    // Cartón 1 - PDF Oficial
+    { poker: 'A', full2: '8', full3: 'V' },
+    
+    // Cartón 2 - PDF Oficial
+    { poker: '8', full2: '10', full3: '7' },
+    
+    // Cartón 3 - PDF Oficial
+    { poker: '4', full2: '8', full3: '6' },
+    
+    // Cartón 4 - PDF Oficial
+    { poker: '5', full2: '9', full3: '6' },
+    
+    // Cartón 5 - PDF Oficial
+    { poker: '9', full2: '6', full3: '8' },
+    
+    // Cartón 6 - PDF Oficial
     { poker: '8', full2: '6', full3: '7' },
-    { poker: '9', full2: '2', full3: '10' },
-    { poker: '10', full2: '9', full3: '6' },
-    { poker: 'J', full2: 'Q', full3: 'K' },
-    { poker: 'Q', full2: 'A', full3: 'K' },
-    { poker: 'K', full2: '9', full3: '6' }
+    
+    // Cartón 7 - PDF Oficial
+    { poker: 'K', full2: '8', full3: '10' },
+    
+    // Cartón 8 - PDF Oficial
+    { poker: '8', full2: '5', full3: 'J' },
+    
+    // Cartón 9 - PDF Oficial
+    { poker: 'Q', full2: '10', full3: '2' },
+    
+    // Cartón 10 - PDF Oficial
+    { poker: '5', full2: '6', full3: 'Q' },
+    
+    // Cartón 11 - PDF Oficial
+    { poker: '10', full2: '5', full3: '9' },
+    
+    // Cartón 12 - PDF Oficial
+    { poker: 'K', full2: '9', full3: '6' },
+    
+    // Cartón 13 - Generado por código (complemento)
+    { poker: 'J', full2: 'Q', full3: 'K' }
   ];
   
   for (let numCarton = 1; numCarton <= 13; numCarton++) {
@@ -267,7 +294,7 @@ const gameState = {
     totalPagado: 0,
     transacciones: []
   },
-  // ✅ Pozos Dinámicos con Mecánica Correcta
+  // ✅ Pozos Dinámicos (Inician en 0)
   pozosDinamicos: {
     pokino: { 
       valorBase: 0, 
@@ -434,7 +461,7 @@ io.on('connection', (socket) => {
     console.log(`💰 ${gameState.jugadores[email].nombre} compró ${cantidadFichas} fichas por $${costoTotal} COP`);
   });
   
-  // ✅ NUEVO: Apostar en pozos al iniciar partida (6 fichas por jugador)
+  // ✅ Apostar en pozos (6 fichas por jugador por partida)
   socket.on('apostarEnPozos', (email) => {
     if (!gameState.jugadores[email]) {
       socket.emit('error', 'Jugador no encontrado.');
@@ -442,26 +469,23 @@ io.on('connection', (socket) => {
     }
     
     const jugador = gameState.jugadores[email];
-    const fichasRequeridas = 6; // 1 ficha para cada uno de los 6 pozos
-    const costoTotal = fichasRequeridas * VALOR_FICHA; // $300 COP
+    const fichasRequeridas = 6;
+    const costoTotal = fichasRequeridas * VALOR_FICHA;
     
     if (jugador.monedas < fichasRequeridas) {
       socket.emit('error', `No tienes suficientes fichas. Necesitas ${fichasRequeridas} fichas ($${costoTotal} COP) para apostar en los 6 pozos.`);
       return;
     }
     
-    // ✅ Descontar fichas del jugador
     jugador.monedas -= fichasRequeridas;
     jugador.fichasApostadas += fichasRequeridas;
     
-    // ✅ Actualizar cada pozo (1 ficha por pozo)
     Object.keys(gameState.pozosDinamicos).forEach(pozo => {
       gameState.pozosDinamicos[pozo].acumulado += VALOR_FICHA;
       gameState.pozosDinamicos[pozo].total = gameState.pozosDinamicos[pozo].valorBase + gameState.pozosDinamicos[pozo].acumulado;
       gameState.pozosDinamicos[pozo].fichas = Math.floor(gameState.pozosDinamicos[pozo].total / VALOR_FICHA);
     });
     
-    // ✅ Registrar transacción
     jugador.historialTransacciones.push({
       tipo: 'APUESTA_POZOS',
       fichas: fichasRequeridas,
@@ -504,53 +528,50 @@ io.on('connection', (socket) => {
     });
   });
   
+  // ✅ Seleccionar cartón (SIN costo - el costo es al apostar)
   socket.on('seleccionarCarton', (numero, email, nombre) => {
-  console.log(`🎴 Intentando seleccionar cartón ${numero} para ${email}`);
-  
-  if (gameState.faseJuego !== 'seleccion') {
-    socket.emit('error', 'La selección está cerrada.');
-    return;
-  }
-  
-  const carton = gameState.cartones.find(c => c.numero === numero);
-  
-  if (!carton) {
-    socket.emit('error', 'Cartón no encontrado.');
-    return;
-  }
-  
-  if (!carton.cartas || !Array.isArray(carton.cartas) || carton.cartas.length !== 25) {
-    console.error(`❌ Cartón ${numero} inválido:`, carton);
-    socket.emit('error', 'Cartón inválido.');
-    return;
-  }
-  
-  if (gameState.jugadores[email].cartones.length >= 3 && !carton.dueño) {
-    socket.emit('error', 'Máximo 3 cartones por jugador.');
-    return;
-  }
-  
-  if (!carton.dueño || carton.dueño === email) {
-    carton.dueño = email;
+    console.log(`🎴 Intentando seleccionar cartón ${numero} para ${email}`);
     
-    if (!gameState.jugadores[email].cartones.includes(numero)) {
-      gameState.jugadores[email].cartones.push(numero);
+    if (gameState.faseJuego !== 'seleccion') {
+      socket.emit('error', 'La selección está cerrada.');
+      return;
     }
     
-    // ✅ ELIMINADO: Ya NO se descuentan fichas al seleccionar cartón
-    // Las 6 fichas se descuentan cuando el jugador hace la apuesta
-    // al iniciar la partida (cuando el cantador cambia a "Jugando")
+    const carton = gameState.cartones.find(c => c.numero === numero);
     
-    console.log(`✅ Cartón ${numero} asignado a ${email} (sin costo)`);
+    if (!carton) {
+      socket.emit('error', 'Cartón no encontrado.');
+      return;
+    }
     
-    io.emit('updateCartones', gameState.cartones);
-    io.emit('updateJugadores', gameState.jugadores);
-    io.emit('updateEstadisticas', gameState.estadisticas);
-    // ✅ ELIMINADO: No se actualizan pozos dinámicos aquí
-  } else {
-    socket.emit('cartonBloqueado', numero);
-  }
-});
+    if (!carton.cartas || !Array.isArray(carton.cartas) || carton.cartas.length !== 25) {
+      console.error(`❌ Cartón ${numero} inválido:`, carton);
+      socket.emit('error', 'Cartón inválido.');
+      return;
+    }
+    
+    if (gameState.jugadores[email].cartones.length >= 3 && !carton.dueño) {
+      socket.emit('error', 'Máximo 3 cartones por jugador.');
+      return;
+    }
+    
+    if (!carton.dueño || carton.dueño === email) {
+      carton.dueño = email;
+      
+      if (!gameState.jugadores[email].cartones.includes(numero)) {
+        gameState.jugadores[email].cartones.push(numero);
+      }
+      
+      // ✅ SIN COSTO: Las fichas se descuentan al apostar, no al seleccionar
+      console.log(`✅ Cartón ${numero} asignado a ${email} (sin costo)`);
+      
+      io.emit('updateCartones', gameState.cartones);
+      io.emit('updateJugadores', gameState.jugadores);
+      io.emit('updateEstadisticas', gameState.estadisticas);
+    } else {
+      socket.emit('cartonBloqueado', numero);
+    }
+  });
   
   socket.on('liberarCarton', (numero, email) => {
     if (gameState.faseJuego !== 'seleccion') {
@@ -560,11 +581,6 @@ io.on('connection', (socket) => {
     
     const carton = gameState.cartones.find(c => c.numero === numero);
     if (carton && carton.dueño === email) {
-      const reembolso = 6;
-      gameState.jugadores[email].monedas += reembolso;
-      gameState.estadisticas[email].monedas += reembolso;
-      gameState.estadisticas[email].perdidas -= reembolso;
-      
       carton.dueño = null;
       gameState.jugadores[email].cartones = gameState.jugadores[email].cartones.filter(n => n !== numero);
       
@@ -842,21 +858,17 @@ io.on('connection', (socket) => {
       
       // ✅ Resetear pozo según mecánica
       if (pozo === 'pokino') {
-        // POKINO se resetea completamente cada partida
         gameState.pozosDinamicos[pozo].acumulado = 0;
         gameState.pozosDinamicos[pozo].total = gameState.pozosDinamicos[pozo].valorBase;
         gameState.pozosDinamicos[pozo].fichas = Math.floor(gameState.pozosDinamicos[pozo].total / VALOR_FICHA);
       } else if (pozo === 'especial') {
         // ESPECIAL NO se resetea hasta finalizar las 6 partidas
-        // Se mantiene acumulado
       } else {
-        // Los otros 4 pozos se resetean al ser ganados
         gameState.pozosDinamicos[pozo].acumulado = 0;
         gameState.pozosDinamicos[pozo].total = gameState.pozosDinamicos[pozo].valorBase;
         gameState.pozosDinamicos[pozo].fichas = Math.floor(gameState.pozosDinamicos[pozo].total / VALOR_FICHA);
       }
       
-      // ✅ Actualizar banco
       gameState.banco.totalPagado += premio;
       gameState.banco.transacciones.push({
         tipo: 'PREMIO',
@@ -989,7 +1001,6 @@ io.on('connection', (socket) => {
     gameState.cantador = null;
     gameState.cantadorAnterior = null;
     
-    // ✅ Resetear banco
     gameState.banco = {
       totalRecaudado: 0,
       totalPagado: 0,
@@ -1253,12 +1264,12 @@ server.listen(PORT, '0.0.0.0', () => {
   console.log('╠═══════════════════════════════════════════════════════════╣');
   console.log(`║  📡 Puerto: ${PORT}                                        `);
   console.log(`║  🌐 URL: https://sabaditos-alegres.onrender.com            `);
-  console.log('║  🎴 13 cartones fijos con 25 cartas cada uno             ║');
+  console.log('║  🎴 13 cartones fijos (12 PDFs + 1 código)               ║');
   console.log('║  🏆 6 Pozos: POKINO, 4 ESQUINAS, FULL, POKER, CENTRO, ESPECIAL ║');
   console.log('║  ⭐ ESPECIAL: 25 cartas (CARTÓN LLENO)                   ║');
   console.log('║  💰 VALOR FICHA: $50 COP                                  ║');
   console.log('║  🎰 APUESTA POR PARTIDA: 6 fichas ($300 COP)             ║');
   console.log('║  🏦 SISTEMA DE BANCO: ACTIVO                              ║');
-  console.log('║  🏆 POZOS DINÁMICOS: ACTIVO                               ║');
+  console.log('║  🏆 POZOS DINÁMICOS: Inician en $0                        ║');
   console.log('╚═══════════════════════════════════════════════════════════╝');
 });

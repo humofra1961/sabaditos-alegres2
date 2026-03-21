@@ -900,7 +900,6 @@ const partidaEl = document.getElementById('partidaActual');
 if (partidaEl) partidaEl.textContent = state.partidaActual;
 actualizarIndicadorPartida(state.partidaActual);
 }
-// Resetear estado de apuesta al cargar nueva partida
 yaAposto = false;
 actualizarPanelApuestas();
 });
@@ -996,12 +995,6 @@ socket.on('updatePozosDinamicos', (pozos) => {
 console.log('🏆 Actualizando pozos dinámicos:', pozos);
 gameState.pozosDinamicos = pozos;
 actualizarPozosVisuales(pozos);
-});
-
-socket.on('pokinoIniciado', (data) => {
-mostrarNotificacion(`🎰 ${data.mensaje}`, 'success', true);
-yaAposto = false;
-actualizarPanelApuestas();
 });
 
 socket.on('premiosParaVerificar', (data) => {
@@ -1121,7 +1114,6 @@ if (fichasEl) {
 fichasEl.textContent = `${pozoData.fichas} ficha${pozoData.fichas > 1 ? 's' : ''}`;
 }
 
-// Si tiene acumulado, agregar animación
 if (pozoData.acumulado > 0) {
 elemento.classList.add('acumulado');
 } else {
@@ -1138,7 +1130,6 @@ const estadoEl = document.getElementById('estadoApuesta');
 
 if (!panel || !gameState.faseJuego) return;
 
-// Solo mostrar en fase de juego y si no ha apostado
 if (gameState.faseJuego === 'jugando' && !yaAposto) {
 panel.classList.remove('hidden');
 if (estadoEl) {
@@ -1435,9 +1426,9 @@ function cerrarModalBalance() {
 document.getElementById('modalBalance').classList.remove('active');
 }
 
+// ✅ NUEVA FUNCIÓN: Renderizar grid con imágenes PNG
 function renderizarGridCartones() {
 const grid = document.getElementById('gridCartones');
-if (!grid) return;
 const cartones = gameState.cartones || [];
 if (!cartones || cartones.length === 0) {
 grid.innerHTML = '<p>Cargando cartones...</p>';
@@ -1446,9 +1437,17 @@ return;
 grid.innerHTML = cartones.map(carton => {
 const seleccionado = carton.dueño === emailActual;
 const bloqueado = carton.dueño && carton.dueño !== emailActual;
+
+// ✅ AGREGAR: Mostrar imagen para cartones 1-12
+const imagenCarton = carton.numero <= 12
+? `<img src="/carton_${carton.numero}.png" alt="Cartón ${carton.numero}"
+style="width: 100%; border-radius: 6px; margin-bottom: 8px;">`
+: '';
+
 return `
 <div class="carton-item ${seleccionado ? 'seleccionado' : ''} ${bloqueado ? 'bloqueado' : ''}"
 onclick="${!bloqueado ? `seleccionarCarton(${carton.numero})` : ''}">
+${imagenCarton}
 <strong style="color: #f39c12;">${carton.nombre}</strong>
 <p style="font-size: 0.75em; margin: 4px 0;">${seleccionado ? '✅ Tuyo' : bloqueado ? '🔒 Ocupado' : '📋 Libre'}</p>
 </div>
@@ -1466,9 +1465,9 @@ socket.emit('seleccionarCarton', numero, emailActual, nombreActual);
 }
 }
 
+// ✅ NUEVA FUNCIÓN: Renderizar mis cartones con imágenes PNG
 function renderizarMisCartones() {
 const container = document.getElementById('misCartones');
-if (!container) return;
 const cartones = gameState.cartones || [];
 if (!cartones || cartones.length === 0) {
 container.innerHTML = '<p style="text-align: center; padding: 30px; color: #95a5a6;">Cargando cartones...</p>';
@@ -1483,8 +1482,16 @@ container.innerHTML = misCartones.map(carton => {
 if (!carton.cartas || !Array.isArray(carton.cartas) || carton.cartas.length !== 25) {
 return `<div class="carton-bingo-pro"><p style="color: #e74c3c; text-align: center;">Error en cartón ${carton.numero}</p></div>`;
 }
+
+// ✅ AGREGAR: Mostrar imagen para cartones 1-12
+const imagenCarton = carton.numero <= 12
+? `<img src="/carton_${carton.numero}.png" alt="Cartón ${carton.numero}"
+style="width: 100%; border-radius: 8px; margin-bottom: 10px;">`
+: '';
+
 return `
 <div class="carton-bingo-pro">
+${imagenCarton}
 <div class="carton-header-pro">${carton.nombre}</div>
 <div class="carton-info-pro">
 <span>★ Poker: ${carton.valorPoker}</span>
@@ -1512,7 +1519,8 @@ ${(carton.pozos && carton.pozos[pozo]) ? 'disabled' : ''}>${pozosInfo[pozo].nomb
 `).join('')}
 </div>
 </div>
-`}).join('');
+`;
+}).join('');
 }
 
 function taparCarta(numeroCarton, index) {
