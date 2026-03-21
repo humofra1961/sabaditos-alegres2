@@ -1467,60 +1467,87 @@ socket.emit('seleccionarCarton', numero, emailActual, nombreActual);
 
 // ✅ NUEVA FUNCIÓN: Renderizar mis cartones con imágenes PNG
 function renderizarMisCartones() {
-const container = document.getElementById('misCartones');
-const cartones = gameState.cartones || [];
-if (!cartones || cartones.length === 0) {
-container.innerHTML = '<p style="text-align: center; padding: 30px; color: #95a5a6;">Cargando cartones...</p>';
-return;
-}
-const misCartones = cartones.filter(c => c.dueño === emailActual);
-if (!misCartones || misCartones.length === 0) {
-container.innerHTML = '<p style="text-align: center; padding: 30px; color: #95a5a6; font-size: 0.9em;">Selecciona cartones arriba para jugar</p>';
-return;
-}
-container.innerHTML = misCartones.map(carton => {
-if (!carton.cartas || !Array.isArray(carton.cartas) || carton.cartas.length !== 25) {
-return `<div class="carton-bingo-pro"><p style="color: #e74c3c; text-align: center;">Error en cartón ${carton.numero}</p></div>`;
-}
+  const container = document.getElementById('misCartones');
+  const cartones = gameState.cartones || [];
+  
+  if (!cartones || cartones.length === 0) {
+    container.innerHTML = '<p style="text-align: center; padding: 30px; color: #95a5a6;">Cargando cartones...</p>';
+    return;
+  }
+  
+  const misCartones = cartones.filter(c => c.dueño === emailActual);
+  
+  if (!misCartones || misCartones.length === 0) {
+    container.innerHTML = '<p style="text-align: center; padding: 30px; color: #95a5a6; font-size: 0.9em;">Selecciona cartones arriba para jugar</p>';
+    return;
+  }
+  
+  container.innerHTML = misCartones.map(carton => {
+    if (!carton.cartas || !Array.isArray(carton.cartas) || carton.cartas.length !== 25) {
+      return `<div class="carton-bingo-pro"><p style="color: #e74c3c; text-align: center;">Error en cartón ${carton.numero}</p></div>`;
+    }
 
-// ✅ AGREGAR: Mostrar imagen para cartones 1-12
-const imagenCarton = carton.numero <= 12
-? `<img src="/carton_${carton.numero}.png" alt="Cartón ${carton.numero}"
-style="width: 100%; border-radius: 8px; margin-bottom: 10px;">`
-: '';
-
-return `
-<div class="carton-bingo-pro">
-${imagenCarton}
-<div class="carton-header-pro">${carton.nombre}</div>
-<div class="carton-info-pro">
-<span>★ Poker: ${carton.valorPoker}</span>
-<span>★ Full: ${carton.valorFull2}+${carton.valorFull3}</span>
-</div>
-<div class="carton-board-pro">
-${carton.cartas.map((carta, index) => {
-if (!carta) return `<div class="carta-pro">?</div>`;
-const estaTapada = carton.tapadas && carton.tapadas[index] ? 'tapada' : '';
-const tipoClase = carta.tipo || '';
-return `
-<div class="carta-pro ${tipoClase} ${estaTapada}"
-onclick="taparCarta(${carton.numero}, ${index})"
-style="cursor: pointer !important; pointer-events: auto !important;">
-<div style="color: ${colores[carta.palo]}; font-weight: bold; font-size: 1.1em;">${carta.valor}</div>
-<div style="color: ${colores[carta.palo]}; font-size: 1.3em;">${carta.palo}</div>
-</div>
-`}).join('')}
-</div>
-<div class="botones-pozos">
-${Object.keys(pozosInfo).map(pozo => `
-<button class="boton-pozo ${carton.pozos && carton.pozos[pozo] ? 'reclamado' : ''}"
-onclick="reclamarPremio(${carton.numero}, '${pozo}')"
-${(carton.pozos && carton.pozos[pozo]) ? 'disabled' : ''}>${pozosInfo[pozo].nombre}</button>
-`).join('')}
-</div>
-</div>
-`;
-}).join('');
+    // ✅ MOSTRAR IMAGEN PNG OFICIAL (cartones 1-12)
+    // ✅ Cartón 13 usa renderizado por código
+    const usarImagenPNG = carton.numero <= 12;
+    
+    return `
+    <div class="carton-bingo-pro" style="padding: 0; overflow: hidden;">
+      <div class="carton-header-pro">${carton.nombre}</div>
+      <div class="carton-info-pro">
+        <span>★ Poker: ${carton.valorPoker}</span>
+        <span>★ Full: ${carton.valorFull2}+${carton.valorFull3}</span>
+      </div>
+      
+      ${usarImagenPNG ? `
+        <!-- ✅ CARTONES 1-12: Imagen PNG oficial con cuadrícula clicable -->
+        <div style="position: relative; width: 100%; max-width: 500px; margin: 0 auto;">
+          <img src="/carton_${carton.numero}.png" alt="${carton.nombre}" 
+               style="width: 100%; display: block; border-radius: 8px;">
+          
+          <!-- ✅ Cuadrícula transparente clicable sobre el PNG -->
+          <div class="carton-board-pro" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; 
+               background: transparent; border: none; padding: 5%;">
+            ${carton.cartas.map((carta, index) => {
+              const estaTapada = carton.tapadas && carton.tapadas[index] ? 'tapada' : '';
+              return `
+              <div class="carta-pro ${estaTapada}" 
+                   onclick="taparCarta(${carton.numero}, ${index})"
+                   style="background: ${estaTapada ? 'rgba(52, 73, 94, 0.85)' : 'transparent'}; 
+                          border: ${estaTapada ? '3px solid #f39c12' : '2px solid transparent'};
+                          cursor: pointer; position: relative; z-index: 10;">
+                ${estaTapada ? '<span style="color: #f39c12; font-size: 1.5em;">✓</span>' : ''}
+              </div>
+            `}).join('')}
+          </div>
+        </div>
+      ` : `
+        <!-- ✅ CARTÓN 13: Renderizado por código (sin PNG) -->
+        <div class="carton-board-pro">
+          ${carton.cartas.map((carta, index) => {
+            const estaTapada = carton.tapadas && carton.tapadas[index] ? 'tapada' : '';
+            const tipoClase = carta.tipo || '';
+            return `
+            <div class="carta-pro ${tipoClase} ${estaTapada}"
+                 onclick="taparCarta(${carton.numero}, ${index})"
+                 style="cursor: pointer !important; pointer-events: auto !important;">
+              <div style="color: ${colores[carta.palo]}; font-weight: bold; font-size: 1.1em;">${carta.valor}</div>
+              <div style="color: ${colores[carta.palo]}; font-size: 1.3em;">${carta.palo}</div>
+            </div>
+          `}).join('')}
+        </div>
+      `}
+      
+      <div class="botones-pozos" style="padding: 10px;">
+        ${Object.keys(pozosInfo).map(pozo => `
+          <button class="boton-pozo ${carton.pozos && carton.pozos[pozo] ? 'reclamado' : ''}"
+                  onclick="reclamarPremio(${carton.numero}, '${pozo}')"
+                  ${(carton.pozos && carton.pozos[pozo]) ? 'disabled' : ''}>${pozosInfo[pozo].nombre}</button>
+        `).join('')}
+      </div>
+    </div>
+    `;
+  }).join('');
 }
 
 function taparCarta(numeroCarton, index) {
