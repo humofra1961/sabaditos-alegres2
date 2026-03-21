@@ -226,14 +226,22 @@ function generarCartonesFijos() {
     cartasCarton.push(...cartasPoker);
     cartasCarton.push(poolCartas.shift());
     for (let i = 0; i < 5; i++) cartasCarton.push(poolCartas.shift());
-
+    
     if (cartasCarton.length !== 25) {
-      console.error(`❌ Cartón #${numCarton} tiene ${cartasCarton.length} cartas. Regenerando...`);
-      numCarton--;
-      continue;
-    }
-
-    cartasCarton = cartasCarton.map((carta, index) => {
+      console.error(`❌ Cartón #${numCarton} tiene ${cartasCarton.length} cartas. Usando valores por defecto...`);
+      // ✅ Crear cartón válido con 25 cartas por defecto
+      cartasCarton = [];
+      for (let i = 0; i < 25; i++) {
+        cartasCarton.push({
+          palo: palos[i % 4],
+          valor: valores[i % 13],
+          color: colores[palos[i % 4]],
+          codigo: palos[i % 4] + valores[i % 13],
+          tipo: i >= 5 && i <= 9 ? 'full' : i >= 15 && i <= 18 ? 'poker' : i === 12 ? 'centro' : ''
+        });
+      }
+    }    
+      cartasCarton = cartasCarton.map((carta, index) => {
       if (index >= 5 && index <= 9) return {...carta, tipo: 'full'};
       if (index >= 15 && index <= 18) return {...carta, tipo: 'poker'};
       if (index >= 10 && index <= 14) return {...carta, tipo: 'especial'};
