@@ -566,6 +566,18 @@ background: rgba(255,255,255,0.05);
 .panel-superior { grid-template-columns: 1fr; }
 .layout-principal { grid-template-columns: 1fr; }
 .pozos-container { grid-template-columns: repeat(2, 1fr); }
+
+.carta-pro img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  border-radius: 4px;
+}
+
+.carta-pro.tapada img {
+  opacity: 0.3;
+}
+
 .carta-pro { font-size: 0.55em; min-width: 18px; }
 input { width: 100%; margin: 3px 0; }
 button { width: 100%; margin: 3px 0; }
@@ -1487,7 +1499,8 @@ return `
 <div class="carta-pro ${tipoClase} ${estaTapada}"
 onclick="taparCarta(${carton.numero}, ${index})"
 style="cursor: pointer !important; pointer-events: auto !important;">
-${estaTapada ? '' : `<img src="/${nombreArchivo}" alt="${carta.valor}${carta.palo}">`}
+${estaTapada ? '' : `<img src="/${nombreArchivo}.png" alt="${carta.valor}${carta.palo}" 
+                      style="width: 100%; height: 100%; object-fit: contain;">`}
 </div>
 `;
 }).join('')}
