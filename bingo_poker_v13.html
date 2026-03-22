@@ -1578,9 +1578,28 @@ ${carton.cartas.map((carta, index) => {
 const estaTapada = carton.tapadas && carton.tapadas[index] ? 'tapada' : '';
 
 // ✅ CONVERSIÓN: "A" → "1" para las imágenes PNG
-const nombreImagen = carta.codigo.replace('A', '1');
+//const nombreImagen = carta.codigo.replace('1', 'A');
+// O si tus imágenes se llaman "1c.png":
+const nombreImagen = carta.codigo;  // Usa el código directo para el src
+<img src="/${nombreImagen}.png" />
 
-return `
+return function verificarPozo(carton, pozo, codigosCantados) { 
+const verificarCartas = (indices) => {
+for (let i of indices) {
+if (!carton.tapadas[i]) {
+console.log(`❌ Carta ${i} no está tapada`);
+return false;
+}
+const carta = carton.cartas[i];
+console.log(`🔍 Verificando carta ${i}: código='${carta.codigo}', enMazo=${codigosCantados.includes(carta.codigo)}`);
+if (!codigosCantados.includes(carta.codigo)) {
+console.log(`❌ Carta ${carta.codigo} NO está en cartas cantadas`);
+console.log(`📋 Cartas cantadas:`, codigosCantados);
+return false;
+}
+}
+return true;
+  };
 <div class="carta-pro ${estaTapada}"
 onclick="taparCarta(${carton.numero}, ${index})"
 style="cursor: pointer !important; pointer-events: auto !important; position: relative;">
