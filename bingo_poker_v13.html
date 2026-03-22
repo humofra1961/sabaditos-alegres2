@@ -242,7 +242,6 @@ aspect-ratio: 3/4;
 background: #fff;
 border-radius: 4px;
 display: flex;
-flex-direction: column;
 align-items: center;
 justify-content: center;
 font-size: 0.65em;
@@ -256,56 +255,43 @@ pointer-events: auto !important;
 user-select: none;
 position: relative;
 z-index: 1;
+overflow: hidden;
 }
 .carta-pro:hover {
 transform: scale(1.1);
 box-shadow: 0 4px 8px rgba(0,0,0,0.3);
 z-index: 20;
 }
+.carta-pro img {
+width: 100%;
+height: 100%;
+object-fit: cover;
+border-radius: 4px;
+}
 .carta-pro.tapada {
 background: linear-gradient(135deg, #34495e 0%, #2c3e50 100%) !important;
-color: transparent !important;
 border: 3px solid #f39c12 !important;
 cursor: pointer !important;
 pointer-events: auto !important;
 z-index: 10 !important;
 }
-.carta-pro.poker:not(.tapada) {
-border: 3px solid #f39c12;
-background: linear-gradient(135deg, #fef9e7 0%, #fcf3cf 100%);
-cursor: pointer !important;
-pointer-events: auto !important;
-z-index: 5;
+.carta-pro.tapada::after {
+content: '✓';
+position: absolute;
+top: 50%;
+left: 50%;
+transform: translate(-50%, -50%);
+color: #f39c12;
+font-size: 2em;
+font-weight: bold;
 }
-.carta-pro.full:not(.tapada) {
-border: 3px solid #9b59b6;
-background: linear-gradient(135deg, #f5eef8 0%, #ebdef0 100%);
-cursor: pointer !important;
-pointer-events: auto !important;
-z-index: 5;
+.carta-pro.tapada img {
+opacity: 0.3;
 }
-.carta-pro.especial:not(.tapada) {
-border: 3px solid #e74c3c;
-background: linear-gradient(135deg, #fdedec 0%, #fadbd8 100%);
-cursor: pointer !important;
-pointer-events: auto !important;
-z-index: 5;
-}
-.carta-pro.centro:not(.tapada) {
-border: 3px solid #27ae60;
-background: linear-gradient(135deg, #e9f7ef 0%, #d5f5e3 100%);
-cursor: pointer !important;
-pointer-events: auto !important;
-z-index: 5;
-}
-.carta-pro.poker.tapada,
-.carta-pro.full.tapada,
-.carta-pro.especial.tapada,
-.carta-pro.centro.tapada {
-background: linear-gradient(135deg, #34495e 0%, #2c3e50 100%) !important;
-color: transparent !important;
-border: 3px solid #f39c12 !important;
-}
+.carta-pro.poker:not(.tapada) { border: 3px solid #f39c12; }
+.carta-pro.full:not(.tapada) { border: 3px solid #9b59b6; }
+.carta-pro.especial:not(.tapada) { border: 3px solid #e74c3c; }
+.carta-pro.centro:not(.tapada) { border: 3px solid #27ae60; }
 .pozos-container {
 display: grid;
 grid-template-columns: repeat(3, 1fr);
@@ -401,6 +387,11 @@ transition: all 0.3s;
 .carton-item:hover { transform: translateY(-3px); background: rgba(52, 152, 219, 0.5); }
 .carton-item.seleccionado { border-color: #27ae60; background: linear-gradient(135deg, rgba(39, 174, 96, 0.5) 0%, rgba(39, 174, 96, 0.4) 100%); }
 .carton-item.bloqueado { border-color: #e74c3c; opacity: 0.65; cursor: not-allowed; background: rgba(231, 76, 60, 0.25); }
+.carton-item img {
+width: 100%;
+border-radius: 6px;
+margin-bottom: 8px;
+}
 .jugadores-lista {
 background: rgba(255,255,255,0.1);
 padding: 8px;
@@ -595,15 +586,15 @@ button { width: 100%; margin: 3px 0; }
 position: fixed;
 bottom: 0;
 right: 0;
-margin-bottom: 10px;
-width: 40%;
-display: flex;
-flex-wrap: wrap;
+margin: 10px;
+width: 45%;
+max-width: 500px;
 border: 5px solid #e74c3c;
 border-radius: 8px;
 background-color: #e0b046;
 z-index: 2000;
 padding: 10px;
+box-shadow: 0 4px 15px rgba(0,0,0,0.5);
 }
 </style>
 </head>
@@ -839,7 +830,6 @@ let gameState = {};
 let premioPendiente = null;
 let reporteActual = null;
 let yaAposto = false;
-const colores = {'♠': 'black', '♣': 'black', '♥': 'red', '♦': 'red'};
 const VALOR_FICHA = 50;
 const pozosInfo = {
 pokino: { nombre: 'POKINO', premio: 50 },
@@ -940,7 +930,7 @@ socket.on('updateUltimaCarta', (carta) => {
 const display = document.getElementById('ultimaCartaDisplay');
 if (display) {
 if (carta) {
-display.innerHTML = `<span style="color: ${colores[carta.palo]}">${carta.valor}${carta.palo}</span>`;
+display.innerHTML = `<span style="color: ${carta.color || '#000'}">${carta.valor}${carta.palo}</span>`;
 } else {
 display.textContent = '-';
 }
@@ -990,7 +980,6 @@ if (recaudadoEl) recaudadoEl.textContent = banco.totalRecaudado;
 if (pagadoEl) pagadoEl.textContent = banco.totalPagado;
 });
 
-// ✅ NUEVO: Evento para actualizar pozos dinámicos
 socket.on('updatePozosDinamicos', (pozos) => {
 console.log('🏆 Actualizando pozos dinámicos:', pozos);
 gameState.pozosDinamicos = pozos;
@@ -1096,7 +1085,6 @@ mostrarReporteFinal(reporte);
 });
 }
 
-// ✅ NUEVA FUNCIÓN: Actualizar visualización de pozos
 function actualizarPozosVisuales(pozos) {
 if (!pozos) return;
 
@@ -1123,7 +1111,6 @@ elemento.classList.remove('acumulado');
 });
 }
 
-// ✅ NUEVA FUNCIÓN: Actualizar panel de apuestas
 function actualizarPanelApuestas() {
 const panel = document.getElementById('panelApuestas');
 const estadoEl = document.getElementById('estadoApuesta');
@@ -1146,7 +1133,6 @@ panel.classList.add('hidden');
 }
 }
 
-// ✅ NUEVA FUNCIÓN: Apostar en pozos
 function apostarEnPozos() {
 if (yaAposto) {
 mostrarNotificacion('❌ Ya apostaste en esta partida', 'error');
@@ -1426,7 +1412,7 @@ function cerrarModalBalance() {
 document.getElementById('modalBalance').classList.remove('active');
 }
 
-// ✅ NUEVA FUNCIÓN: Renderizar grid con imágenes PNG
+// ✅ NUEVA FUNCIÓN: Renderizar grid con imágenes PNG de cartones oficiales
 function renderizarGridCartones() {
 const grid = document.getElementById('gridCartones');
 const cartones = gameState.cartones || [];
@@ -1438,10 +1424,9 @@ grid.innerHTML = cartones.map(carton => {
 const seleccionado = carton.dueño === emailActual;
 const bloqueado = carton.dueño && carton.dueño !== emailActual;
 
-// ✅ AGREGAR: Mostrar imagen para cartones 1-12
+// ✅ Mostrar imagen PNG oficial para cartones 1-12
 const imagenCarton = carton.numero <= 12
-? `<img src="/carton_${carton.numero}.png" alt="Cartón ${carton.numero}"
-style="width: 100%; border-radius: 6px; margin-bottom: 8px;">`
+? `<img src="/carton_${carton.numero}.png" alt="Cartón ${carton.numero}">`
 : '';
 
 return `
@@ -1465,89 +1450,59 @@ socket.emit('seleccionarCarton', numero, emailActual, nombreActual);
 }
 }
 
-// ✅ NUEVA FUNCIÓN: Renderizar mis cartones con imágenes PNG
+// ✅ NUEVA FUNCIÓN: Renderizar mis cartones con imágenes de cartas individuales
 function renderizarMisCartones() {
-  const container = document.getElementById('misCartones');
-  const cartones = gameState.cartones || [];
-  
-  if (!cartones || cartones.length === 0) {
-    container.innerHTML = '<p style="text-align: center; padding: 30px; color: #95a5a6;">Cargando cartones...</p>';
-    return;
-  }
-  
-  const misCartones = cartones.filter(c => c.dueño === emailActual);
-  
-  if (!misCartones || misCartones.length === 0) {
-    container.innerHTML = '<p style="text-align: center; padding: 30px; color: #95a5a6; font-size: 0.9em;">Selecciona cartones arriba para jugar</p>';
-    return;
-  }
-  
-  container.innerHTML = misCartones.map(carton => {
-    if (!carton.cartas || !Array.isArray(carton.cartas) || carton.cartas.length !== 25) {
-      return `<div class="carton-bingo-pro"><p style="color: #e74c3c; text-align: center;">Error en cartón ${carton.numero}</p></div>`;
-    }
+const container = document.getElementById('misCartones');
+const cartones = gameState.cartones || [];
+if (!cartones || cartones.length === 0) {
+container.innerHTML = '<p style="text-align: center; padding: 30px; color: #95a5a6;">Cargando cartones...</p>';
+return;
+}
+const misCartones = cartones.filter(c => c.dueño === emailActual);
+if (!misCartones || misCartones.length === 0) {
+container.innerHTML = '<p style="text-align: center; padding: 30px; color: #95a5a6; font-size: 0.9em;">Selecciona cartones arriba para jugar</p>';
+return;
+}
+container.innerHTML = misCartones.map(carton => {
+if (!carton.cartas || !Array.isArray(carton.cartas) || carton.cartas.length !== 25) {
+return `<div class="carton-bingo-pro"><p style="color: #e74c3c; text-align: center;">Error en cartón ${carton.numero}</p></div>`;
+}
 
-    // ✅ MOSTRAR IMAGEN PNG OFICIAL (cartones 1-12)
-    // ✅ Cartón 13 usa renderizado por código
-    const usarImagenPNG = carton.numero <= 12;
-    
-    return `
-    <div class="carton-bingo-pro" style="padding: 0; overflow: hidden;">
-      <div class="carton-header-pro">${carton.nombre}</div>
-      <div class="carton-info-pro">
-        <span>★ Poker: ${carton.valorPoker}</span>
-        <span>★ Full: ${carton.valorFull2}+${carton.valorFull3}</span>
-      </div>
-      
-      ${usarImagenPNG ? `
-        <!-- ✅ CARTONES 1-12: Imagen PNG oficial con cuadrícula clicable -->
-        <div style="position: relative; width: 100%; max-width: 500px; margin: 0 auto;">
-          <img src="/carton_${carton.numero}.png" alt="${carton.nombre}" 
-               style="width: 100%; display: block; border-radius: 8px;">
-          
-          <!-- ✅ Cuadrícula transparente clicable sobre el PNG -->
-          <div class="carton-board-pro" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; 
-               background: transparent; border: none; padding: 5%;">
-            ${carton.cartas.map((carta, index) => {
-              const estaTapada = carton.tapadas && carton.tapadas[index] ? 'tapada' : '';
-              return `
-              <div class="carta-pro ${estaTapada}" 
-                   onclick="taparCarta(${carton.numero}, ${index})"
-                   style="background: ${estaTapada ? 'rgba(52, 73, 94, 0.85)' : 'transparent'}; 
-                          border: ${estaTapada ? '3px solid #f39c12' : '2px solid transparent'};
-                          cursor: pointer; position: relative; z-index: 10;">
-                ${estaTapada ? '<span style="color: #f39c12; font-size: 1.5em;">✓</span>' : ''}
-              </div>
-            `}).join('')}
-          </div>
-        </div>
-      ` : `
-        <!-- ✅ CARTÓN 13: Renderizado por código (sin PNG) -->
-        <div class="carton-board-pro">
-          ${carton.cartas.map((carta, index) => {
-            const estaTapada = carton.tapadas && carton.tapadas[index] ? 'tapada' : '';
-            const tipoClase = carta.tipo || '';
-            return `
-            <div class="carta-pro ${tipoClase} ${estaTapada}"
-                 onclick="taparCarta(${carton.numero}, ${index})"
-                 style="cursor: pointer !important; pointer-events: auto !important;">
-              <div style="color: ${colores[carta.palo]}; font-weight: bold; font-size: 1.1em;">${carta.valor}</div>
-              <div style="color: ${colores[carta.palo]}; font-size: 1.3em;">${carta.palo}</div>
-            </div>
-          `}).join('')}
-        </div>
-      `}
-      
-      <div class="botones-pozos" style="padding: 10px;">
-        ${Object.keys(pozosInfo).map(pozo => `
-          <button class="boton-pozo ${carton.pozos && carton.pozos[pozo] ? 'reclamado' : ''}"
-                  onclick="reclamarPremio(${carton.numero}, '${pozo}')"
-                  ${(carton.pozos && carton.pozos[pozo]) ? 'disabled' : ''}>${pozosInfo[pozo].nombre}</button>
-        `).join('')}
-      </div>
-    </div>
-    `;
-  }).join('');
+return `
+<div class="carton-bingo-pro">
+<div class="carton-header-pro">${carton.nombre}</div>
+<div class="carton-info-pro">
+<span>★ Poker: ${carton.valorPoker}</span>
+<span>★ Full: ${carton.valorFull2}+${carton.valorFull3}</span>
+</div>
+
+<!-- ✅ CARTÓN RENDERIZADO CON IMÁGENES INDIVIDUALES DE CARTAS -->
+<div class="carton-board-pro">
+${carton.cartas.map((carta, index) => {
+const estaTapada = carton.tapadas && carton.tapadas[index] ? 'tapada' : '';
+const tipoClase = carta.tipo || '';
+const nombreArchivo = carta.codigo || '';
+
+return `
+<div class="carta-pro ${tipoClase} ${estaTapada}"
+onclick="taparCarta(${carton.numero}, ${index})"
+style="cursor: pointer !important; pointer-events: auto !important;">
+${estaTapada ? '' : `<img src="/${nombreArchivo}" alt="${carta.valor}${carta.palo}">`}
+</div>
+`;
+}).join('')}
+</div>
+
+<div class="botones-pozos">
+${Object.keys(pozosInfo).map(pozo => `
+<button class="boton-pozo ${carton.pozos && carton.pozos[pozo] ? 'reclamado' : ''}"
+onclick="reclamarPremio(${carton.numero}, '${pozo}')"
+${(carton.pozos && carton.pozos[pozo]) ? 'disabled' : ''}>${pozosInfo[pozo].nombre}</button>
+`).join('')}
+</div>
+</div>
+`;
+}).join('');
 }
 
 function taparCarta(numeroCarton, index) {
@@ -1570,10 +1525,10 @@ porPintas[carta.palo].push(carta);
 });
 container.innerHTML = Object.entries(porPintas).map(([palo, cartasPalo]) => `
 <div class="pinta-grupo">
-<div class="pinta-titulo" style="color: ${colores[palo]}">${palo} (${cartasPalo.length})</div>
+<div class="pinta-titulo" style="color: ${cartasPalo[0]?.color || '#000'}">${palo} (${cartasPalo.length})</div>
 <div class="cartas-cantadas-grid">
 ${cartasPalo.map(carta => `
-<div class="carta-cantada" style="color: ${colores[carta.palo]}">
+<div class="carta-cantada" style="color: ${carta.color || '#000'}">
 <div style="font-weight: bold;">${carta.valor}</div>
 <div style="font-size: 1.2em;">${carta.palo}</div>
 </div>
