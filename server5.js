@@ -357,8 +357,8 @@ io.on('connection', (socket) => {
       total: gameState.jugadores[emailJugador].monedas
     });
   });
-  
-  // ✅ SELECCIONAR CARTÓN
+
+    // ✅ SELECCIONAR CARTÓN
   socket.on('seleccionarCarton', (numero, email, nombre) => {
     console.log(`🎴 Intentando seleccionar cartón ${numero} para ${email}`);
     
@@ -774,10 +774,12 @@ io.on('connection', (socket) => {
       }
     }
   });
-  
-  // ✅ DESCONECTAR
+
+    // ✅ DESCONECTAR
   socket.on('disconnect', () => {
     console.log('❌ Jugador desconectado:', socket.id);
+    
+    let cantadorDesconectado = false;
     
     for (const email in gameState.jugadores) {
       if (gameState.jugadores[email].socketId === socket.id) {
@@ -787,57 +789,92 @@ io.on('connection', (socket) => {
         if (gameState.cantador === email) {
           gameState.cantadorAnterior = email;
           gameState.cantador = null;
+          cantadorDesconectado = true;
+          console.log(`🎤 Cantador ${email} se desconectó. Posición liberada para reconexión.`);
+          
           io.emit('updateCantador', null);
           io.emit('updateJugadores', gameState.jugadores);
           io.emit('cantadorDesconectado', {
-            mensaje: '⚠️ El cantador se desconectó.',
+            mensaje: `⚠️ El cantador se desconectó. Puede reconectarse para recuperar su posición.`,
             cantadorAnterior: email
           });
         }
         break;
       }
     }
+    
+    if (!cantadorDesconectado) {
+      io.emit('updateJugadores', gameState.jugadores);
+    }
   });
 });
 
 // ============================================================================
-// ✅ VALIDACIÓN DE POZOS (CORREGIDA)
+// ✅ VALIDACIÓN DE POZOS (CORREGIDA - CLAVE PARA EL FIX)
 // ============================================================================
 
 function verificarPozo(carton, pozo, codigosCantados) {
+  // Función helper para verificar cartas tapadas y cantadas
   const verificarCartas = (indices) => {
     for (let i of indices) {
-      if (!carton.tapadas[i]) return false;
+      if (!carton.tapadas[i]) return false; // Carta no tapada
       const carta = carton.cartas[i];
-      if (!codigosCantados.includes(carta.codigo)) return false;
+      if (!codigosCantados.includes(carta.codigo)) return false; // Carta no cantada
     }
     return true;
   };
 
-  if (pozo === 'especial') return verificarCartas(Array.from({length: 25}, (_, i) => i));
+  // ✅ ESPECIAL: 25 cartas
+  if (pozo === 'especial') {
+    return verificarCartas(Array.from({length: 25}, (_, i) => i));
+  }
   
-  if (pozo === 'centro') return verificarCartas([12]);
+  // ✅ CENTRO: carta 12
+  if (pozo === 'centro') {
+    return verificarCartas([12]);
+  }
   
-  if (pozo === 'cuatroEsquinas') return verificarCartas([0, 4, 20, 24]);
+  // ✅ 4 ESQUINAS: índices 0, 4, 20, 24
+  if (pozo === 'cuatroEsquinas') {
+    return verificarCartas([0, 4, 20, 24]);
+  }
   
+  // ✅ POKINO: cualquier línea de 5 cartas (filas, columnas, diagonales)
   if (pozo === 'pokino') {
     const lineas = [
-      [0,1,2,3,4], [5,6,7,8,9], [10,11,12,13,14], [15,16,17,18,19], [20,21,22,23,24],
-      [0,5,10,15,20], [1,6,11,16,21], [2,7,12,17,22], [3,8,13,18,23], [4,9,14,19,24],
-      [0,6,12,18,24], [4,8,12,16,20]
+      [0,1,2,3,4], [5,6,7,8,9], [10,11,12,13,14], [15,16,17,18,19], [20,21,22,23,24], // Filas
+      [0,5,10,15,20], [1,6,11,16,21], [2,7,12,17,22], [3,8,13,18,23], [4,9,14,19,24], // Columnas
+      [0,6,12,18,24], [4,8,12,16,20] // Diagonales
     ];
     return lineas.some(linea => verificarCartas(linea));
   }
   
+  // ✅ POKER: usa la fila configurada en el cartón (pokerFila)
   if (pozo === 'poker') {
-    const fila = carton.pokerFila || 3;
-    const indices = fila === 1 ? [0,1,2,3] : fila === 2 ? [5,6,7,8] : fila === 3 ? [10,11,12,13] : [15,16,17,18];
+    const fila = carton.pokerFila || 3; // Default fila 3 si no está configurada
+    let indices = [];
+    
+    if (fila === 1) indices = [0, 1, 2, 3]; // Solo 4 cartas de poker en fila 1
+    else if (fila === 2) indices = [5, 6, 7, 8];
+    else if (fila === 3) indices = [10, 11, 12, 13];
+    else if (fila === 4) indices = [15, 16, 17, 18];
+    else indices = [10, 11, 12, 13]; // Default
+    
     return verificarCartas(indices);
   }
   
+  // ✅ FULL: usa la fila configurada en el cartón (fullFila)
   if (pozo === 'full') {
-    const fila = carton.fullFila || 4;
-    const indices = fila === 1 ? [0,1,2,3,4] : fila === 2 ? [5,6,7,8,9] : fila === 3 ? [10,11,12,13,14] : fila === 4 ? [15,16,17,18,19] : [20,21,22,23,24];
+    const fila = carton.fullFila || 4; // Default fila 4 si no está configurada
+    let indices = [];
+    
+    if (fila === 1) indices = [0, 1, 2, 3, 4];
+    else if (fila === 2) indices = [5, 6, 7, 8, 9];
+    else if (fila === 3) indices = [10, 11, 12, 13, 14];
+    else if (fila === 4) indices = [15, 16, 17, 18, 19];
+    else if (fila === 5) indices = [20, 21, 22, 23, 24];
+    else indices = [15, 16, 17, 18, 19]; // Default
+    
     return verificarCartas(indices);
   }
   
@@ -849,6 +886,7 @@ function verificarPozo(carton, pozo, codigosCantados) {
 // ============================================================================
 
 const PORT = process.env.PORT || 3000;
+
 server.listen(PORT, '0.0.0.0', () => {
   console.log('╔═══════════════════════════════════════════════════════════╗');
   console.log('║  🎪 BINGO POKER - SABADITO ALEGRE - SERVIDOR ACTIVO      ║');
@@ -860,5 +898,6 @@ server.listen(PORT, '0.0.0.0', () => {
   console.log('║  🏆 6 Pozos dinámicos (inician en $0)');
   console.log('║  💰 VALOR FICHA: $50 COP');
   console.log('║  🎰 APUESTA POR PARTIDA: 6 fichas ($300 COP)');
+  console.log('║  ✅ VALIDACIÓN DE POZOS: Corregida (Poker/Full por fila)');
   console.log('╚═══════════════════════════════════════════════════════════╝');
 });
