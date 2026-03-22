@@ -888,9 +888,16 @@ mostrarNotificacion('❌ No se pudo copiar el enlace', 'error');
 }
 
 function conectarSocket() {
-socket = io();
+socket = io({
+ transports: ['websocket', 'polling'],
+ reconnection: true,
+ reconnectionDelay: 1000,
+ reconnectionAttempts: 10,
+timeout: 20000
+});
 
 socket.on('connect', () => {
+console.log('✅ Socket conectado:', socket.id);
 const estadoEl = document.getElementById('estadoConexion');
 if (estadoEl) {
 estadoEl.className = 'status connected';
@@ -898,11 +905,12 @@ estadoEl.innerHTML = '✅ Conectado';
 }
 });
 
-socket.on('disconnect', () => {
+socket.on('connect_error', (error) => {
+console.error('❌ Error de conexión:', error);
 const estadoEl = document.getElementById('estadoConexion');
 if (estadoEl) {
 estadoEl.className = 'status disconnected';
-estadoEl.innerHTML = '❌ Desconectado';
+estadoEl.innerHTML = '❌ Desconectado - ' + error.message;
 }
 });
 
