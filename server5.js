@@ -1,7 +1,7 @@
 // ============================================================================
 // 🎪 BINGO POKER - SABADITO ALEGRE - SERVIDOR PRINCIPAL
 // ============================================================================
-// Versión: 13.0 (MATRICES OFICIALES DE 12 CARTONES + 52 CARTAS INDIVIDUALES)
+// Versión: 14.0 (CORRECCIÓN VALIDACIÓN POZOS + CÓDIGOS UNIFICADOS)
 // ============================================================================
 
 const express = require('express');
@@ -20,305 +20,38 @@ const io = new Server(server, {
 });
 
 // ============================================================================
-// 🃏 CONFIGURACIÓN DE CARTAS
-// ============================================================================
-
-const VALOR_FICHA = 50; // Cada ficha vale $50 COP
-
-// ============================================================================
 // 🏆 CONFIGURACIÓN DE LOS 6 POZOS
 // ============================================================================
 
+const VALOR_FICHA = 50;
+
 const pozosConfig = {
-  pokino: { 
-    nombre: 'POKINO', 
-    cartas: 5, 
-    tipo: 'linea',
-    acumula: false,
-    fichasPorJugador: 1
-  },
-  cuatroEsquinas: { 
-    nombre: '4 ESQUINAS', 
-    cartas: 4, 
-    indices: [0, 4, 20, 24],
-    tipo: 'indices',
-    acumula: true,
-    fichasPorJugador: 1
-  },
-  full: { 
-    nombre: 'FULL', 
-    cartas: 5, 
-    tipo: 'indices',
-    acumula: true,
-    fichasPorJugador: 1
-  },
-  poker: { 
-    nombre: 'POKER', 
-    cartas: 4, 
-    tipo: 'indices',
-    acumula: true,
-    fichasPorJugador: 1
-  },
-  centro: { 
-    nombre: 'CENTRO', 
-    cartas: 1, 
-    tipo: 'centro',
-    maxCartas: 5,
-    acumula: true,
-    fichasPorJugador: 1
-  },
-  especial: { 
-    nombre: 'ESPECIAL', 
-    cartas: 25, 
-    tipo: 'cartonLleno',
-    acumula: true,
-    acumulaPartidas: true,
-    fichasPorJugador: 1
-  }
+  pokino: { nombre: 'POKINO', cartas: 5, tipo: 'linea', acumula: false },
+  cuatroEsquinas: { nombre: '4 ESQUINAS', cartas: 4, indices: [0, 4, 20, 24], tipo: 'indices', acumula: true },
+  full: { nombre: 'FULL', cartas: 5, tipo: 'indices', acumula: true },
+  poker: { nombre: 'POKER', cartas: 4, tipo: 'indices', acumula: true },
+  centro: { nombre: 'CENTRO', cartas: 1, tipo: 'centro', maxCartas: 5, acumula: true },
+  especial: { nombre: 'ESPECIAL', cartas: 25, tipo: 'cartonLleno', acumula: true, acumulaPartidas: true }
 };
 
 // ============================================================================
-// 🎴 MATRICES DE LOS 12 CARTONES OFICIALES (Datos extraídos de PDFs)
-// ============================================================================
-// Cada cartón es un array de 25 cartas en orden fila por fila (5x5)
-// Nomenclatura: 1p=As Picas, 1c=As Corazones, 1d=As Diamantes, 1t=As Tréboles
-//               jp=Jota Picas, jc=Jota Corazones, etc.
+// 🎴 MATRICES DE LOS 12 CARTONES OFICIALES (Datos de tu Excel)
 // ============================================================================
 
 const distribucionesCartones = [
-  // Cartón 1 - PDF Oficial
-  {
-    numero: 1,
-    nombre: 'Cartón A',
-    poker: 'A',
-    full2: 'Q',
-    full3: '5',
-    pokerFila: 3,
-    fullFila: 4,
-    cartas: [
-      '8c.png', 'jt.png', '2d.png', '9c.png', '8d.png',
-      '6c.png', 'kc.png', '3p.png', 'kt.png', '3d.png',
-      '7c.png', '1p.png', '1c.png', '1t.png', '1d.png',
-      '5c.png', 'qc.png', '5d.png', '5p.png', 'qd.png',
-      '4c.png', '10c.png', '4p.png', '4d.png', '6d.png'
-    ]
-  },
-  
-  // Cartón 2 - PDF Oficial
-  {
-    numero: 2,
-    nombre: 'Cartón 3',
-    poker: '3',
-    full2: '5',
-    full3: 'J',
-    pokerFila: 3,
-    fullFila: 5,
-    cartas: [
-      '1p.png', '10c.png', '7d.png', '8d.png', '1c.png',
-      '2p.png', '6c.png', '6d.png', '9d.png', '2t.png',
-      '3t.png', '3c.png', '3d.png', '8t.png', '3p.png',
-      '7c.png', '4c.png', '4d.png', '10t.png', '4t.png',
-      'jp.png', 'jc.png', '5d.png', 'jt.png', '5p.png'
-    ]
-  },
-  
-  // Cartón 3 - PDF Oficial
-  {
-    numero: 3,
-    nombre: 'Cartón 4',
-    poker: '4',
-    full2: 'A',
-    full3: '9',
-    pokerFila: 1,
-    fullFila: 2,
-    cartas: [
-      '4c.png', '7c.png', '4t.png', '4d.png', '4p.png',
-      '1c.png', '9t.png', '9c.png', '9d.png', '1p.png',
-      '2d.png', '8c.png', '8t.png', '8d.png', '3p.png',
-      '3c.png', '10p.png', '10d.png', '5d.png', '5p.png',
-      '5t.png', 'jt.png', 'qc.png', 'qd.png', '2p.png'
-    ]
-  },
-  
-  // Cartón 4 - PDF Oficial
-  {
-    numero: 4,
-    nombre: 'Cartón 5',
-    poker: '5',
-    full2: '9',
-    full3: '7',
-    pokerFila: 3,
-    fullFila: 1,
-    cartas: [
-      '9p.png', '7c.png', '7d.png', '7p.png', '9c.png',
-      '4d.png', '9d.png', '4c.png', '4p.png', '10c.png',
-      '5c.png', '5d.png', '5t.png', '5p.png', 'kc.png',
-      '6d.png', '6p.png', '3t.png', 'qp.png', 'qc.png',
-      '1t.png', '8p.png', '6c.png', 'jp.png', 'jc.png'
-    ]
-  },
-  
-  // Cartón 5 - PDF Oficial
-  {
-    numero: 5,
-    nombre: 'Cartón 6',
-    poker: '6',
-    full2: '2',
-    full3: '8',
-    pokerFila: 3,
-    fullFila: 5,
-    cartas: [
-      '9t.png', '4c.png', '5d.png', '5c.png', 'qt.png',
-      '10d.png', '9p.png', '4p.png', '9c.png', '4t.png',
-      '6d.png', 'jd.png', '6p.png', '6c.png', '6t.png',
-      '7d.png', 'kp.png', '3t.png', '7c.png', '7t.png',
-      '8t.png', '8d.png', '2c.png', '8c.png', '2t.png'
-    ]
-  },
-  
-  // Cartón 6 - PDF Oficial
-  {
-    numero: 6,
-    nombre: 'Cartón 7',
-    poker: '7',
-    full2: 'A',
-    full3: '6',
-    pokerFila: 3,
-    fullFila: 4,
-    cartas: [
-      '8p.png', '8d.png', '9d.png', 'jt.png', '4d.png',
-      '5p.png', '4p.png', 'jd.png', '4t.png', '5d.png',
-      '7p.png', '7t.png', '7d.png', 'kp.png', '7c.png',
-      '6p.png', '6d.png', '1d.png', '1c.png', '6c.png',
-      '9p.png', '5t.png', '3d.png', '3c.png', '3p.png'
-    ]
-  },
-  
-  // Cartón 7 - PDF Oficial
-  {
-    numero: 7,
-    nombre: 'Cartón 8',
-    poker: '8',
-    full2: '7',
-    full3: '10',
-    pokerFila: 3,
-    fullFila: 4,
-    cartas: [
-      'kc.png', '4p.png', '7c.png', 'kp.png', '4c.png',
-      'jc.png', '5d.png', '9c.png', 'jd.png', 'jp.png',
-      '8c.png', '8d.png', '8t.png', '9d.png', '8p.png',
-      '10c.png', '7d.png', '10p.png', '10t.png', '7t.png',
-      '1c.png', '6d.png', '6p.png', 'qc.png', '10d.png'
-    ]
-  },
-  
-  // Cartón 8 - PDF Oficial
-  {
-    numero: 8,
-    nombre: 'Cartón 9',
-    poker: '9',
-    full2: '8',
-    full3: '5',
-    pokerFila: 3,
-    fullFila: 4,
-    cartas: [
-      '1c.png', '8p.png', 'jd.png', '2p.png', 'jt.png',
-      '3p.png', '6d.png', '10d.png', '3c.png', '3t.png',
-      '9c.png', '9p.png', '9d.png', '6c.png', '9t.png',
-      '5t.png', '5d.png', '8d.png', '5p.png', '8t.png',
-      'kd.png', '7p.png', '7c.png', '4p.png', '4t.png'
-    ]
-  },
-  
-  // Cartón 9 - PDF Oficial
-  {
-    numero: 9,
-    nombre: 'Cartón 10',
-    poker: '10',
-    full2: '4',
-    full3: '9',
-    pokerFila: 2,
-    fullFila: 3,
-    cartas: [
-      'qp.png', '3d.png', 'qt.png', '3p.png', '8d.png',
-      '10p.png', '2d.png', '10c.png', '10t.png', '10d.png',
-      '9p.png', '4t.png', '9c.png', '4p.png', '9d.png',
-      '7p.png', '5p.png', 'jt.png', '7t.png', '7d.png',
-      '2p.png', '1c.png', 'kt.png', '1d.png', '6d.png'
-    ]
-  },
-  
-  // Cartón 10 - PDF Oficial
-  {
-    numero: 10,
-    nombre: 'Cartón J',
-    poker: 'J',
-    full2: 'Q',
-    full3: '6',
-    pokerFila: 2,
-    fullFila: 4,
-    cartas: [
-      '5p.png', '5d.png', '10p.png', '8c.png', '1c.png',
-      'jp.png', '3p.png', 'jd.png', 'jc.png', 'jt.png',
-      '4p.png', '7t.png', 'kt.png', '7c.png', 'kc.png',
-      'qp.png', '6d.png', 'qt.png', '6c.png', '6t.png',
-      '9p.png', '4t.png', '9d.png', '9c.png', '2c.png'
-    ]
-  },
-  
-  // Cartón 11 - PDF Oficial
-  {
-    numero: 11,
-    nombre: 'Cartón Q',
-    poker: 'Q',
-    full2: '5',
-    full3: 'J',
-    pokerFila: 3,
-    fullFila: 4,
-    cartas: [
-      '1c.png', '8t.png', '4t.png', '7c.png', '7d.png',
-      'kt.png', '10t.png', '10c.png', '6d.png', '10d.png',
-      'qc.png', 'qt.png', 'qp.png', '9c.png', 'qd.png',
-      'jc.png', 'jt.png', '5p.png', '5t.png', 'jd.png',
-      '10p.png', '9t.png', '9p.png', '8c.png', '5d.png'
-    ]
-  },
-  
-  // Cartón 12 - PDF Oficial
-  {
-    numero: 12,
-    nombre: 'Cartón K',
-    poker: 'K',
-    full2: 'Q',
-    full3: '9',
-    pokerFila: 2,
-    fullFila: 4,
-    cartas: [
-      '1c.png', '8c.png', '8d.png', '9t.png', '4p.png',
-      'kt.png', 'kc.png', '5d.png', 'kd.png', 'kp.png',
-      'kd.png', '10c.png', '6d.png', '6c.png', '10p.png',
-      'qc.png', '9p.png', '9d.png', 'qt.png', '9c.png',
-      'jc.png', '2c.png', '7d.png', '1t.png', 'jt.png'
-    ]
-  },
-  
-  // Cartón 13 - Generado por código (complemento)
-  {
-    numero: 13,
-    nombre: 'Cartón Complemento',
-    poker: 'J',
-    full2: 'Q',
-    full3: 'K',
-    pokerFila: 3,
-    fullFila: 4,
-    cartas: [
-      'jp.png', 'qc.png', 'kd.png', '1t.png', '2p.png',
-      '3c.png', '4d.png', '5t.png', '6p.png', '7c.png',
-      '8d.png', '9t.png', '10p.png', 'jc.png', 'qd.png',
-      'kp.png', '1c.png', '2d.png', '3t.png', '4p.png',
-      '5c.png', '6d.png', '7t.png', '8p.png', '9c.png'
-    ]
-  }
+  { numero: 1, nombre: 'Cartón A', poker: 'A', full2: 'Q', full3: '5', pokerFila: 3, fullFila: 4, cartas: ['8c', 'jt', '2d', '9c', '8d', '6c', 'kc', '3p', 'kt', '3d', '7c', '1p', '1c', '1t', '1d', '5c', 'qc', '5d', '5p', 'qd', '4c', '10c', '4p', '4d', '6d'] },
+  { numero: 2, nombre: 'Cartón 3', poker: '3', full2: '5', full3: 'J', pokerFila: 3, fullFila: 5, cartas: ['1p', '10c', '7d', '8d', '1c', '2p', '6c', '6d', '9d', '2t', '3t', '3c', '3d', '8t', '3p', '7c', '4c', '4d', '10t', '4t', 'jp', 'jc', '5d', 'jt', '5p'] },
+  { numero: 3, nombre: 'Cartón 4', poker: '4', full2: 'A', full3: '9', pokerFila: 1, fullFila: 2, cartas: ['4c', '7c', '4t', '4d', '4p', '1c', '9t', '9c', '9d', '1p', '2d', '8c', '8t', '8d', '3p', '3c', '10p', '10d', '5d', '5p', '5t', 'jt', 'qc', 'qd', '2p'] },
+  { numero: 4, nombre: 'Cartón 5', poker: '5', full2: '9', full3: '7', pokerFila: 3, fullFila: 1, cartas: ['9p', '7c', '7d', '7p', '9c', '4d', '9d', '4c', '4p', '10c', '5c', '5d', '5t', '5p', 'kc', '6d', '6p', '3t', 'qp', 'qc', '1t', '8p', '6c', 'jp', 'jc'] },
+  { numero: 5, nombre: 'Cartón 6', poker: '6', full2: '2', full3: '8', pokerFila: 3, fullFila: 5, cartas: ['9t', '4c', '5d', '5c', 'qt', '10d', '9p', '4p', '9c', '4t', '6d', 'jd', '6p', '6c', '6t', '7d', 'kp', '3t', '7c', '7t', '8t', '8d', '2c', '8c', '2t'] },
+  { numero: 6, nombre: 'Cartón 7', poker: '7', full2: 'A', full3: '6', pokerFila: 3, fullFila: 4, cartas: ['8p', '8d', '9d', 'jt', '4d', '5p', '4p', 'jd', '4t', '5d', '7p', '7t', '7d', 'kp', '7c', '6p', '6d', '1d', '1c', '6c', '9p', '5t', '3d', '3c', '3p'] },
+  { numero: 7, nombre: 'Cartón 8', poker: '8', full2: '7', full3: '10', pokerFila: 3, fullFila: 4, cartas: ['kc', '4p', '7c', 'kp', '4c', 'jc', '5d', '9c', 'jd', 'jp', '8c', '8d', '8t', '9d', '8p', '10c', '7d', '10p', '10t', '7t', '1c', '6d', '6p', 'qc', '10d'] },
+  { numero: 8, nombre: 'Cartón 9', poker: '9', full2: '8', full3: '5', pokerFila: 3, fullFila: 4, cartas: ['1c', '8p', 'jd', '2p', 'jt', '3p', '6d', '10d', '3c', '3t', '9c', '9p', '9d', '6c', '9t', '5t', '5d', '8d', '5p', '8t', 'kd', '7p', '7c', '4p', '4t'] },
+  { numero: 9, nombre: 'Cartón 10', poker: '10', full2: '4', full3: '9', pokerFila: 2, fullFila: 3, cartas: ['qp', '3d', 'qt', '3p', '8d', '10p', '2d', '10c', '10t', '10d', '9p', '4t', '9c', '4p', '9d', '7p', '5p', 'jt', '7t', '7d', '2p', '1c', 'kt', '1d', '6d'] },
+  { numero: 10, nombre: 'Cartón J', poker: 'J', full2: 'Q', full3: '6', pokerFila: 2, fullFila: 4, cartas: ['5p', '5d', '10p', '8c', '1c', 'jp', '3p', 'jd', 'jc', 'jt', '4p', '7t', 'kt', '7c', 'kc', 'qp', '6d', 'qt', '6c', '6t', '9p', '4t', '9d', '9c', '2c'] },
+  { numero: 11, nombre: 'Cartón Q', poker: 'Q', full2: '5', full3: 'J', pokerFila: 3, fullFila: 4, cartas: ['1c', '8t', '4t', '7c', '7d', 'kt', '10t', '10c', '6d', '10d', 'qc', 'qt', 'qp', '9c', 'qd', 'jc', 'jt', '5p', '5t', 'jd', '10p', '9t', '9p', '8c', '5d'] },
+  { numero: 12, nombre: 'Cartón K', poker: 'K', full2: 'Q', full3: '9', pokerFila: 2, fullFila: 4, cartas: ['1c', '8c', '8d', '9t', '4p', 'kt', 'kc', '5d', 'kd', 'kp', 'kd', '10c', '6d', '6c', '10p', 'qc', '9p', '9d', 'qt', '9c', 'jc', '2c', '7d', '1t', 'jt'] },
+  { numero: 13, nombre: 'Cartón Complemento', poker: 'J', full2: 'Q', full3: 'K', pokerFila: 3, fullFila: 4, cartas: ['jp', 'qc', 'kd', '1t', '2p', '3c', '4d', '5t', '6p', '7c', '8d', '9t', '10p', 'jc', 'qd', 'kp', '1c', '2d', '3t', '4p', '5c', '6d', '7t', '8p', '9c'] }
 ];
 
 // ============================================================================
@@ -358,47 +91,30 @@ const gameState = {
 };
 
 // ============================================================================
-// 🎴 GENERACIÓN DE CARTONES
+// 🎴 GENERACIÓN DE CARTONES Y MAZO
 // ============================================================================
 
 function generarCartonesFijos() {
-  console.log('🚀 Generando 13 cartones con matrices oficiales...');
+  console.log('🚀 Generando 13 cartones con códigos unificados...');
   
   const cartones = distribucionesCartones.map(dist => {
-    // Convertir array de nombres de archivo a objetos de carta
-    const cartas = dist.cartas.map(nombreArchivo => {
-      // Extraer valor y palo del nombre del archivo (ej: '8c.png' → valor: '8', palo: 'c')
-      const nombre = nombreArchivo.replace('.png', '');
-      const valor = nombre.slice(0, -1);
-      const paloCodigo = nombre.slice(-1);
-      
+    const cartas = dist.cartas.map((codigo, index) => {
+      const valor = codigo.slice(0, -1);
+      const paloCodigo = codigo.slice(-1);
       const palos = { 'p': '♠', 'c': '♥', 'd': '♦', 't': '♣' };
       const colores = { '♠': 'black', '♣': 'black', '♥': 'red', '♦': 'red' };
-      
       const palo = palos[paloCodigo] || '♠';
       
-      // Determinar tipo de carta (poker, full, etc.) basado en la fila
       let tipo = '';
-      const indicesPoker = dist.pokerFila === 1 ? [0,1,2,3] : 
-                          dist.pokerFila === 2 ? [5,6,7,8] :
-                          dist.pokerFila === 3 ? [10,11,12,13] :
-                          dist.pokerFila === 4 ? [15,16,17,18] : [20,21,22,23];
-      
-      const indicesFull2 = dist.fullFila === 1 ? [0,1] : 
-                          dist.fullFila === 2 ? [5,6] :
-                          dist.fullFila === 3 ? [10,11] :
-                          dist.fullFila === 4 ? [15,16] : [20,21];
-      
-      const indicesFull3 = dist.fullFila === 1 ? [2,3,4] : 
-                          dist.fullFila === 2 ? [7,8,9] :
-                          dist.fullFila === 3 ? [12,13,14] :
-                          dist.fullFila === 4 ? [17,18,19] : [22,23,24];
-      
+      if (valor === dist.poker) tipo = 'poker';
+      else if (valor === dist.full2 || valor === dist.full3) tipo = 'full';
+      else if (index === 12) tipo = 'centro';
+
       return {
-        codigo: nombreArchivo,
+        codigo: codigo,
         valor: valor,
         palo: palo,
-        color: colores[palo] || 'black',
+        color: colores[palo],
         tipo: tipo
       };
     });
@@ -409,41 +125,33 @@ function generarCartonesFijos() {
       valorPoker: dist.poker,
       valorFull2: dist.full2,
       valorFull3: dist.full3,
+      pokerFila: dist.pokerFila,
+      fullFila: dist.fullFila,
       dueño: null,
       cartas: cartas,
       tapadas: Array(25).fill(false),
-      pozos: {
-        pokino: false,
-        cuatroEsquinas: false,
-        full: false,
-        poker: false,
-        centro: false,
-        especial: false
-      }
+      pozos: { pokino: false, cuatroEsquinas: false, full: false, poker: false, centro: false, especial: false }
     };
   });
   
-  console.log(`✅ Generados ${cartones.length} cartones completos`);
+  console.log(`✅ Generados ${cartones.length} cartones`);
   return cartones;
 }
 
-// ============================================================================
-// 🃏 GENERAR MAZO
-// ============================================================================
-
 function generarMazo() {
-  const palos = ['♠', '♥', '♦', '♣'];
+  const palos = ['p', 'c', 'd', 't'];
   const valores = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K'];
-  const colores = { '♠': 'black', '♣': 'black', '♥': 'red', '♦': 'red' };
+  const simbolos = { 'p': '♠', 'c': '♥', 'd': '♦', 't': '♣' };
+  const colores = { 'p': 'black', 'c': 'red', 'd': 'red', 't': 'black' };
   
   let mazo = [];
   for (let palo of palos) {
     for (let valor of valores) {
       mazo.push({
-        palo,
-        valor,
+        palo: simbolos[palo],
+        valor: valor,
         color: colores[palo],
-        codigo: palo + valor
+        codigo: valor + palo
       });
     }
   }
@@ -464,7 +172,6 @@ function barajarMazo(mazo) {
 // ============================================================================
 
 app.use(express.static(__dirname));
-
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'bingo_poker_v13.html'));
 });
@@ -476,7 +183,6 @@ app.get('/', (req, res) => {
 io.on('connection', (socket) => {
   console.log('✅ Jugador conectado:', socket.id);
   
-  // Inicializar cartones al conectar
   if (gameState.cartones.length === 0) {
     gameState.cartones = generarCartonesFijos();
     gameState.mazo = barajarMazo(generarMazo());
@@ -484,6 +190,7 @@ io.on('connection', (socket) => {
   
   socket.emit('gameState', gameState);
   
+  // ✅ REGISTRO DE JUGADOR
   socket.on('registerPlayer', (email, nombre) => {
     console.log(`👤 Jugador registrado: ${nombre} (${email})`);
     
@@ -540,6 +247,7 @@ io.on('connection', (socket) => {
     io.emit('updatePozosDinamicos', gameState.pozosDinamicos);
   });
   
+  // ✅ COMPRAR FICHAS
   socket.on('comprarFichas', (email, cantidadFichas) => {
     if (!gameState.jugadores[email]) {
       socket.emit('error', 'Jugador no encontrado.');
@@ -582,6 +290,7 @@ io.on('connection', (socket) => {
     console.log(`💰 ${gameState.jugadores[email].nombre} compró ${cantidadFichas} fichas por $${costoTotal} COP`);
   });
   
+  // ✅ APOSTAR EN POZOS
   socket.on('apostarEnPozos', (email) => {
     if (!gameState.jugadores[email]) {
       socket.emit('error', 'Jugador no encontrado.');
@@ -625,6 +334,7 @@ io.on('connection', (socket) => {
     console.log(`🎰 ${jugador.nombre} apostó ${fichasRequeridas} fichas ($${costoTotal} COP) en los 6 pozos - Partida ${gameState.partidaActual}`);
   });
   
+  // ✅ AGREGAR MONEDAS (Cantador)
   socket.on('agregarMonedas', (emailJugador, cantidad, emailCantador) => {
     if (gameState.cantador !== emailCantador) {
       socket.emit('error', 'Solo el cantador puede agregar monedas.');
@@ -648,6 +358,7 @@ io.on('connection', (socket) => {
     });
   });
   
+  // ✅ SELECCIONAR CARTÓN
   socket.on('seleccionarCarton', (numero, email, nombre) => {
     console.log(`🎴 Intentando seleccionar cartón ${numero} para ${email}`);
     
@@ -691,6 +402,7 @@ io.on('connection', (socket) => {
     }
   });
   
+  // ✅ LIBERAR CARTÓN
   socket.on('liberarCarton', (numero, email) => {
     if (gameState.faseJuego !== 'seleccion') {
       socket.emit('error', 'La selección está cerrada.');
@@ -708,6 +420,7 @@ io.on('connection', (socket) => {
     }
   });
   
+  // ✅ CANTAR CARTA
   socket.on('cantarCartaAleatoria', (email) => {
     if (gameState.cantador !== email) {
       socket.emit('error', 'Solo el cantador puede cantar cartas.');
@@ -746,8 +459,10 @@ io.on('connection', (socket) => {
     }
   });
   
+  // ✅ VERIFICAR PREMIOS
   function verificarPremiosCompletados() {
     const premiosDetectados = [];
+    const codigosCantados = gameState.cartasCantadas.map(c => c.codigo);
     
     gameState.cartones.forEach(carton => {
       if (!carton.dueño) return;
@@ -755,16 +470,13 @@ io.on('connection', (socket) => {
       Object.keys(pozosConfig).forEach(pozo => {
         if (carton.pozos[pozo]) return;
         
-        const valido = verificarPozo(carton, pozo, gameState.cartasCantadas);
-        
-        if (valido) {
-          const jugador = gameState.jugadores[carton.dueño];
+        if (verificarPozo(carton, pozo, codigosCantados)) {
           premiosDetectados.push({
             carton: carton.numero,
             nombreCarton: carton.nombre,
             pozo: pozo,
             nombrePozo: pozosConfig[pozo].nombre,
-            jugador: jugador?.nombre || carton.dueño,
+            jugador: gameState.jugadores[carton.dueño]?.nombre || carton.dueño,
             email: carton.dueño,
             premio: gameState.pozosDinamicos[pozo].total,
             fichas: gameState.pozosDinamicos[pozo].fichas,
@@ -790,14 +502,16 @@ io.on('connection', (socket) => {
     }
   }
   
-  socket.on('taparCarta', (numeroCarton, indexCasilla, email) => {
+  // ✅ TAPAR CARTA
+  socket.on('taparCarta', (numeroCarton, index, email) => {
     const carton = gameState.cartones.find(c => c.numero === numeroCarton);
     if (carton && carton.dueño === email) {
-      carton.tapadas[indexCasilla] = !carton.tapadas[indexCasilla];
+      carton.tapadas[index] = !carton.tapadas[index];
       io.emit('updateCartones', gameState.cartones);
     }
   });
   
+  // ✅ ESTABLECER CANTADOR
   socket.on('establecerCantador', (email) => {
     if (gameState.cantador && gameState.cantador !== email) {
       socket.emit('error', 'Ya hay un cantador en esta partida.');
@@ -811,6 +525,7 @@ io.on('connection', (socket) => {
     console.log(`🎤 Cantador establecido: ${email}`);
   });
   
+  // ✅ INICIAR JUEGO
   socket.on('iniciarJuego', (email) => {
     if (gameState.cantador !== email) {
       socket.emit('error', 'Solo el cantador puede iniciar.');
@@ -837,6 +552,7 @@ io.on('connection', (socket) => {
     }
   });
   
+  // ✅ RECLAMAR PREMIO
   socket.on('reclamarPremio', (numeroCarton, pozo, email) => {
     const carton = gameState.cartones.find(c => c.numero === numeroCarton);
     if (!carton || carton.dueño !== email) {
@@ -849,20 +565,18 @@ io.on('connection', (socket) => {
       return;
     }
     
-    const valido = verificarPozo(carton, pozo, gameState.cartasCantadas);
+    const codigosCantados = gameState.cartasCantadas.map(c => c.codigo);
+    const valido = verificarPozo(carton, pozo, codigosCantados);
     
     if (valido) {
-      const premioTotal = gameState.pozosDinamicos[pozo].total;
-      const fichasTotales = gameState.pozosDinamicos[pozo].fichas;
-      
       io.emit('alertaGanador', {
         carton: numeroCarton,
         pozo: pozosConfig[pozo].nombre,
         jugador: gameState.jugadores[email]?.nombre || email,
         email: email,
-        premio: premioTotal,
-        fichas: fichasTotales,
-        mensaje: `🏆 ¡${gameState.jugadores[email]?.nombre || email} RECLAMA ${pozosConfig[pozo].nombre}! ($${premioTotal} - ${fichasTotales} fichas)`,
+        premio: gameState.pozosDinamicos[pozo].total,
+        fichas: gameState.pozosDinamicos[pozo].fichas,
+        mensaje: `🏆 ¡${gameState.jugadores[email]?.nombre} RECLAMA ${pozosConfig[pozo].nombre}! ($${gameState.pozosDinamicos[pozo].total})`,
         esEspecial: pozo === 'especial'
       });
     } else {
@@ -870,6 +584,7 @@ io.on('connection', (socket) => {
     }
   });
   
+  // ✅ CONFIRMAR PREMIO
   socket.on('confirmarPremio', (numeroCarton, pozo, emailGanador, emailCantador) => {
     if (gameState.cantador !== emailCantador) {
       socket.emit('error', 'Solo el cantador puede confirmar.');
@@ -877,9 +592,9 @@ io.on('connection', (socket) => {
     }
     
     const carton = gameState.cartones.find(c => c.numero === numeroCarton);
-    const valido = verificarPozo(carton, pozo, gameState.cartasCantadas);
+    const codigosCantados = gameState.cartasCantadas.map(c => c.codigo);
     
-    if (valido) {
+    if (verificarPozo(carton, pozo, codigosCantados)) {
       carton.pozos[pozo] = true;
       const premio = gameState.pozosDinamicos[pozo].total;
       const fichasGanadas = gameState.pozosDinamicos[pozo].fichas;
@@ -906,8 +621,8 @@ io.on('connection', (socket) => {
         });
       }
       
-      // Resetear pozo según mecánica
-      if (pozo === 'pokino' || pozo === 'cuatroEsquinas' || pozo === 'full' || pozo === 'poker' || pozo === 'centro') {
+      // Resetear pozo (excepto especial)
+      if (pozo !== 'especial') {
         gameState.pozosDinamicos[pozo].acumulado = 0;
         gameState.pozosDinamicos[pozo].total = gameState.pozosDinamicos[pozo].valorBase;
         gameState.pozosDinamicos[pozo].fichas = Math.floor(gameState.pozosDinamicos[pozo].total / VALOR_FICHA);
@@ -917,13 +632,11 @@ io.on('connection', (socket) => {
       
       io.emit('updateCartones', gameState.cartones);
       io.emit('updateJugadores', gameState.jugadores);
-      io.emit('updateEstadisticas', gameState.estadisticas);
-      io.emit('updateBanco', gameState.banco);
       io.emit('updatePozosDinamicos', gameState.pozosDinamicos);
+      io.emit('updateBanco', gameState.banco);
       io.emit('premioConfirmado', {
-        carton: numeroCarton,
+        jugador: gameState.jugadores[emailGanador]?.nombre,
         pozo: pozosConfig[pozo].nombre,
-        jugador: gameState.jugadores[emailGanador]?.nombre || emailGanador,
         premio: premio,
         fichas: fichasGanadas,
         esEspecial: pozo === 'especial'
@@ -931,6 +644,7 @@ io.on('connection', (socket) => {
     }
   });
   
+  // ✅ TOGGLE FASE SELECCIÓN
   socket.on('toggleFaseSeleccion', (email) => {
     if (gameState.cantador !== email) {
       socket.emit('error', 'Solo el cantador.');
@@ -940,6 +654,7 @@ io.on('connection', (socket) => {
     io.emit('updateFaseJuego', gameState.faseJuego);
   });
   
+  // ✅ SIGUIENTE PARTIDA
   socket.on('siguientePartida', (email) => {
     if (gameState.cantador !== email) {
       socket.emit('error', 'Solo el cantador.');
@@ -960,21 +675,14 @@ io.on('connection', (socket) => {
     gameState.premiosPendientes = [];
     
     gameState.cartones.forEach(carton => {
-      carton.tapadas = Array(25).fill(false);
-      carton.pozos = { 
-        pokino: false, 
-        cuatroEsquinas: false, 
-        full: false, 
-        poker: false, 
-        centro: false, 
-        especial: false 
-      };
+      carton.tapadas.fill(false);
+      Object.keys(carton.pozos).forEach(k => carton.pozos[k] = false);
     });
     
-    // Resetear SOLO POKINO (los demás acumulan)
+    // Resetear solo Pokino
     gameState.pozosDinamicos.pokino.acumulado = 0;
-    gameState.pozosDinamicos.pokino.total = gameState.pozosDinamicos.pokino.valorBase;
-    gameState.pozosDinamicos.pokino.fichas = Math.floor(gameState.pozosDinamicos.pokino.total / VALOR_FICHA);
+    gameState.pozosDinamicos.pokino.total = 0;
+    gameState.pozosDinamicos.pokino.fichas = 0;
     
     gameState.partidaActual++;
     
@@ -988,6 +696,7 @@ io.on('connection', (socket) => {
     });
   });
   
+  // ✅ REINICIAR JUEGO
   socket.on('reiniciarJuego', (email) => {
     if (gameState.cantador !== email) {
       socket.emit('error', 'Solo el cantador.');
@@ -1006,40 +715,19 @@ io.on('connection', (socket) => {
     gameState.cantador = null;
     gameState.cantadorAnterior = null;
     
-    gameState.banco = {
-      totalRecaudado: 0,
-      totalPagado: 0,
-      transacciones: []
-    };
+    gameState.banco = { totalRecaudado: 0, totalPagado: 0, transacciones: [] };
     
-    Object.keys(gameState.pozosDinamicos).forEach(pozo => {
-      gameState.pozosDinamicos[pozo].acumulado = 0;
-      gameState.pozosDinamicos[pozo].total = gameState.pozosDinamicos[pozo].valorBase;
-      gameState.pozosDinamicos[pozo].fichas = Math.floor(gameState.pozosDinamicos[pozo].total / VALOR_FICHA);
+    Object.keys(gameState.pozosDinamicos).forEach(p => {
+      gameState.pozosDinamicos[p].acumulado = 0;
+      gameState.pozosDinamicos[p].total = 0;
+      gameState.pozosDinamicos[p].fichas = 0;
     });
     
-    gameState.cartones.forEach(carton => {
-      carton.dueño = null;
-      carton.tapadas = Array(25).fill(false);
-      carton.pozos = { 
-        pokino: false, 
-        cuatroEsquinas: false, 
-        full: false, 
-        poker: false, 
-        centro: false, 
-        especial: false 
-      };
+    gameState.cartones.forEach(c => { 
+      c.dueño = null; 
+      c.tapadas.fill(false); 
+      Object.keys(c.pozos).forEach(k => c.pozos[k] = false); 
     });
-    
-    for (const email in gameState.jugadores) {
-      gameState.jugadores[email].cartones = [];
-      gameState.jugadores[email].monedas = 0;
-      gameState.jugadores[email].fichasCompradas = 0;
-      gameState.jugadores[email].fichasGanadas = 0;
-      gameState.jugadores[email].fichasApostadas = 0;
-      gameState.jugadores[email].pozosGanados = [];
-      gameState.jugadores[email].historialTransacciones = [];
-    }
     
     io.emit('gameState', gameState);
     io.emit('updateFaseJuego', 'seleccion');
@@ -1051,6 +739,43 @@ io.on('connection', (socket) => {
     console.log('🔄 Juego reiniciado completamente');
   });
   
+  // ✅ SOLICITUD DE CAMBIO
+  socket.on('solicitarCambio', (email, mensaje) => {
+    const solicitud = { 
+      id: Date.now(), 
+      email, 
+      nombre: gameState.jugadores[email]?.nombre || email, 
+      mensaje, 
+      timestamp: Date.now() 
+    };
+    gameState.solicitudes.push(solicitud);
+    io.emit('updateSolicitudes', gameState.solicitudes);
+  });
+  
+  socket.on('responderSolicitud', (solicitudId, emailCantador, aprobar) => {
+    if (gameState.cantador !== emailCantador) {
+      socket.emit('error', 'Solo el cantador.');
+      return;
+    }
+    
+    const index = gameState.solicitudes.findIndex(s => s.id === solicitudId);
+    if (index !== -1) {
+      const solicitud = gameState.solicitudes[index];
+      if (aprobar) {
+        gameState.faseJuego = 'seleccion';
+        io.emit('updateFaseJuego', 'seleccion');
+      }
+      gameState.solicitudes.splice(index, 1);
+      io.emit('updateSolicitudes', gameState.solicitudes);
+      
+      const jugadorSocket = io.sockets.sockets.get(gameState.jugadores[solicitud.email]?.socketId);
+      if (jugadorSocket) {
+        jugadorSocket.emit('solicitudRespondida', { aprobada: aprobar });
+      }
+    }
+  });
+  
+  // ✅ DESCONECTAR
   socket.on('disconnect', () => {
     console.log('❌ Jugador desconectado:', socket.id);
     
@@ -1064,6 +789,10 @@ io.on('connection', (socket) => {
           gameState.cantador = null;
           io.emit('updateCantador', null);
           io.emit('updateJugadores', gameState.jugadores);
+          io.emit('cantadorDesconectado', {
+            mensaje: '⚠️ El cantador se desconectó.',
+            cantadorAnterior: email
+          });
         }
         break;
       }
@@ -1072,83 +801,46 @@ io.on('connection', (socket) => {
 });
 
 // ============================================================================
-// ✅ VALIDACIÓN DE POZOS
+// ✅ VALIDACIÓN DE POZOS (CORREGIDA)
 // ============================================================================
 
-function verificarPozo(carton, pozo, cartasCantadas) {
-  const codigosCantados = cartasCantadas.map(c => c.codigo);
-  
-  if (pozo === 'especial') {
-    let tapadasCount = 0;
-    for (let i = 0; i < 25; i++) {
-      if (carton.tapadas[i]) {
-        tapadasCount++;
-        const carta = carton.cartas[i];
-        if (!codigosCantados.includes(carta.codigo)) {
-          return false;
-        }
-      }
+function verificarPozo(carton, pozo, codigosCantados) {
+  const verificarCartas = (indices) => {
+    for (let i of indices) {
+      if (!carton.tapadas[i]) return false;
+      const carta = carton.cartas[i];
+      if (!codigosCantados.includes(carta.codigo)) return false;
     }
-    return tapadasCount === 25;
-  }
+    return true;
+  };
+
+  if (pozo === 'especial') return verificarCartas(Array.from({length: 25}, (_, i) => i));
   
-  if (pozo === 'centro') {
-    return carton.tapadas[12];
-  }
+  if (pozo === 'centro') return verificarCartas([12]);
+  
+  if (pozo === 'cuatroEsquinas') return verificarCartas([0, 4, 20, 24]);
   
   if (pozo === 'pokino') {
-    return verificarLineaCompleta(carton, codigosCantados);
+    const lineas = [
+      [0,1,2,3,4], [5,6,7,8,9], [10,11,12,13,14], [15,16,17,18,19], [20,21,22,23,24],
+      [0,5,10,15,20], [1,6,11,16,21], [2,7,12,17,22], [3,8,13,18,23], [4,9,14,19,24],
+      [0,6,12,18,24], [4,8,12,16,20]
+    ];
+    return lineas.some(linea => verificarCartas(linea));
   }
   
-  if (pozo === 'cuatroEsquinas') {
-    const indices = [0, 4, 20, 24];
-    for (let index of indices) {
-      if (!carton.tapadas[index]) return false;
-      const carta = carton.cartas[index];
-      if (!codigosCantados.includes(carta.codigo)) return false;
-    }
-    return true;
+  if (pozo === 'poker') {
+    const fila = carton.pokerFila || 3;
+    const indices = fila === 1 ? [0,1,2,3] : fila === 2 ? [5,6,7,8] : fila === 3 ? [10,11,12,13] : [15,16,17,18];
+    return verificarCartas(indices);
   }
   
-  if (pozo === 'full' || pozo === 'poker') {
-    // Buscar índices según la configuración del cartón
-    let indices = [];
-    if (pozo === 'poker') {
-      const fila = carton.valorPoker ? 3 : 2; // Según configuración
-      indices = fila === 1 ? [0,1,2,3] : fila === 2 ? [5,6,7,8] : fila === 3 ? [10,11,12,13] : [15,16,17,18];
-    } else {
-      indices = [5,6,7,8,9]; // Default full
-    }
-    
-    for (let index of indices) {
-      if (!carton.tapadas[index]) return false;
-      const carta = carton.cartas[index];
-      if (!codigosCantados.includes(carta.codigo)) return false;
-    }
-    return true;
+  if (pozo === 'full') {
+    const fila = carton.fullFila || 4;
+    const indices = fila === 1 ? [0,1,2,3,4] : fila === 2 ? [5,6,7,8,9] : fila === 3 ? [10,11,12,13,14] : fila === 4 ? [15,16,17,18,19] : [20,21,22,23,24];
+    return verificarCartas(indices);
   }
   
-  return false;
-}
-
-function verificarLineaCompleta(carton, codigosCantados) {
-  const lineas = [
-    [0, 1, 2, 3, 4], [5, 6, 7, 8, 9], [10, 11, 12, 13, 14],
-    [15, 16, 17, 18, 19], [20, 21, 22, 23, 24],
-    [0, 5, 10, 15, 20], [1, 6, 11, 16, 21], [2, 7, 12, 17, 22],
-    [3, 8, 13, 18, 23], [4, 9, 14, 19, 24],
-    [0, 6, 12, 18, 24], [4, 8, 12, 16, 20]
-  ];
-  
-  for (let linea of lineas) {
-    let completa = true;
-    for (let index of linea) {
-      if (!carton.tapadas[index]) { completa = false; break; }
-      const carta = carton.cartas[index];
-      if (!codigosCantados.includes(carta.codigo)) { completa = false; break; }
-    }
-    if (completa) return true;
-  }
   return false;
 }
 
@@ -1157,7 +849,6 @@ function verificarLineaCompleta(carton, codigosCantados) {
 // ============================================================================
 
 const PORT = process.env.PORT || 3000;
-
 server.listen(PORT, '0.0.0.0', () => {
   console.log('╔═══════════════════════════════════════════════════════════╗');
   console.log('║  🎪 BINGO POKER - SABADITO ALEGRE - SERVIDOR ACTIVO      ║');
