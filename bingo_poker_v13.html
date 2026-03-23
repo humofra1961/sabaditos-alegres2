@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+https://sabaditos-alegres.onrender.com <!DOCTYPE html>
 <html lang="es">
 <head>
 <meta charset="UTF-8">
@@ -69,10 +69,6 @@ button.banco { background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%); }
 button.banco:hover { background: linear-gradient(135deg, #d68910 0%, #c0392b 100%); }
 button.apostar { background: linear-gradient(135deg, #9b59b6 0%, #8e44ad 100%); }
 button.apostar:hover { background: linear-gradient(135deg, #8e44ad 0%, #7d3c98 100%); }
-button:disabled {
-opacity: 0.5;
-cursor: not-allowed;
-}
 .status {
 padding: 6px 10px;
 border-radius: 5px;
@@ -114,7 +110,7 @@ font-size: 0.75em;
 color: #000;
 margin-bottom: 5px;
 }
-.premios-pendientes-panel, .banco-panel, .verificacion-panel {
+.premios-pendientes-panel, .banco-panel {
 background: rgba(241, 196, 15, 0.25);
 padding: 8px;
 border-radius: 6px;
@@ -127,11 +123,7 @@ overflow-y: auto;
 background: rgba(243, 156, 18, 0.35);
 border-color: #e67e22;
 }
-.verificacion-panel {
-background: rgba(155, 89, 182, 0.25);
-border-color: #9b59b6;
-}
-.premio-pendiente-item, .banco-item, .verificacion-item {
+.premio-pendiente-item, .banco-item {
 background: rgba(255,255,255,0.1);
 padding: 6px;
 border-radius: 4px;
@@ -140,14 +132,6 @@ font-size: 0.8em;
 border-left: 3px solid #f39c12;
 }
 .premio-pendiente-item.especial {
-border-left-color: #e74c3c;
-background: rgba(231, 76, 60, 0.25);
-}
-.verificacion-item.listo {
-border-left-color: #27ae60;
-background: rgba(39, 174, 96, 0.25);
-}
-.verificacion-item.nolisto {
 border-left-color: #e74c3c;
 background: rgba(231, 76, 60, 0.25);
 }
@@ -281,7 +265,7 @@ z-index: 20;
 .carta-pro img {
 width: 100%;
 height: 100%;
-object-fit: contain;
+object-fit: cover;
 border-radius: 4px;
 }
 .carta-pro.tapada {
@@ -290,9 +274,6 @@ border: 3px solid #f39c12 !important;
 cursor: pointer !important;
 pointer-events: auto !important;
 z-index: 10 !important;
-}
-.carta-pro.tapada img {
-opacity: 0.3;
 }
 .carta-pro.tapada::after {
 content: '✓';
@@ -303,6 +284,9 @@ transform: translate(-50%, -50%);
 color: #f39c12;
 font-size: 2em;
 font-weight: bold;
+}
+.carta-pro.tapada img {
+opacity: 0.3;
 }
 .carta-pro.poker:not(.tapada) { border: 3px solid #f39c12; }
 .carta-pro.full:not(.tapada) { border: 3px solid #9b59b6; }
@@ -678,14 +662,6 @@ box-shadow: 0 4px 15px rgba(0,0,0,0.5);
 <p style="font-size: 0.75em; opacity: 0.7;">No hay premios pendientes</p>
 </div>
 </div>
-
-<!-- ✅ NUEVO: Panel de Verificación de Apuestas -->
-<div id="panelVerificacionApuestas" class="verificacion-panel" style="display: none;">
-<h4 style="font-size: 0.85em; margin-bottom: 6px;">📋 Verificación de Apuestas</h4>
-<div id="listaVerificacionApuestas"></div>
-<div id="mensajeValidacion" style="margin-top: 10px; font-weight: bold;"></div>
-</div>
-
 <div class="comprar-fichas-panel">
 <h4 style="font-size: 0.85em; margin-bottom: 6px;">💵 Agregar Fichas (Cantador)</h4>
 <div class="flex gap-5" style="align-items: center;">
@@ -707,9 +683,8 @@ box-shadow: 0 4px 15px rgba(0,0,0,0.5);
 <div id="panelCantadorFijo" class="panel-cantador-fijo hidden">
 <h3 style="margin-bottom: 5px; font-size: 1.2em;">🎤 Panel del Cantador</h3>
 <div class="botones-cantador">
-<button class="verde" onclick="verificarEstadoApuestas()" style="margin-bottom: 5px;">📋 Verificar Apuestas</button>
 <button class="cantador" onclick="cantarCartaAleatoria()">🃏 Cantar</button>
-<button class="cantador" onclick="iniciarJuego()" id="btnIniciarJuego">▶️ Iniciar</button>
+<button class="cantador" onclick="iniciarJuego()">▶️ Iniciar</button>
 <button class="cantador" onclick="toggleFaseSeleccion()">🔄 Selección</button>
 <button class="cantador" onclick="siguientePartida()">➡️ Siguiente</button>
 <button class="cantador" onclick="reiniciarJuego()">🔄 Reiniciar</button>
@@ -888,321 +863,226 @@ mostrarNotificacion('❌ No se pudo copiar el enlace', 'error');
 }
 
 function conectarSocket() {
-  // ✅ IMPORTANTE: Misma configuración que el servidor
-  socket = io({
-    transports: ['websocket', 'polling'],
-    reconnection: true,
-    reconnectionDelay: 1000,
-    reconnectionAttempts: 10
-  });
+socket = io();
 
-  socket.on('connect', () => {
-    console.log('✅ Socket conectado:', socket.id);
-    const estadoEl = document.getElementById('estadoConexion');
-    if (estadoEl) {
-      estadoEl.className = 'status connected';
-      estadoEl.innerHTML = '✅ Conectado';
-      estadoEl.style.background = '#27ae60';
-    }
-  });
-
-  socket.on('connect_error', (error) => {
-    console.error('❌ Error de conexión:', error);
-    const estadoEl = document.getElementById('estadoConexion');
-    if (estadoEl) {
-      estadoEl.className = 'status disconnected';
-      estadoEl.innerHTML = '❌ Desconectado - ' + error.message;
-      estadoEl.style.background = '#e74c3c';
-    }
-  });
-
-  // ... resto de tus event listeners que ya tienes ...
+socket.on('connect', () => {
+const estadoEl = document.getElementById('estadoConexion');
+if (estadoEl) {
+estadoEl.className = 'status connected';
+estadoEl.innerHTML = '✅ Conectado';
 }
+});
 
-  socket.on('disconnect', () => {
-    console.log('❌ Socket desconectado');
-    const estadoEl = document.getElementById('estadoConexion');
-    if (estadoEl) {
-      estadoEl.className = 'status disconnected';
-      estadoEl.innerHTML = '❌ Desconectado';
-      estadoEl.style.background = '#e74c3c';
-    }
-  });
+socket.on('disconnect', () => {
+const estadoEl = document.getElementById('estadoConexion');
+if (estadoEl) {
+estadoEl.className = 'status disconnected';
+estadoEl.innerHTML = '❌ Desconectado';
+}
+});
 
-  // ✅ Event listeners existentes (mantén los que ya tienes)
-  socket.on('gameState', (state) => {
-    console.log('📊 Recibiendo gameState:', state);
-    gameState = state;
-    renderizarTodo();
-    if (state.partidaActual) {
-      const partidaEl = document.getElementById('partidaActual');
-      if (partidaEl) partidaEl.textContent = state.partidaActual;
-      actualizarIndicadorPartida(state.partidaActual);
-    }
-    yaAposto = false;
-    actualizarPanelApuestas();
-  });
+socket.on('gameState', (state) => {
+console.log('📊 Recibiendo gameState:', state);
+gameState = state;
+renderizarTodo();
+if (state.partidaActual) {
+const partidaEl = document.getElementById('partidaActual');
+if (partidaEl) partidaEl.textContent = state.partidaActual;
+actualizarIndicadorPartida(state.partidaActual);
+}
+yaAposto = false;
+actualizarPanelApuestas();
+});
 
-  socket.on('updateJugadores', (jugadores) => {
-    console.log('👥 Actualizando jugadores:', jugadores);
-    gameState.jugadores = jugadores;
-    renderizarJugadores();
-    actualizarSelectJugadores();
-    if (jugadores[emailActual]) {
-      const monedasEl = document.getElementById('misMonedas');
-      const valorEl = document.getElementById('misMonedasValor');
-      if (monedasEl) monedasEl.textContent = jugadores[emailActual].monedas;
-      if (valorEl) valorEl.textContent = jugadores[emailActual].monedas * VALOR_FICHA;
-      actualizarBalancePersonal(jugadores[emailActual]);
-    }
-  });
+socket.on('updateJugadores', (jugadores) => {
+console.log('👥 Actualizando jugadores:', jugadores);
+gameState.jugadores = jugadores;
+renderizarJugadores();
+actualizarSelectJugadores();
+if (jugadores[emailActual]) {
+const monedasEl = document.getElementById('misMonedas');
+const valorEl = document.getElementById('misMonedasValor');
+if (monedasEl) monedasEl.textContent = jugadores[emailActual].monedas;
+if (valorEl) valorEl.textContent = jugadores[emailActual].monedas * VALOR_FICHA;
+actualizarBalancePersonal(jugadores[emailActual]);
+}
+});
 
-  socket.on('updateCartones', (cartones) => {
-    console.log('🎴 Actualizando cartones:', cartones);
-    gameState.cartones = cartones;
-    renderizarGridCartones();
-    renderizarMisCartones();
-  });
+socket.on('updateCartones', (cartones) => {
+console.log('🎴 Actualizando cartones:', cartones);
+gameState.cartones = cartones;
+renderizarGridCartones();
+renderizarMisCartones();
+});
 
-  socket.on('updateCartasCantadas', (cartas) => {
-    gameState.cartasCantadas = cartas;
-    renderizarCartasPorPintas();
-    const contadorEl = document.getElementById('contadorCartas');
-    if (contadorEl) contadorEl.textContent = cartas.length;
-    if (cartas.length >= 52) {
-      mostrarNotificacion('⚠️ ¡MAZO COMPLETO! Verifiquen el ESPECIAL', 'error');
-      verificarEspecialManual();
-    }
-  });
+socket.on('updateCartasCantadas', (cartas) => {
+gameState.cartasCantadas = cartas;
+renderizarCartasPorPintas();
+const contadorEl = document.getElementById('contadorCartas');
+if (contadorEl) contadorEl.textContent = cartas.length;
+if (cartas.length >= 52) {
+mostrarNotificacion('⚠️ ¡MAZO COMPLETO! Verifiquen el ESPECIAL', 'error');
+verificarEspecialManual();
+}
+});
 
-  socket.on('updateUltimaCarta', (carta) => {
-    const display = document.getElementById('ultimaCartaDisplay');
-    if (display) {
-      if (carta) {
-        display.innerHTML = `<span style="color: ${carta.color || '#000'}">${carta.valor}${carta.palo}</span>`;
-      } else {
-        display.textContent = '-';
-      }
-    }
-  });
+socket.on('updateUltimaCarta', (carta) => {
+const display = document.getElementById('ultimaCartaDisplay');
+if (display) {
+if (carta) {
+display.innerHTML = `<span style="color: ${carta.color || '#000'}">${carta.valor}${carta.palo}</span>`;
+} else {
+display.textContent = '-';
+}
+}
+});
 
-  socket.on('updateFaseJuego', (fase) => {
-    gameState.faseJuego = fase;
-    const indicator = document.getElementById('faseJuego');
-    const seleccion = document.getElementById('seleccionCartones');
-    if (indicator && seleccion) {
-      if (fase === 'seleccion') {
-        indicator.className = 'fase-indicator fase-seleccion';
-        indicator.textContent = 'Fase: Selección';
-        seleccion.classList.remove('hidden');
-      } else {
-        indicator.className = 'fase-indicator fase-jugando';
-        indicator.textContent = 'Fase: Jugando';
-        seleccion.classList.add('hidden');
-      }
-    }
-    actualizarPanelApuestas();
-  });
+socket.on('updateFaseJuego', (fase) => {
+gameState.faseJuego = fase;
+const indicator = document.getElementById('faseJuego');
+const seleccion = document.getElementById('seleccionCartones');
+if (indicator && seleccion) {
+if (fase === 'seleccion') {
+indicator.className = 'fase-indicator fase-seleccion';
+indicator.textContent = 'Fase: Selección';
+seleccion.classList.remove('hidden');
+} else {
+indicator.className = 'fase-indicator fase-jugando';
+indicator.textContent = 'Fase: Jugando';
+seleccion.classList.add('hidden');
+}
+}
+actualizarPanelApuestas();
+});
 
-  socket.on('updateCantador', (email) => {
-    gameState.cantador = email;
-    const panel = document.getElementById('panelCantador');
-    const panelFijo = document.getElementById('panelCantadorFijo');
-    const btnSerCantador = document.getElementById('btnSerCantador');
+socket.on('updateCantador', (email) => {
+gameState.cantador = email;
+const panel = document.getElementById('panelCantador');
+const panelFijo = document.getElementById('panelCantadorFijo');
+const btnSerCantador = document.getElementById('btnSerCantador');
 
-    if (panel) panel.classList.toggle('hidden', email !== emailActual);
-    if (panelFijo) panelFijo.classList.toggle('hidden', email !== emailActual);
-    if (btnSerCantador) btnSerCantador.style.display = email ? 'none' : 'inline-block';
-    renderizarJugadores();
-  });
+if (panel) panel.classList.toggle('hidden', email !== emailActual);
+if (panelFijo) panelFijo.classList.toggle('hidden', email !== emailActual);
+if (btnSerCantador) btnSerCantador.style.display = email ? 'none' : 'inline-block';
+renderizarJugadores();
+});
 
-  socket.on('updateEstadisticas', (estadisticas) => {
-    gameState.estadisticas = estadisticas;
-    renderizarEstadisticas();
-  });
+socket.on('updateEstadisticas', (estadisticas) => {
+gameState.estadisticas = estadisticas;
+renderizarEstadisticas();
+});
 
-  socket.on('updateBanco', (banco) => {
-    gameState.banco = banco;
-    const recaudadoEl = document.getElementById('bancoRecaudado');
-    const pagadoEl = document.getElementById('bancoPagado');
-    if (recaudadoEl) recaudadoEl.textContent = banco.totalRecaudado;
-    if (pagadoEl) pagadoEl.textContent = banco.totalPagado;
-  });
+socket.on('updateBanco', (banco) => {
+gameState.banco = banco;
+const recaudadoEl = document.getElementById('bancoRecaudado');
+const pagadoEl = document.getElementById('bancoPagado');
+if (recaudadoEl) recaudadoEl.textContent = banco.totalRecaudado;
+if (pagadoEl) pagadoEl.textContent = banco.totalPagado;
+});
 
-  socket.on('updatePozosDinamicos', (pozos) => {
-    console.log('🏆 Actualizando pozos dinámicos:', pozos);
-    gameState.pozosDinamicos = pozos;
-    actualizarPozosVisuales(pozos);
-  });
+socket.on('updatePozosDinamicos', (pozos) => {
+console.log('🏆 Actualizando pozos dinámicos:', pozos);
+gameState.pozosDinamicos = pozos;
+actualizarPozosVisuales(pozos);
+});
 
-  socket.on('validacionFallida', (data) => {
-    mostrarNotificacion(data.mensaje, 'error', true);
+socket.on('premiosParaVerificar', (data) => {
+console.log('🔍 Premios para verificar:', data);
+renderizarPremiosPendientes(data.premios);
+mostrarNotificacion(data.mensaje, 'success', true);
+});
 
-    const panel = document.getElementById('panelVerificacionApuestas');
-    const lista = document.getElementById('listaVerificacionApuestas');
-    const mensaje = document.getElementById('mensajeValidacion');
+socket.on('cantadorDesconectado', (data) => {
+mostrarNotificacion(data.mensaje, 'error', true);
+console.log('🎤 Cantador desconectado:', data.cantadorAnterior);
+});
 
-    if (panel && lista && mensaje) {
-      panel.style.display = 'block';
+socket.on('alertaGanador', (data) => {
+if (gameState.cantador === emailActual) {
+premioPendiente = data;
+const mensajeEl = document.getElementById('mensajeGanador');
+if (mensajeEl) mensajeEl.textContent = data.mensaje;
+const alerta = document.getElementById('alertaGanador');
+if (alerta) {
+alerta.classList.remove('hidden');
+if (data.esEspecial) {
+alerta.classList.add('especial');
+} else {
+alerta.classList.remove('especial');
+}
+}
+mostrarNotificacion(data.mensaje, 'success');
+} else {
+mostrarNotificacion(data.mensaje, 'success');
+}
+});
 
-      lista.innerHTML = data.jugadoresNoListos.map(j => `
-        <div class="verificacion-item nolisto">
-          <strong>❌ ${j.nombre}</strong><br>
-          <span style="font-size: 0.75em;">${j.razon}</span>
-        </div>
-      `).join('');
+socket.on('premioConfirmado', (data) => {
+mostrarNotificacion(`✅ ${data.jugador} ganó ${data.pozo} ($${data.premio} - ${data.fichas} fichas)`, 'success');
+const alerta = document.getElementById('alertaGanador');
+if (alerta) alerta.classList.add('hidden');
+premioPendiente = null;
+});
 
-      mensaje.innerHTML = `
-        <span style="color: #e74c3c;">
-          ${data.jugadoresNoListos.length} de ${data.totalJugadores} jugadores NO están listos
-        </span>
-      `;
-    }
+socket.on('premioRechazado', (data) => {
+mostrarNotificacion(data.mensaje, 'error');
+const alerta = document.getElementById('alertaGanador');
+if (alerta) alerta.classList.add('hidden');
+premioPendiente = null;
+});
 
-    const btnIniciar = document.getElementById('btnIniciarJuego');
-    if (btnIniciar) {
-      btnIniciar.disabled = true;
-      btnIniciar.style.opacity = '0.5';
-      btnIniciar.textContent = '⛔ Esperando apuestas...';
-    }
-  });
+socket.on('monedasAgregadas', (data) => {
+mostrarNotificacion(`💰 ${data.cantidad} fichas agregadas a ${data.jugador}`, 'success');
+});
 
-  socket.on('estadoApuestas', (data) => {
-    const panel = document.getElementById('panelVerificacionApuestas');
-    const lista = document.getElementById('listaVerificacionApuestas');
+socket.on('fichasCompradas', (data) => {
+mostrarNotificacion(`✅ ${data.jugador} compró ${data.fichas} fichas por $${data.valor} COP`, 'success', true);
+});
 
-    if (panel && lista) {
-      panel.style.display = 'block';
+socket.on('error', (mensaje) => {
+mostrarNotificacion('❌ ' + mensaje, 'error');
+});
 
-      if (data.todosListos) {
-        lista.innerHTML = data.listos.map(j => `
-          <div class="verificacion-item listo">
-            <strong>✅ ${j.nombre}</strong><br>
-            <span style="font-size: 0.75em;">
-              💰 ${j.monedas} fichas | 🎰 ${j.apostado} fichas apostadas
-            </span>
-          </div>
-        `).join('');
+socket.on('reconexionExitosa', (data) => {
+mostrarNotificacion('✅ ' + data.mensaje, 'success');
+if (data.esCantador) {
+const panel = document.getElementById('panelCantador');
+const panelFijo = document.getElementById('panelCantadorFijo');
+const btnSerCantador = document.getElementById('btnSerCantador');
+if (panel) panel.classList.remove('hidden');
+if (panelFijo) panelFijo.classList.remove('hidden');
+if (btnSerCantador) btnSerCantador.style.display = 'none';
+}
+});
 
-        document.getElementById('mensajeValidacion').innerHTML = `
-          <span style="color: #27ae60;">
-            ✅ Todos los ${data.listos.length} jugadores están listos para jugar
-          </span>
-        `;
-      } else {
-        lista.innerHTML = `
-          <div style="margin-bottom: 10px;">
-            <strong style="color: #27ae60;">Jugadores Listos:</strong><br>
-            ${data.listos.map(j => `<span>✅ ${j.nombre}</span>`).join(', ')}
-          </div>
-          <div>
-            <strong style="color: #e74c3c;">Jugadores NO Listos:</strong><br>
-            ${data.noListos.map(j => `<span>❌ ${j.nombre} (${j.razon})</span>`).join(', ')}
-          </div>
-        `;
-      }
-    }
-  });
+socket.on('juegoIniciado', (data) => {
+if (data.esEspecial) {
+mostrarNotificacion('🎊 ' + data.mensaje, 'success', true);
+actualizarIndicadorPartida(gameState.partidaActual, true);
+} else {
+mostrarNotificacion(data.mensaje, 'success');
+}
+actualizarPanelApuestas();
+});
 
-  socket.on('juegoIniciado', (data) => {
-    const btnIniciar = document.getElementById('btnIniciarJuego');
-    if (btnIniciar) {
-      btnIniciar.disabled = false;
-      btnIniciar.style.opacity = '1';
-      btnIniciar.textContent = '▶️ Iniciar';
-    }
+socket.on('siguientePartida', (data) => {
+const partidaEl = document.getElementById('partidaActual');
+if (partidaEl) partidaEl.textContent = data.partida;
+actualizarIndicadorPartida(data.partida, data.esEspecial);
+mostrarNotificacion(data.mensaje, 'success', data.esEspecial);
+yaAposto = false;
+actualizarPanelApuestas();
+});
 
-    const panel = document.getElementById('panelVerificacionApuestas');
-    if (panel) {
-      panel.style.display = 'none';
-    }
+socket.on('mazoAgotado', (data) => {
+mostrarNotificacion(data.mensaje, 'error');
+verificarEspecialManual();
+});
 
-    if (data.esEspecial) {
-      mostrarNotificacion('🎊 ' + data.mensaje, 'success', true);
-      actualizarIndicadorPartida(gameState.partidaActual, true);
-    } else {
-      mostrarNotificacion(data.mensaje, 'success');
-    }
-  });
-
-  socket.on('premiosParaVerificar', (data) => {
-    console.log('🔍 Premios para verificar:', data);
-    renderizarPremiosPendientes(data.premios);
-    mostrarNotificacion(data.mensaje, 'success', true);
-  });
-
-  socket.on('cantadorDesconectado', (data) => {
-    mostrarNotificacion(data.mensaje, 'error', true);
-    console.log('🎤 Cantador desconectado:', data.cantadorAnterior);
-  });
-
-  socket.on('alertaGanador', (data) => {
-    if (gameState.cantador === emailActual) {
-      premioPendiente = data;
-      const mensajeEl = document.getElementById('mensajeGanador');
-      if (mensajeEl) mensajeEl.textContent = data.mensaje;
-      const alerta = document.getElementById('alertaGanador');
-      if (alerta) {
-        alerta.classList.remove('hidden');
-        if (data.esEspecial) {
-          alerta.classList.add('especial');
-        } else {
-          alerta.classList.remove('especial');
-        }
-      }
-      mostrarNotificacion(data.mensaje, 'success');
-    } else {
-      mostrarNotificacion(data.mensaje, 'success');
-    }
-  });
-
-  socket.on('premioConfirmado', (data) => {
-    mostrarNotificacion(`✅ ${data.jugador} ganó ${data.pozo} ($${data.premio} - ${data.fichas} fichas)`, 'success');
-    const alerta = document.getElementById('alertaGanador');
-    if (alerta) alerta.classList.add('hidden');
-    premioPendiente = null;
-  });
-
-  socket.on('premioRechazado', (data) => {
-    mostrarNotificacion(data.mensaje, 'error');
-    const alerta = document.getElementById('alertaGanador');
-    if (alerta) alerta.classList.add('hidden');
-    premioPendiente = null;
-  });
-
-  socket.on('monedasAgregadas', (data) => {
-    mostrarNotificacion(`💰 ${data.cantidad} fichas agregadas a ${data.jugador}`, 'success');
-  });
-
-  socket.on('fichasCompradas', (data) => {
-    mostrarNotificacion(`✅ ${data.jugador} compró ${data.fichas} fichas por $${data.valor} COP`, 'success', true);
-  });
-
-  socket.on('error', (mensaje) => {
-    mostrarNotificacion('❌ ' + mensaje, 'error');
-  });
-
-  socket.on('reconexionExitosa', (data) => {
-    mostrarNotificacion('✅ ' + data.mensaje, 'success');
-    if (data.esCantador) {
-      const panel = document.getElementById('panelCantador');
-      const panelFijo = document.getElementById('panelCantadorFijo');
-      const btnSerCantador = document.getElementById('btnSerCantador');
-      if (panel) panel.classList.remove('hidden');
-      if (panelFijo) panelFijo.classList.remove('hidden');
-      if (btnSerCantador) btnSerCantador.style.display = 'none';
-    }
-  });
-
-  socket.on('mazoAgotado', (data) => {
-    mostrarNotificacion(data.mensaje, 'error');
-    verificarEspecialManual();
-  });
-
-  socket.on('reporteFinalGenerado', (reporte) => {
-    reporteActual = reporte;
-    mostrarReporteFinal(reporte);
-  });
+socket.on('reporteFinalGenerado', (reporte) => {
+reporteActual = reporte;
+mostrarReporteFinal(reporte);
+});
 }
 
 function actualizarPozosVisuales(pozos) {
@@ -1262,10 +1142,6 @@ return;
 socket.emit('apostarEnPozos', emailActual);
 yaAposto = true;
 actualizarPanelApuestas();
-}
-
-function verificarEstadoApuestas() {
-socket.emit('solicitarEstadoApuestas', emailActual);
 }
 
 function renderizarPremiosPendientes(premios) {
@@ -1536,6 +1412,7 @@ function cerrarModalBalance() {
 document.getElementById('modalBalance').classList.remove('active');
 }
 
+// ✅ NUEVA FUNCIÓN: Renderizar grid con imágenes PNG de cartones oficiales
 function renderizarGridCartones() {
 const grid = document.getElementById('gridCartones');
 const cartones = gameState.cartones || [];
@@ -1547,6 +1424,7 @@ grid.innerHTML = cartones.map(carton => {
 const seleccionado = carton.dueño === emailActual;
 const bloqueado = carton.dueño && carton.dueño !== emailActual;
 
+// ✅ Mostrar imagen PNG oficial para cartones 1-12
 const imagenCarton = carton.numero <= 12
 ? `<img src="/carton_${carton.numero}.png" alt="Cartón ${carton.numero}">`
 : '';
@@ -1572,6 +1450,7 @@ socket.emit('seleccionarCarton', numero, emailActual, nombreActual);
 }
 }
 
+// ✅ NUEVA FUNCIÓN: Renderizar mis cartones con imágenes de cartas individuales
 function renderizarMisCartones() {
 const container = document.getElementById('misCartones');
 const cartones = gameState.cartones || [];
@@ -1597,45 +1476,18 @@ return `
 <span>★ Full: ${carton.valorFull2}+${carton.valorFull3}</span>
 </div>
 
+<!-- ✅ CARTÓN RENDERIZADO CON IMÁGENES INDIVIDUALES DE CARTAS -->
 <div class="carton-board-pro">
 ${carton.cartas.map((carta, index) => {
 const estaTapada = carton.tapadas && carton.tapadas[index] ? 'tapada' : '';
+const tipoClase = carta.tipo || '';
+const nombreArchivo = carta.codigo || '';
 
-// ✅ CONVERSIÓN: "A" → "1" para las imágenes PNG
-//const nombreImagen = carta.codigo.replace('1', 'A');
-// O si tus imágenes se llaman "1c.png":
-const nombreImagen = carta.codigo;  // Usa el código directo para el src
-<img src="/${nombreImagen}.png" />
-
-return function verificarPozo(carton, pozo, codigosCantados) { 
-const verificarCartas = (indices) => {
-for (let i of indices) {
-if (!carton.tapadas[i]) {
-console.log(`❌ Carta ${i} no está tapada`);
-return false;
-}
-const carta = carton.cartas[i];
-console.log(`🔍 Verificando carta ${i}: código='${carta.codigo}', enMazo=${codigosCantados.includes(carta.codigo)}`);
-if (!codigosCantados.includes(carta.codigo)) {
-console.log(`❌ Carta ${carta.codigo} NO está en cartas cantadas`);
-console.log(`📋 Cartas cantadas:`, codigosCantados);
-return false;
-}
-}
-return true;
-  };
-<div class="carta-pro ${estaTapada}"
+return `
+<div class="carta-pro ${tipoClase} ${estaTapada}"
 onclick="taparCarta(${carton.numero}, ${index})"
-style="cursor: pointer !important; pointer-events: auto !important; position: relative;">
-${estaTapada ? `
-<div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; 
-background: rgba(52, 73, 94, 0.9); border-radius: 4px;
-display: flex; align-items: center; justify-content: center;">
-<span style="color: #f39c12; font-size: 2em;">✓</span>
-</div>
-` : ''}
-<img src="/${nombreImagen}.png" alt="${carta.valor}${carta.palo}" 
-style="width: 100%; height: 100%; object-fit: contain;"/>
+style="cursor: pointer !important; pointer-events: auto !important;">
+${estaTapada ? '' : `<img src="/${nombreArchivo}" alt="${carta.valor}${carta.palo}">`}
 </div>
 `;
 }).join('')}
