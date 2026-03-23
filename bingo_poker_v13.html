@@ -69,6 +69,10 @@ button.banco { background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%); }
 button.banco:hover { background: linear-gradient(135deg, #d68910 0%, #c0392b 100%); }
 button.apostar { background: linear-gradient(135deg, #9b59b6 0%, #8e44ad 100%); }
 button.apostar:hover { background: linear-gradient(135deg, #8e44ad 0%, #7d3c98 100%); }
+button:disabled {
+opacity: 0.5;
+cursor: not-allowed;
+}
 .status {
 padding: 6px 10px;
 border-radius: 5px;
@@ -110,7 +114,7 @@ font-size: 0.75em;
 color: #000;
 margin-bottom: 5px;
 }
-.premios-pendientes-panel, .banco-panel {
+.premios-pendientes-panel, .banco-panel, .verificacion-panel {
 background: rgba(241, 196, 15, 0.25);
 padding: 8px;
 border-radius: 6px;
@@ -123,7 +127,11 @@ overflow-y: auto;
 background: rgba(243, 156, 18, 0.35);
 border-color: #e67e22;
 }
-.premio-pendiente-item, .banco-item {
+.verificacion-panel {
+background: rgba(155, 89, 182, 0.25);
+border-color: #9b59b6;
+}
+.premio-pendiente-item, .banco-item, .verificacion-item {
 background: rgba(255,255,255,0.1);
 padding: 6px;
 border-radius: 4px;
@@ -132,6 +140,14 @@ font-size: 0.8em;
 border-left: 3px solid #f39c12;
 }
 .premio-pendiente-item.especial {
+border-left-color: #e74c3c;
+background: rgba(231, 76, 60, 0.25);
+}
+.verificacion-item.listo {
+border-left-color: #27ae60;
+background: rgba(39, 174, 96, 0.25);
+}
+.verificacion-item.nolisto {
 border-left-color: #e74c3c;
 background: rgba(231, 76, 60, 0.25);
 }
@@ -265,7 +281,7 @@ z-index: 20;
 .carta-pro img {
 width: 100%;
 height: 100%;
-object-fit: cover;
+object-fit: contain;
 border-radius: 4px;
 }
 .carta-pro.tapada {
@@ -274,6 +290,9 @@ border: 3px solid #f39c12 !important;
 cursor: pointer !important;
 pointer-events: auto !important;
 z-index: 10 !important;
+}
+.carta-pro.tapada img {
+opacity: 0.3;
 }
 .carta-pro.tapada::after {
 content: '✓';
@@ -284,9 +303,6 @@ transform: translate(-50%, -50%);
 color: #f39c12;
 font-size: 2em;
 font-weight: bold;
-}
-.carta-pro.tapada img {
-opacity: 0.3;
 }
 .carta-pro.poker:not(.tapada) { border: 3px solid #f39c12; }
 .carta-pro.full:not(.tapada) { border: 3px solid #9b59b6; }
@@ -662,6 +678,14 @@ box-shadow: 0 4px 15px rgba(0,0,0,0.5);
 <p style="font-size: 0.75em; opacity: 0.7;">No hay premios pendientes</p>
 </div>
 </div>
+
+<!-- ✅ NUEVO: Panel de Verificación de Apuestas -->
+<div id="panelVerificacionApuestas" class="verificacion-panel" style="display: none;">
+<h4 style="font-size: 0.85em; margin-bottom: 6px;">📋 Verificación de Apuestas</h4>
+<div id="listaVerificacionApuestas"></div>
+<div id="mensajeValidacion" style="margin-top: 10px; font-weight: bold;"></div>
+</div>
+
 <div class="comprar-fichas-panel">
 <h4 style="font-size: 0.85em; margin-bottom: 6px;">💵 Agregar Fichas (Cantador)</h4>
 <div class="flex gap-5" style="align-items: center;">
@@ -682,9 +706,18 @@ box-shadow: 0 4px 15px rgba(0,0,0,0.5);
 <!-- ✅ TU PANEL FIJO - CORREGIDO CON ID -->
 <div id="panelCantadorFijo" class="panel-cantador-fijo hidden">
 <h3 style="margin-bottom: 5px; font-size: 1.2em;">🎤 Panel del Cantador</h3>
+<!-- ✅ NUEVO: Panel de Verificación de Apuestas -->
+<div id="panelVerificacionApuestas" class="banco-panel" style="display: none;">
+<h4 style="font-size: 0.85em; margin-bottom: 6px;">📋 Verificación de Apuestas</h4>
+<div id="listaVerificacionApuestas">
+<!-- Se llena dinámicamente -->
+</div>
+<div id="mensajeValidacion" style="margin-top: 10px; font-weight: bold;"></div>
+</div>
 <div class="botones-cantador">
+<button class="verde" onclick="verificarEstadoApuestas()" style="margin-bottom: 5px;">📋 Verificar Apuestas</button>
 <button class="cantador" onclick="cantarCartaAleatoria()">🃏 Cantar</button>
-<button class="cantador" onclick="iniciarJuego()">▶️ Iniciar</button>
+<button class="cantador" onclick="iniciarJuego()" id="btnIniciarJuego">▶️ Iniciar</button>
 <button class="cantador" onclick="toggleFaseSeleccion()">🔄 Selección</button>
 <button class="cantador" onclick="siguientePartida()">➡️ Siguiente</button>
 <button class="cantador" onclick="reiniciarJuego()">🔄 Reiniciar</button>
@@ -986,6 +1019,96 @@ gameState.pozosDinamicos = pozos;
 actualizarPozosVisuales(pozos);
 });
 
+socket.on('validacionFallida', (data) => {
+mostrarNotificacion(data.mensaje, 'error', true);
+
+const panel = document.getElementById('panelVerificacionApuestas');
+const lista = document.getElementById('listaVerificacionApuestas');
+const mensaje = document.getElementById('mensajeValidacion');
+
+if (panel && lista && mensaje) {
+panel.style.display = 'block';
+
+lista.innerHTML = data.jugadoresNoListos.map(j => `
+<div class="verificacion-item nolisto">
+<strong>❌ ${j.nombre}</strong><br>
+<span style="font-size: 0.75em;">${j.razon}</span>
+</div>
+`).join('');
+
+mensaje.innerHTML = `
+<span style="color: #e74c3c;">
+${data.jugadoresNoListos.length} de ${data.totalJugadores} jugadores NO están listos
+</span>
+`;
+}
+
+const btnIniciar = document.getElementById('btnIniciarJuego');
+if (btnIniciar) {
+btnIniciar.disabled = true;
+btnIniciar.style.opacity = '0.5';
+btnIniciar.textContent = '⛔ Esperando apuestas...';
+}
+});
+
+socket.on('estadoApuestas', (data) => {
+const panel = document.getElementById('panelVerificacionApuestas');
+const lista = document.getElementById('listaVerificacionApuestas');
+
+if (panel && lista) {
+panel.style.display = 'block';
+
+if (data.todosListos) {
+lista.innerHTML = data.listos.map(j => `
+<div class="verificacion-item listo">
+<strong>✅ ${j.nombre}</strong><br>
+<span style="font-size: 0.75em;">
+💰 ${j.monedas} fichas | 🎰 ${j.apostado} fichas apostadas
+</span>
+</div>
+`).join('');
+
+document.getElementById('mensajeValidacion').innerHTML = `
+<span style="color: #27ae60;">
+✅ Todos los ${data.listos.length} jugadores están listos para jugar
+</span>
+`;
+} else {
+lista.innerHTML = `
+<div style="margin-bottom: 10px;">
+<strong style="color: #27ae60;">Jugadores Listos:</strong><br>
+${data.listos.map(j => `<span>✅ ${j.nombre}</span>`).join(', ')}
+</div>
+<div>
+<strong style="color: #e74c3c;">Jugadores NO Listos:</strong><br>
+${data.noListos.map(j => `<span>❌ ${j.nombre} (${j.razon})</span>`).join(', ')}
+</div>
+`;
+}
+}
+});
+
+socket.on('juegoIniciado', (data) => {
+const btnIniciar = document.getElementById('btnIniciarJuego');
+if (btnIniciar) {
+btnIniciar.disabled = false;
+btnIniciar.style.opacity = '1';
+btnIniciar.textContent = '▶️ Iniciar';
+}
+
+const panel = document.getElementById('panelVerificacionApuestas');
+if (panel) {
+panel.style.display = 'none';
+}
+
+if (data.esEspecial) {
+mostrarNotificacion('🎊 ' + data.mensaje, 'success', true);
+actualizarIndicadorPartida(gameState.partidaActual, true);
+} else {
+mostrarNotificacion(data.mensaje, 'success');
+}
+});
+
 socket.on('premiosParaVerificar', (data) => {
 console.log('🔍 Premios para verificar:', data);
 renderizarPremiosPendientes(data.premios);
@@ -1053,25 +1176,6 @@ if (panel) panel.classList.remove('hidden');
 if (panelFijo) panelFijo.classList.remove('hidden');
 if (btnSerCantador) btnSerCantador.style.display = 'none';
 }
-});
-
-socket.on('juegoIniciado', (data) => {
-if (data.esEspecial) {
-mostrarNotificacion('🎊 ' + data.mensaje, 'success', true);
-actualizarIndicadorPartida(gameState.partidaActual, true);
-} else {
-mostrarNotificacion(data.mensaje, 'success');
-}
-actualizarPanelApuestas();
-});
-
-socket.on('siguientePartida', (data) => {
-const partidaEl = document.getElementById('partidaActual');
-if (partidaEl) partidaEl.textContent = data.partida;
-actualizarIndicadorPartida(data.partida, data.esEspecial);
-mostrarNotificacion(data.mensaje, 'success', data.esEspecial);
-yaAposto = false;
-actualizarPanelApuestas();
 });
 
 socket.on('mazoAgotado', (data) => {
@@ -1143,6 +1247,107 @@ socket.emit('apostarEnPozos', emailActual);
 yaAposto = true;
 actualizarPanelApuestas();
 }
+
+// ✅ NUEVA FUNCIÓN: Verificar estado de apuestas
+function verificarEstadoApuestas() {
+  socket.emit('solicitarEstadoApuestas', emailActual);
+}
+
+// ✅ NUEVO: Escuchar validación del servidor
+socket.on('validacionFallida', (data) => {
+  mostrarNotificacion(data.mensaje, 'error', true);
+  
+  // ✅ Mostrar lista detallada en el panel del cantador
+  const panel = document.getElementById('panelVerificacionApuestas');
+  const lista = document.getElementById('listaVerificacionApuestas');
+  const mensaje = document.getElementById('mensajeValidacion');
+  
+  if (panel && lista && mensaje) {
+    panel.style.display = 'block';
+    
+    lista.innerHTML = data.jugadoresNoListos.map(j => `
+      <div class="premio-pendiente-item" style="border-left-color: #e74c3c;">
+        <strong>❌ ${j.nombre}</strong><br>
+        <span style="font-size: 0.75em;">${j.razon}</span>
+      </div>
+    `).join('');
+    
+    mensaje.innerHTML = `
+      <span style="color: #e74c3c;">
+        ${data.jugadoresNoListos.length} de ${data.totalJugadores} jugadores NO están listos
+      </span>
+    `;
+  }
+  
+  // ✅ Deshabilitar botón de iniciar temporalmente
+  const btnIniciar = document.querySelector('button[onclick="iniciarJuego()"]');
+  if (btnIniciar) {
+    btnIniciar.disabled = true;
+    btnIniciar.style.opacity = '0.5';
+    btnIniciar.textContent = '⛔ Esperando apuestas...';
+  }
+});
+
+// ✅ NUEVO: Escuchar juego iniciado exitosamente
+socket.on('juegoIniciado', (data) => {
+  // ✅ Habilitar botón de iniciar nuevamente
+  const btnIniciar = document.querySelector('button[onclick="iniciarJuego()"]');
+  if (btnIniciar) {
+    btnIniciar.disabled = false;
+    btnIniciar.style.opacity = '1';
+    btnIniciar.textContent = '▶️ Iniciar';
+  }
+  
+  // ✅ Ocultar panel de verificación
+  const panel = document.getElementById('panelVerificacionApuestas');
+  if (panel) {
+    panel.style.display = 'none';
+  }
+  
+  if (data.esEspecial) {
+    mostrarNotificacion('🎊 ' + data.mensaje, 'success', true);
+  } else {
+    mostrarNotificacion(data.mensaje, 'success');
+  }
+});
+
+// ✅ NUEVO: Escuchar estado de apuestas (para mostrar en panel)
+socket.on('estadoApuestas', (data) => {
+  const panel = document.getElementById('panelVerificacionApuestas');
+  const lista = document.getElementById('listaVerificacionApuestas');
+  
+  if (panel && lista) {
+    panel.style.display = 'block';
+    
+    if (data.todosListos) {
+      lista.innerHTML = data.listos.map(j => `
+        <div class="premio-pendiente-item" style="border-left-color: #27ae60;">
+          <strong>✅ ${j.nombre}</strong><br>
+          <span style="font-size: 0.75em;">
+            💰 ${j.monedas} fichas | 🎰 ${j.apostado} fichas apostadas
+          </span>
+        </div>
+      `).join('');
+      
+      document.getElementById('mensajeValidacion').innerHTML = `
+        <span style="color: #27ae60;">
+          ✅ Todos los ${data.listos.length} jugadores están listos para jugar
+        </span>
+      `;
+    } else {
+      lista.innerHTML = `
+        <div style="margin-bottom: 10px;">
+          <strong style="color: #27ae60;">Jugadores Listos:</strong>
+          ${data.listos.map(j => `<span>✅ ${j.nombre}</span>`).join(', ')}
+        </div>
+        <div>
+          <strong style="color: #e74c3c;">Jugadores NO Listos:</strong>
+          ${data.noListos.map(j => `<span>❌ ${j.nombre} (${j.razon})</span>`).join(', ')}
+        </div>
+      `;
+    }
+  }
+});
 
 function renderizarPremiosPendientes(premios) {
 const container = document.getElementById('premiosPendientesLista');
@@ -1412,7 +1617,6 @@ function cerrarModalBalance() {
 document.getElementById('modalBalance').classList.remove('active');
 }
 
-// ✅ NUEVA FUNCIÓN: Renderizar grid con imágenes PNG de cartones oficiales
 function renderizarGridCartones() {
 const grid = document.getElementById('gridCartones');
 const cartones = gameState.cartones || [];
@@ -1424,7 +1628,6 @@ grid.innerHTML = cartones.map(carton => {
 const seleccionado = carton.dueño === emailActual;
 const bloqueado = carton.dueño && carton.dueño !== emailActual;
 
-// ✅ Mostrar imagen PNG oficial para cartones 1-12
 const imagenCarton = carton.numero <= 12
 ? `<img src="/carton_${carton.numero}.png" alt="Cartón ${carton.numero}">`
 : '';
@@ -1450,7 +1653,6 @@ socket.emit('seleccionarCarton', numero, emailActual, nombreActual);
 }
 }
 
-// ✅ NUEVA FUNCIÓN: Renderizar mis cartones con imágenes de cartas individuales
 function renderizarMisCartones() {
 const container = document.getElementById('misCartones');
 const cartones = gameState.cartones || [];
@@ -1476,18 +1678,26 @@ return `
 <span>★ Full: ${carton.valorFull2}+${carton.valorFull3}</span>
 </div>
 
-<!-- ✅ CARTÓN RENDERIZADO CON IMÁGENES INDIVIDUALES DE CARTAS -->
 <div class="carton-board-pro">
 ${carton.cartas.map((carta, index) => {
 const estaTapada = carton.tapadas && carton.tapadas[index] ? 'tapada' : '';
-const tipoClase = carta.tipo || '';
-const nombreArchivo = carta.codigo || '';
+
+// ✅ CONVERSIÓN: "A" → "1" para las imágenes PNG
+const nombreImagen = carta.codigo.replace('A', '1');
 
 return `
-<div class="carta-pro ${tipoClase} ${estaTapada}"
+<div class="carta-pro ${estaTapada}"
 onclick="taparCarta(${carton.numero}, ${index})"
-style="cursor: pointer !important; pointer-events: auto !important;">
-${estaTapada ? '' : `<img src="/${nombreArchivo}" alt="${carta.valor}${carta.palo}">`}
+style="cursor: pointer !important; pointer-events: auto !important; position: relative;">
+${estaTapada ? `
+<div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; 
+background: rgba(52, 73, 94, 0.9); border-radius: 4px;
+display: flex; align-items: center; justify-content: center;">
+<span style="color: #f39c12; font-size: 2em;">✓</span>
+</div>
+` : ''}
+<img src="/${nombreImagen}.png" alt="${carta.valor}${carta.palo}" 
+style="width: 100%; height: 100%; object-fit: contain;"/>
 </div>
 `;
 }).join('')}
