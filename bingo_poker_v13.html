@@ -888,14 +888,12 @@ mostrarNotificacion('❌ No se pudo copiar el enlace', 'error');
 }
 
 function conectarSocket() {
-  // ✅ Conectar con configuración explícita para Render
+  // ✅ IMPORTANTE: Misma configuración que el servidor
   socket = io({
     transports: ['websocket', 'polling'],
     reconnection: true,
     reconnectionDelay: 1000,
-    reconnectionAttempts: 10,
-    timeout: 20000,
-    forceNew: false
+    reconnectionAttempts: 10
   });
 
   socket.on('connect', () => {
@@ -909,7 +907,7 @@ function conectarSocket() {
   });
 
   socket.on('connect_error', (error) => {
-    console.error('❌ Error de conexión Socket:', error);
+    console.error('❌ Error de conexión:', error);
     const estadoEl = document.getElementById('estadoConexion');
     if (estadoEl) {
       estadoEl.className = 'status disconnected';
@@ -917,6 +915,9 @@ function conectarSocket() {
       estadoEl.style.background = '#e74c3c';
     }
   });
+
+  // ... resto de tus event listeners que ya tienes ...
+}
 
   socket.on('disconnect', () => {
     console.log('❌ Socket desconectado');
