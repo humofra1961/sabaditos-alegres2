@@ -1,19 +1,24 @@
 {
-  "name": "bingo-poker-sabadito-alegre",
+  "name": "sabaditos-alegres",
   "version": "2.0.0",
-  "description": "Servidor para Bingo Poker - Sabadito Alegre Familiar",
-  "main": "server5.js",
+  "description": "Bingo Poker - Sabadito Alegre (Arquitectura Modular)",
+  "main": "server/index.js",
   "scripts": {
-    "start": "node server5.js",
-    "dev": "nodemon server5.js"
+    "start": "node server/index.js",
+    "dev": "nodemon server/index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
+  "keywords": ["bingo", "poker", "socket.io", "express"],
+  "author": "Humberto Molina",
+  "license": "MIT",
   "dependencies": {
     "express": "^4.18.2",
     "socket.io": "^4.6.1"
   },
+  "devDependencies": {
+    "nodemon": "^3.0.1"
+  },
   "engines": {
     "node": "18.x"
-  },
-  "author": "Familia Molina Martinez",
-  "license": "MIT"
+  }
 }
