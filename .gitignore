@@ -1,7 +1,16 @@
+<<<<<<< HEAD
 node_modules/
 .env
 *.log
 .DS_Store
 Thumbs.db
 *.pdf
+=======
+node_modules/
+.env
+*.log
+.DS_Store
+Thumbs.db
+*.pdf
+>>>>>>> 77a477f (Migración a arquitectura modular - Servidor y Cliente organizados)
 *.png
