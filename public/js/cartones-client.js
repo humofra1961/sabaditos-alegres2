@@ -17,7 +17,7 @@ const cartones = {
       const bloqueado = carton.dueño && carton.dueño !== app.emailActual;
 
       const imagenCarton = carton.numero <= 12
-        ? `<img src="/carton_${carton.numero}.png" alt="Cartón ${carton.numero}" style="width: 100%; border-radius: 6px; margin-bottom: 8px;">`
+        ? `<img src="/img/cartones/carton_${carton.numero}.png" alt="Cartón ${carton.numero}" style="width: 100%; border-radius: 6px; margin-bottom: 8px;">`
         : '';
 
       return `
@@ -74,11 +74,12 @@ const cartones = {
             ${carton.cartas.map((carta, index) => {
               const estaTapada = carton.tapadas && carton.tapadas[index] ? 'tapada' : '';
               const nombreImagen = carta.codigo.replace('1', 'A');
+              const paloArchivo = carta.palo === '♠' ? 'p' : carta.palo === '♥' ? 'c' : carta.palo === '♦' ? 'd' : 't';
 
               return `
                 <div class="carta-pro ${estaTapada}" onclick="cartones.taparCarta(${carton.numero}, ${index})">
                   ${estaTapada ? '<span style="color: #f39c12; font-size: 2em;">✓</span>' : ''}
-                  <img src="/${nombreImagen}${carton.cartas[index].palo === '♠' ? 'p' : carton.cartas[index].palo === '♥' ? 'c' : carton.cartas[index].palo === '♦' ? 'd' : 't'}.png" 
+                  <img src="/img/cartas/${nombreImagen}${paloArchivo}.png" 
                        alt="${carta.valor}${carta.palo}" style="width: 100%; height: 100%; object-fit: contain;"/>
                 </div>
               `;
@@ -121,3 +122,6 @@ const pozosInfo = {
   centro: { nombre: 'CENTRO', premio: 250 },
   especial: { nombre: 'ESPECIAL', premio: 500 }
 };
+
+// ✅ IMPORTANTE: Hacer cartones global
+window.cartones = cartones;
