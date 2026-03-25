@@ -30,3 +30,6 @@ const pozos = {
     });
   }
 };
+
+// ✅ IMPORTANTE: Hacer pozos global
+window.pozos = pozos;
