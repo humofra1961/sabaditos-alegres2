@@ -112,6 +112,45 @@ const ui = {
   },
 
   actualizarPanelCantador: (email) => {
+    console.log('🎤 UI: Actualizando panel cantador:', email);
+    
+    const panel = document.getElementById('panelCantador');
+    const panelFijo = document.getElementById('panelCantadorFijo');
+    const btnSerCantador = document.getElementById('btnSerCantador');
+    
+    // ✅ Para TODOS los jugadores: mostrar/ocultar paneles
+    if (panel) {
+      if (email === app.emailActual) {
+        panel.classList.remove('hidden');
+        console.log('✅ Panel Cantador visible para:', app.emailActual);
+      } else {
+        panel.classList.add('hidden');
+      }
+    }
+    
+    if (panelFijo) {
+      if (email === app.emailActual) {
+        panelFijo.classList.remove('hidden');
+      } else {
+        panelFijo.classList.add('hidden');
+      }
+    }
+    
+    // ✅ Para TODOS: mostrar/ocultar botón "Ser Cantador"
+    if (btnSerCantador) {
+      if (email) {
+        // Ya hay cantador - NADIE más puede ser cantador
+        btnSerCantador.style.display = 'none';
+        console.log('🔒 Botón "Ser Cantador" oculto (ya hay cantador)');
+      } else {
+        // No hay cantador - TODOS pueden ser cantador
+        btnSerCantador.style.display = 'inline-block';
+        console.log('🔓 Botón "Ser Cantador" visible (no hay cantador)');
+      }
+    }
+  },
+
+  /*actualizarPanelCantador: (email) => {
     const panel = document.getElementById('panelCantador');
     const panelFijo = document.getElementById('panelCantadorFijo');
     const btnSerCantador = document.getElementById('btnSerCantador');
@@ -119,7 +158,7 @@ const ui = {
     if (panel) panel.classList.toggle('hidden', email !== app.emailActual);
     if (panelFijo) panelFijo.classList.toggle('hidden', email !== app.emailActual);
     if (btnSerCantador) btnSerCantador.style.display = email ? 'none' : 'inline-block';
-  },
+  },*/
 
   actualizarBanco: (banco) => {
     if (!banco) return;
