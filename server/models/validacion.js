@@ -10,7 +10,6 @@ function verificarPozo(carton, pozo, codigosCantados) {
         return false;
       }
       const carta = carton.cartas[i];
-      console.log(`🔍 Verificando carta ${i}: código='${carta.codigo}', enMazo=${codigosCantados.includes(carta.codigo)}`);
       if (!codigosCantados.includes(carta.codigo)) {
         console.log(`❌ Carta ${carta.codigo} NO está en cartas cantadas`);
         return false;
