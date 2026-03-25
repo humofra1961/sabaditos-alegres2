@@ -83,13 +83,43 @@ const socketClient = {
       app.gameState.faseJuego = fase || 'seleccion';
       ui.actualizarFaseJuego(fase);
     });
-    
+
     socket.on('updateCantador', (email) => {
-      console.log('🎤 Cantador:', email);
+      console.log('🎤 Cantador actualizado:', email);
+      if (!app.gameState) app.gameState = {};
+      app.gameState.cantador = email;
+      
+      // ✅ IMPORTANTE: Actualizar UI para TODOS los clientes
+      ui.actualizarPanelCantador(email);
+      
+      // ✅ Ocultar/mostrar botón "Ser Cantador" según corresponda
+      const btnSerCantador = document.getElementById('btnSerCantador');
+      if (btnSerCantador) {
+        if (email) {
+          // Ya hay cantador - ocultar botón para todos menos él
+          btnSerCantador.style.display = (email === app.emailActual) ? 'none' : 'none';
+        } else {
+          // No hay cantador - mostrar botón para todos
+          btnSerCantador.style.display = 'inline-block';
+        }
+      }
+      
+      // ✅ Si YO soy el cantador, mostrar mi panel automáticamente
+      if (email === app.emailActual) {
+        const panelCantador = document.getElementById('panelCantador');
+        const panelCantadorFijo = document.getElementById('panelCantadorFijo');
+        if (panelCantador) panelCantador.classList.remove('hidden');
+        if (panelCantadorFijo) panelCantadorFijo.classList.remove('hidden');
+        console.log('✅ Panel de Cantador activado automáticamente');
+      }
+    });
+    
+    //socket.on('updateCantador', (email) => {
+      /*console.log('🎤 Cantador:', email);
       if (!app.gameState) app.gameState = {};
       app.gameState.cantador = email;
       ui.actualizarPanelCantador(email);
-    });
+    });*/
     
     socket.on('updatePozosDinamicos', (pozos) => {
       console.log('🏆 Actualizando pozos:', pozos);
