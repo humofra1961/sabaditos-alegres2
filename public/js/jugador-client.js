@@ -25,3 +25,6 @@ const jugador = {
 };
 
 app.yaAposto = false;
+
+// ✅ IMPORTANTE: Hacer jugador global
+window.jugador = jugador;
