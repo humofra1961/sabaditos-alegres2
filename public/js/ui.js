@@ -248,5 +248,20 @@ const ui = {
       if (event.target.id === 'modalReporte') ui.cerrarModalReporte();
       if (event.target.id === 'modalBalance') ui.cerrarModalBalance();
     };
+  },
+
+  renderizarEstadisticas: () => {
+    const container = document.getElementById('estadisticas');
+    if (!container) return;
+
+    const stats = app.gameState?.estadisticas?.[app.emailActual] || {};
+    container.innerHTML = `
+      <div class="stats-row"><span>Partidas Jugadas:</span><span>${stats.ganadas + stats.perdidas || 0}</span></div>
+      <div class="stats-row"><span>Partidas Ganadas:</span><span style="color: #27ae60;">${stats.ganadas || 0}</span></div>
+      <div class="stats-row"><span>Pozos Ganados:</span><span style="color: #f39c12;">${(stats.pozosGanados || []).length}</span></div>
+    `;
   }
 };
+
+// ✅ IMPORTANTE: Hacer ui global
+window.ui = ui;
