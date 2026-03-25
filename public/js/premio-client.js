@@ -39,3 +39,6 @@ const premio = {
 };
 
 app.premioPendiente = null;
+
+// ✅ IMPORTANTE: Hacer premio global
+window.premio = premio;
