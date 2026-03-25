@@ -40,7 +40,14 @@ const cantador = {
       ui.mostrarNotificacion('Ingresa cantidad válida (1-100)', 'error');
       return;
     }
+
+  // Al final de cantador-client.js
+  window.cantador = cantador;    
+    
     socket.emit('agregarMonedas', emailJugador, cantidad, app.emailActual);
     document.getElementById('cantidadMonedas').value = '';
   }
 };
+
+// ✅ IMPORTANTE: Hacer cantador global
+window.cantador = cantador;
