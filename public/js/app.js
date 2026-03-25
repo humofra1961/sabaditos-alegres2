@@ -61,6 +61,9 @@ const app = {
   }
 };
 
+// ✅ IMPORTANTE: Hacer app global
+window.app = app;
+
 // Inicializar cuando el DOM esté listo
 document.addEventListener('DOMContentLoaded', () => {
   console.log('📄 DOM cargado, inicializando app...');
