@@ -31,7 +31,6 @@ const socketClient = {
       ui.actualizarEstadoConexion(false);
     });
     
-    // Registrar todos los event listeners
     socketClient.registrarEventos();
   },
   
@@ -58,7 +57,7 @@ const socketClient = {
       console.log('🎴 Actualizando cartones:', cartones);
       if (!app.gameState) app.gameState = {};
       app.gameState.cartones = cartones || [];
-      if (typeof cartones !== 'undefined') {
+      if (typeof cartones !== 'undefined' && cartones.renderizarGrid) {
         cartones.renderizarGrid();
         cartones.renderizarMisCartones();
       }
@@ -96,7 +95,7 @@ const socketClient = {
       console.log('🏆 Actualizando pozos:', pozos);
       if (!app.gameState) app.gameState = {};
       app.gameState.pozosDinamicos = pozos || {};
-      if (typeof pozos !== 'undefined') {
+      if (typeof pozos !== 'undefined' && pozos.renderizar) {
         pozos.renderizar();
       }
     });
@@ -176,3 +175,6 @@ const socketClient = {
     });
   }
 };
+
+// ✅ IMPORTANTE: Hacer socketClient global
+window.socketClient = socketClient;
