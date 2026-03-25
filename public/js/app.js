@@ -3,6 +3,22 @@
 // ============================================================================
 
 const app = {
+  emailActual: '',
+  nombreActual: '',
+  gameState: {
+    jugadores: {},
+    cartones: [],
+    cartasCantadas: [],
+    cantador: null,
+    faseJuego: 'seleccion',
+    partidaActual: 1,
+    banco: { totalRecaudado: 0, totalPagado: 0 },
+    pozosDinamicos: {},
+    estadisticas: {}
+  },
+  yaAposto: false,
+  premioPendiente: null,
+  
   iniciarSesion: () => {
     const email = document.getElementById('emailInput').value.trim();
     const nombre = document.getElementById('nombreInput').value.trim();
@@ -42,14 +58,12 @@ const app = {
   copiarEnlace: () => {
     navigator.clipboard.writeText(window.location.href);
     ui.mostrarNotificacion('🔗 Enlace copiado', 'success');
-  },
-  
-  emailActual: '',
-  nombreActual: ''
+  }
 };
 
 // Inicializar cuando el DOM esté listo
 document.addEventListener('DOMContentLoaded', () => {
+  console.log('📄 DOM cargado, inicializando app...');
   socketClient.conectar();
   ui.inicializarModales();
 });
