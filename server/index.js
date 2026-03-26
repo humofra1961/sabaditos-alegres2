@@ -33,7 +33,7 @@ const io = new Server(server, {
 app.use(express.static(path.join(__dirname, '../public')));
 app.use('/css', express.static(path.join(__dirname, '../public/css')));
 app.use('/js', express.static(path.join(__dirname, '../public/js')));
-app.use('/img', express.static(path.join(__dirname, '../public/img')));
+app.use('/img', express.static(path.join(__dirname, '../img')));
 
 // Ruta principal
 app.get('/', function(req, res) {
