@@ -3,28 +3,30 @@
 // ============================================================================
 
 const jugador = {
-  comprarFichas: () => {
-    const cantidad = parseInt(document.getElementById('cantidadFichasComprar').value);
+  comprarFichas: function() {
+    const cantidadInput = document.getElementById('cantidadFichasComprar');
+    const cantidad = parseInt(cantidadInput ? cantidadInput.value : 0);
     if (!cantidad || cantidad < 1 || cantidad > 100) {
-      ui.mostrarNotificacion('Ingresa cantidad válida (1-100)', 'error');
+      if (window.ui) window.ui.mostrarNotificacion('Ingresa cantidad válida (1-100)', 'error');
       return;
     }
-    socket.emit('comprarFichas', app.emailActual, cantidad);
-    document.getElementById('cantidadFichasComprar').value = '';
+    socket.emit('comprarFichas', window.app.emailActual, cantidad);
+    if (cantidadInput) cantidadInput.value = '';
   },
-
-  apostarEnPozos: () => {
-    if (app.yaAposto) {
-      ui.mostrarNotificacion('❌ Ya apostaste en esta partida', 'error');
+  
+  apostarEnPozos: function() {
+    if (window.app.yaAposto) {
+      if (window.ui) window.ui.mostrarNotificacion('❌ Ya apostaste en esta partida', 'error');
       return;
     }
-    socket.emit('apostarEnPozos', app.emailActual);
-    app.yaAposto = true;
-    ui.mostrarNotificacion('✅ Apuesta realizada - 6 fichas', 'success');
+    socket.emit('apostarEnPozos', window.app.emailActual);
+    window.app.yaAposto = true;
+    if (window.ui) window.ui.mostrarNotificacion('✅ Apuesta realizada - 6 fichas', 'success');
+    
+    // Ocultar panel de apuestas después de apostar
+    const panelApuestas = document.getElementById('panelApuestas');
+    if (panelApuestas) panelApuestas.classList.add('hidden');
   }
 };
 
-app.yaAposto = false;
-
-// ✅ IMPORTANTE: Hacer jugador global
 window.jugador = jugador;
