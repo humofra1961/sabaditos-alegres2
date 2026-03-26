@@ -580,8 +580,8 @@ button.email {
 /* ============================================================================ */
 
 .panel-cantador-fijo {
-  position: sticky;
-  bottom: 0px;
+  position: fixed;
+  bottom: 20px;
   right: 20px;
   background: linear-gradient(135deg, #f39c12, #e67e22);
   border-radius: 15px;
