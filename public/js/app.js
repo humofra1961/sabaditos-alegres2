@@ -39,7 +39,15 @@ const app = {
     
     console.log('👤 Sesión iniciada:', email);
   },
-  
+
+  // ✅ IMPORTANTE: Verificar si ya hay cantador después de registrar
+  setTimeout(() => {
+    if (app.gameState && app.gameState.cantador) {
+      console.log('🎤 Ya hay cantador:', app.gameState.cantador);
+      ui.actualizarPanelCantador(app.gameState.cantador);
+    }
+  }, 1000);
+
   cerrarSesion: () => {
     location.reload();
   },
