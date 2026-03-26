@@ -11,6 +11,7 @@ module.exports = (io) => {
     logger.gameEvent('Conexion', { socketId: socket.id });
 
     // ✅ REGISTRO DE JUGADOR
+        // ✅ REGISTRO DE JUGADOR
     socket.on('registerPlayer', (email, nombre) => {
       logger.gameEvent('Registro', { email, nombre });
       
@@ -19,24 +20,25 @@ module.exports = (io) => {
         gameState.jugadores[email].timestamp = Date.now();
         gameState.jugadores[email].desconectado = false;
         
-        if (gameState.cantadorAnterior === email && !gameState.cantador) {
-          gameState.cantador = email;
-          io.emit('updateCantador', email);
-          io.emit('updateJugadores', gameState.jugadores);
+        //if (gameState.cantadorAnterior === email && !gameState.cantador) {
+          //gameState.cantador = email;
+          //io.emit('updateCantador', email);
+         // io.emit('updateJugadores', gameState.jugadores);
           socket.emit('reconexionExitosa', {
             mensaje: 'Reconectado como CANTADOR. Tu posición fue restaurada.',
             monedas: gameState.jugadores[email].monedas,
             cartones: gameState.jugadores[email].cartones,
-            esCantador: true
+            esCantador: gameState.cantador === email
+            //esCantador: true
           });
-        } else {
+        /*} else {
           socket.emit('reconexionExitosa', {
             mensaje: 'Reconectado. Tu estado se mantuvo.',
             monedas: gameState.jugadores[email].monedas,
             cartones: gameState.jugadores[email].cartones,
             esCantador: gameState.cantador === email
           });
-        }
+        }*/
       } else {
         gameState.jugadores[email] = { 
           nombre, 
@@ -61,11 +63,19 @@ module.exports = (io) => {
         }
       }
       
+      // ✅ IMPORTANTE: Emitir a TODOS los clientes (incluyendo al Cantador)
       io.emit('updateJugadores', gameState.jugadores);
       io.emit('updateEstadisticas', gameState.estadisticas);
       io.emit('updateBanco', gameState.banco);
       io.emit('updatePozosDinamicos', gameState.pozosDinamicos);
+
+      // ✅ IMPORTANTE: Emitir estado del Cantador al nuevo jugador
+      socket.emit('updateCantador', gameState.cantador);
+  
+      logger.gameEvent('Jugador Registrado', { email, nombre, cantadorActual: gameState.cantador });      
+
     });
+
     
     // ✅ COMPRAR FICHAS
     socket.on('comprarFichas', (email, cantidadFichas) => {
