@@ -24,18 +24,10 @@ const app = {
     const nombre = document.getElementById('nombreInput').value.trim();
     
     if (!email || !nombre) {
-      ui.mostrarNotificacion('Ingresa correo y nombre', 'error');
+      if (window.ui) window.ui.mostrarNotificacion('Ingresa correo y nombre', 'error');
       return;
     }
-    verificarPanelApuestas: function() {
-      // Mostrar panel de apuestas si no ha apostado y está en fase de selección
-      const panelApuestas = document.getElementById('panelApuestas');
-      if (panelApuestas && window.app.gameState && window.app.gameState.faseJuego === 'seleccion') {
-        if (!window.app.yaAposto) {
-          panelApuestas.classList.remove('hidden');
-        }
-      }
-    }    
+    
     app.emailActual = email;
     app.nombreActual = nombre;
     
@@ -46,6 +38,11 @@ const app = {
     document.getElementById('jugadorNombre').textContent = nombre;
     
     console.log('👤 Sesión iniciada:', email);
+    
+    // ✅ Verificar panel de apuestas después de iniciar sesión
+    setTimeout(function() {
+      app.verificarPanelApuestas();
+    }, 1000);
   },
   
   cerrarSesion: function() {
@@ -65,7 +62,21 @@ const app = {
   
   copiarEnlace: function() {
     navigator.clipboard.writeText(window.location.href);
-    ui.mostrarNotificacion('🔗 Enlace copiado', 'success');
+    if (window.ui) window.ui.mostrarNotificacion('🔗 Enlace copiado', 'success');
+  },
+  
+  verificarPanelApuestas: function() {
+    // Mostrar panel de apuestas si no ha apostado y está en fase de selección
+    const panelApuestas = document.getElementById('panelApuestas');
+    if (panelApuestas && app.gameState && app.gameState.faseJuego === 'seleccion') {
+      if (!app.yaAposto) {
+        panelApuestas.classList.remove('hidden');
+        console.log('✅ Panel de apuestas visible');
+      } else {
+        panelApuestas.classList.add('hidden');
+        console.log('🔒 Panel de apuestas oculto (ya apostó)');
+      }
+    }
   }
 };
 
@@ -75,6 +86,6 @@ window.app = app;
 // Inicializar cuando el DOM esté listo
 document.addEventListener('DOMContentLoaded', function() {
   console.log('📄 DOM cargado, inicializando app...');
-  socketClient.conectar();
-  ui.inicializarModales();
+  if (window.socketClient) window.socketClient.conectar();
+  if (window.ui) window.ui.inicializarModales();
 });
