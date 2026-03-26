@@ -5,7 +5,7 @@
 let socket;
 
 const socketClient = {
-  conectar: () => {
+  conectar: function() {
     console.log('🔌 Conectando a Socket.io...');
     
     socket = io({
@@ -16,195 +16,157 @@ const socketClient = {
       timeout: 20000
     });
     
-    socket.on('connect', () => {
+    socket.on('connect', function() {
       console.log('✅ Socket conectado:', socket.id);
-      ui.actualizarEstadoConexion(true);
+      if (window.ui) window.ui.actualizarEstadoConexion(true);
     });
     
-    socket.on('connect_error', (error) => {
+    socket.on('connect_error', function(error) {
       console.error('❌ Error de conexión:', error);
-      ui.actualizarEstadoConexion(false);
+      if (window.ui) window.ui.actualizarEstadoConexion(false);
     });
     
-    socket.on('disconnect', () => {
+    socket.on('disconnect', function() {
       console.log('❌ Socket desconectado');
-      ui.actualizarEstadoConexion(false);
+      if (window.ui) window.ui.actualizarEstadoConexion(false);
     });
     
     socketClient.registrarEventos();
   },
   
-  registrarEventos: () => {
-    socket.on('gameState', (state) => {
+  registrarEventos: function() {
+    socket.on('gameState', function(state) {
       console.log('📊 Recibiendo gameState:', state);
-      if (!app.gameState) app.gameState = {};
-      app.gameState = state;
-      ui.renderizarTodo();
+      if (!window.app.gameState) window.app.gameState = {};
+      window.app.gameState = state;
+      
+      // ✅ IMPORTANTE: Renderizar cartones cuando llega gameState
+      if (state.cartones && state.cartones.length > 0) {
+        console.log('🎴 Cartones recibidos:', state.cartones.length);
+        if (window.cartones) {
+          window.cartones.renderizarGrid();
+          window.cartones.renderizarMisCartones();
+        }
+      }
+      
+      if (window.ui) window.ui.renderizarTodo();
     });
     
-    socket.on('updateJugadores', (jugadores) => {
+    socket.on('updateJugadores', function(jugadores) {
       console.log('👥 Actualizando jugadores:', jugadores);
-      if (!app.gameState) app.gameState = {};
-      app.gameState.jugadores = jugadores || {};
-      ui.renderizarJugadores();
-      ui.actualizarSelectJugadores();
-      if (jugadores && jugadores[app.emailActual]) {
-        ui.actualizarMonedas(jugadores[app.emailActual].monedas);
+      if (!window.app.gameState) window.app.gameState = {};
+      window.app.gameState.jugadores = jugadores || {};
+      if (window.ui) {
+        window.ui.renderizarJugadores();
+        window.ui.actualizarSelectJugadores();
+      }
+      if (jugadores && jugadores[window.app.emailActual]) {
+        if (window.ui) window.ui.actualizarMonedas(jugadores[window.app.emailActual].monedas);
       }
     });
     
-    socket.on('updateCartones', (cartones) => {
+    socket.on('updateCartones', function(cartones) {
       console.log('🎴 Actualizando cartones:', cartones);
-      if (!app.gameState) app.gameState = {};
-      app.gameState.cartones = cartones || [];
-      if (typeof cartones !== 'undefined' && cartones.renderizarGrid) {
-        cartones.renderizarGrid();
-        cartones.renderizarMisCartones();
+      if (!window.app.gameState) window.app.gameState = {};
+      window.app.gameState.cartones = cartones || [];
+      
+      // ✅ CORRECCIÓN: Llamar al módulo window.cartones
+      if (window.cartones && Array.isArray(cartones)) {
+        console.log('🎴 Renderizando grid de cartones...');
+        window.cartones.renderizarGrid();
+        window.cartones.renderizarMisCartones();
       }
     });
     
-    socket.on('updateCartasCantadas', (cartas) => {
+    socket.on('updateCartasCantadas', function(cartas) {
       console.log('🃏 Actualizando cartas cantadas:', cartas);
-      if (!app.gameState) app.gameState = {};
-      app.gameState.cartasCantadas = cartas || [];
-      ui.renderizarCartasPorPintas();
+      if (!window.app.gameState) window.app.gameState = {};
+      window.app.gameState.cartasCantadas = cartas || [];
+      if (window.ui) window.ui.renderizarCartasPorPintas();
       const contadorEl = document.getElementById('contadorCartas');
       if (contadorEl) contadorEl.textContent = (cartas || []).length;
     });
     
-    socket.on('updateUltimaCarta', (carta) => {
+    socket.on('updateUltimaCarta', function(carta) {
       console.log('🎴 Última carta:', carta);
-      ui.renderizarUltimaCarta(carta);
+      if (window.ui) window.ui.renderizarUltimaCarta(carta);
     });
     
-    socket.on('updateFaseJuego', (fase) => {
+    socket.on('updateFaseJuego', function(fase) {
       console.log('🔄 Fase del juego:', fase);
-      if (!app.gameState) app.gameState = {};
-      app.gameState.faseJuego = fase || 'seleccion';
-      ui.actualizarFaseJuego(fase);
-    });
-
-    socket.on('updateCantador', (email) => {
-      console.log('🎤 Cantador actualizado:', email);
-      if (!app.gameState) app.gameState = {};
-      app.gameState.cantador = email;
-      
-      // ✅ IMPORTANTE: Actualizar UI para TODOS los clientes
-      ui.actualizarPanelCantador(email);
-      
-      // ✅ Ocultar/mostrar botón "Ser Cantador" según corresponda
-      const btnSerCantador = document.getElementById('btnSerCantador');
-      if (btnSerCantador) {
-        if (email) {
-          // Ya hay cantador - ocultar botón para todos menos él
-          btnSerCantador.style.display = (email === app.emailActual) ? 'none' : 'none';
-        } else {
-          // No hay cantador - mostrar botón para todos
-          btnSerCantador.style.display = 'inline-block';
-        }
-      }
-      
-      // ✅ Si YO soy el cantador, mostrar mi panel automáticamente
-      if (email === app.emailActual) {
-        const panelCantador = document.getElementById('panelCantador');
-        const panelCantadorFijo = document.getElementById('panelCantadorFijo');
-        if (panelCantador) panelCantador.classList.remove('hidden');
-        if (panelCantadorFijo) panelCantadorFijo.classList.remove('hidden');
-        console.log('✅ Panel de Cantador activado automáticamente');
-      }
+      if (!window.app.gameState) window.app.gameState = {};
+      window.app.gameState.faseJuego = fase || 'seleccion';
+      if (window.ui) window.ui.actualizarFaseJuego(fase);
     });
     
-    //socket.on('updateCantador', (email) => {
-      /*console.log('🎤 Cantador:', email);
-      if (!app.gameState) app.gameState = {};
-      app.gameState.cantador = email;
-      ui.actualizarPanelCantador(email);
-    });*/
+    socket.on('updateCantador', function(email) {
+      console.log('🎤 Cantador:', email);
+      if (!window.app.gameState) window.app.gameState = {};
+      window.app.gameState.cantador = email;
+      if (window.ui) window.ui.actualizarPanelCantador(email);
+    });
     
-    socket.on('updatePozosDinamicos', (pozos) => {
+    socket.on('updatePozosDinamicos', function(pozos) {
       console.log('🏆 Actualizando pozos:', pozos);
-      if (!app.gameState) app.gameState = {};
-      app.gameState.pozosDinamicos = pozos || {};
-      if (typeof pozos !== 'undefined' && pozos.renderizar) {
-        pozos.renderizar();
-      }
+      if (!window.app.gameState) window.app.gameState = {};
+      window.app.gameState.pozosDinamicos = pozos || {};
+      if (window.pozos) window.pozos.renderizar();
     });
     
-    socket.on('updateBanco', (banco) => {
+    socket.on('updateBanco', function(banco) {
       console.log('🏦 Actualizando banco:', banco);
-      if (!app.gameState) app.gameState = {};
-      app.gameState.banco = banco || { totalRecaudado: 0, totalPagado: 0 };
-      ui.actualizarBanco(banco);
+      if (!window.app.gameState) window.app.gameState = {};
+      window.app.gameState.banco = banco || { totalRecaudado: 0, totalPagado: 0 };
+      if (window.ui) window.ui.actualizarBanco(banco);
     });
     
-    socket.on('updateEstadisticas', (estadisticas) => {
+    socket.on('updateEstadisticas', function(estadisticas) {
       console.log('📊 Actualizando estadísticas:', estadisticas);
-      if (!app.gameState) app.gameState = {};
-      app.gameState.estadisticas = estadisticas || {};
-      ui.renderizarEstadisticas();
+      if (!window.app.gameState) window.app.gameState = {};
+      window.app.gameState.estadisticas = estadisticas || {};
+      if (window.ui) window.ui.renderizarEstadisticas();
     });
     
-    socket.on('validacionFallida', (data) => {
+    socket.on('validacionFallida', function(data) {
       console.log('⚠️ Validación fallida:', data);
-      ui.mostrarValidacionFallida(data);
+      if (window.ui) window.ui.mostrarValidacionFallida(data);
     });
     
-    socket.on('estadoApuestas', (data) => {
+    socket.on('estadoApuestas', function(data) {
       console.log('📋 Estado de apuestas:', data);
-      ui.mostrarEstadoApuestas(data);
+      if (window.ui) window.ui.mostrarEstadoApuestas(data);
     });
     
-    socket.on('juegoIniciado', (data) => {
+    socket.on('juegoIniciado', function(data) {
       console.log('🎮 Juego iniciado:', data);
-      ui.mostrarJuegoIniciado(data);
+      if (window.ui) window.ui.mostrarJuegoIniciado(data);
     });
     
-    socket.on('alertaGanador', (data) => {
+    socket.on('alertaGanador', function(data) {
       console.log('🏆 Alerta de ganador:', data);
-      premio.mostrarAlerta(data);
+      if (window.premio) window.premio.mostrarAlerta(data);
     });
     
-    socket.on('premioConfirmado', (data) => {
+    socket.on('premioConfirmado', function(data) {
       console.log('✅ Premio confirmado:', data);
-      ui.mostrarNotificacion(`✅ ${data.jugador} ganó ${data.pozo}`, 'success');
+      if (window.ui) window.ui.mostrarNotificacion('✅ ' + data.jugador + ' ganó ' + data.pozo, 'success');
     });
     
-    socket.on('premioRechazado', (data) => {
-      console.log('❌ Premio rechazado:', data);
-      ui.mostrarNotificacion(data.mensaje, 'error');
-    });
-    
-    socket.on('monedasAgregadas', (data) => {
-      console.log('💰 Monedas agregadas:', data);
-      ui.mostrarNotificacion(`💰 ${data.cantidad} fichas agregadas a ${data.jugador}`, 'success');
-    });
-    
-    socket.on('fichasCompradas', (data) => {
-      console.log('✅ Fichas compradas:', data);
-      ui.mostrarNotificacion(`✅ ${data.jugador} compró ${data.fichas} fichas`, 'success');
-    });
-    
-    socket.on('error', (mensaje) => {
+    socket.on('error', function(mensaje) {
       console.error('❌ Error del servidor:', mensaje);
-      ui.mostrarNotificacion('❌ ' + mensaje, 'error');
+      if (window.ui) window.ui.mostrarNotificacion('❌ ' + mensaje, 'error');
     });
     
-    socket.on('reconexionExitosa', (data) => {
-      console.log('✅ Reconexión exitosa:', data);
-      ui.mostrarNotificacion('✅ ' + data.mensaje, 'success');
+    socket.on('fichasCompradas', function(data) {
+      console.log('✅ Fichas compradas:', data);
+      if (window.ui) window.ui.mostrarNotificacion('✅ ' + data.jugador + ' compró ' + data.fichas + ' fichas', 'success');
     });
     
-    socket.on('mazoAgotado', (data) => {
-      console.log('⚠️ Mazo agotado:', data);
-      ui.mostrarNotificacion(data.mensaje, 'error');
-    });
-    
-    socket.on('reporteFinalGenerado', (reporte) => {
-      console.log('📊 Reporte generado:', reporte);
-      banco.mostrarReporte(reporte);
+    socket.on('monedasAgregadas', function(data) {
+      console.log('💰 Monedas agregadas:', data);
+      if (window.ui) window.ui.mostrarNotificacion('💰 ' + data.cantidad + ' fichas agregadas a ' + data.jugador, 'success');
     });
   }
 };
 
-// ✅ IMPORTANTE: Hacer socketClient global
 window.socketClient = socketClient;
