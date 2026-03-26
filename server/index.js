@@ -180,7 +180,7 @@ function barajarMazo(mazo) {
 }
 
 // ============================================================================
-// ✅ VALIDACIÓN DE APUESTAS
+// ✅ VALIDACIÓN DE APUESTAS - CORREGIDA
 // ============================================================================
 
 function verificarJugadoresListos() {
@@ -190,28 +190,20 @@ function verificarJugadoresListos() {
   Object.keys(gameState.jugadores).forEach(function(email) {
     const jugador = gameState.jugadores[email];
     
-    if (jugador.monedas < 40) {
-      jugadoresNoListos.push({
-        email: email,
-        nombre: jugador.nombre,
-        razon: 'Saldo insuficiente (' + jugador.monedas + ' fichas, mín. 40)',
-        monedas: jugador.monedas
-      });
-      return;
-    }
-    
-    // ✅ CAMBIO: Verificar fichasApostadas >= 6
+    // ✅ CORRECCIÓN: Verificar si APOSTÓ las 6 fichas (NO el saldo)
+    // El saldo de 40 fichas es para PODER apostar, no para validar
     if (!jugador.fichasApostadas || jugador.fichasApostadas < 6) {
       jugadoresNoListos.push({
         email: email,
         nombre: jugador.nombre,
-        razon: 'No ha apostado las 6 fichas (tiene ' + (jugador.fichasApostadas || 0) + ')',
+        razon: 'No ha apostado las 6 fichas (tiene ' + (jugador.fichasApostadas || 0) + ' apostadas)',
         monedas: jugador.monedas,
         apostado: jugador.fichasApostadas || 0
       });
       return;
     }
     
+    // ✅ Si ya apostó 6 fichas, está LISTO (independiente del saldo restante)
     jugadoresListos.push({
       email: email,
       nombre: jugador.nombre,
@@ -432,7 +424,7 @@ io.on('connection', function(socket) {
     });
   });
   
-    // ✅ APOSTAR EN POZOS
+      // ✅ APOSTAR EN POZOS - CORREGIDO
   socket.on('apostarEnPozos', function(email) {
     if (!gameState.jugadores[email]) {
       socket.emit('error', 'Jugador no encontrado.');
@@ -443,16 +435,23 @@ io.on('connection', function(socket) {
     const fichasRequeridas = 6;
     const costoTotal = fichasRequeridas * VALOR_FICHA;
     
-    if (jugador.monedas < fichasRequeridas) {
-      socket.emit('error', 'No tienes suficientes fichas. Necesitas ' + fichasRequeridas + ' fichas ($' + costoTotal + ' COP).');
+    // ✅ Verificar si YA apostó en esta partida
+    if (jugador.fichasApostadas >= 6) {
+      socket.emit('error', 'Ya apostaste en esta partida.');
       return;
     }
     
-    // ✅ IMPORTANTE: Descontar fichas y registrar apuesta
-    jugador.monedas -= fichasRequeridas;
-    jugador.fichasApostadas = fichasRequeridas;  // ← CAMBIO: = en lugar de +=
+    // ✅ Verificar si tiene suficientes fichas para apostar
+    if (jugador.monedas < fichasRequeridas) {
+      socket.emit('error', 'No tienes suficientes fichas. Necesitas ' + fichasRequeridas + ' fichas ($' + costoTotal + ' COP). Compra más fichas.');
+      return;
+    }
     
-    // ✅ IMPORTANTE: Actualizar pozos dinámicos
+    // ✅ Descontar fichas y registrar apuesta
+    jugador.monedas -= fichasRequeridas;
+    jugador.fichasApostadas = 6;  // ← Marcar como que YA apostó
+    
+    // ✅ Actualizar pozos dinámicos
     Object.keys(gameState.pozosDinamicos).forEach(function(pozo) {
       gameState.pozosDinamicos[pozo].acumulado += VALOR_FICHA;
       gameState.pozosDinamicos[pozo].total = gameState.pozosDinamicos[pozo].valorBase + gameState.pozosDinamicos[pozo].acumulado;
@@ -469,13 +468,13 @@ io.on('connection', function(socket) {
     
     gameState.banco.totalRecaudado += costoTotal;
     
-    // ✅ IMPORTANTE: Emitir actualizaciones a TODOS
+    // ✅ Emitir actualizaciones a TODOS
     io.emit('updateJugadores', gameState.jugadores);
     io.emit('updateEstadisticas', gameState.estadisticas);
     io.emit('updateBanco', gameState.banco);
     io.emit('updatePozosDinamicos', gameState.pozosDinamicos);
     
-    console.log('🎰 Apuesta registrada: ' + email + ' apostó ' + fichasRequeridas + ' fichas');
+    console.log('🎰 Apuesta registrada: ' + email + ' apostó ' + fichasRequeridas + ' fichas. Ahora tiene ' + jugador.fichasApostadas + ' fichas apostadas');
   });
   
   // ✅ AGREGAR MONEDAS (Cantador)
@@ -773,7 +772,7 @@ io.on('connection', function(socket) {
     io.emit('updateFaseJuego', gameState.faseJuego);
   });
   
-  // ✅ SIGUIENTE PARTIDA
+  // ✅ SIGUIENTE PARTIDA CORREGIDA
   socket.on('siguientePartida', function(email) {
     if (gameState.cantador !== email) {
       socket.emit('error', 'Solo el cantador.');
@@ -795,6 +794,11 @@ io.on('connection', function(socket) {
     gameState.cartones.forEach(function(carton) {
       carton.tapadas.fill(false);
       Object.keys(carton.pozos).forEach(function(k) { carton.pozos[k] = false; });
+    });
+
+    // ✅ IMPORTANTE: Resetear fichasApostadas de TODOS los jugadores para la nueva partida
+    Object.keys(gameState.jugadores).forEach(function(email) {
+      gameState.jugadores[email].fichasApostadas = 0;
     });
     
     gameState.pozosDinamicos.pokino.acumulado = 0;
