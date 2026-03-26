@@ -19,7 +19,7 @@ const app = {
   yaAposto: false,
   premioPendiente: null,
   
-  iniciarSesion: () => {
+  iniciarSesion: function() {
     const email = document.getElementById('emailInput').value.trim();
     const nombre = document.getElementById('nombreInput').value.trim();
     
@@ -39,31 +39,23 @@ const app = {
     
     console.log('👤 Sesión iniciada:', email);
   },
-
-  // ✅ IMPORTANTE: Verificar si ya hay cantador después de registrar
-  setTimeout(() => {
-    if (app.gameState && app.gameState.cantador) {
-      console.log('🎤 Ya hay cantador:', app.gameState.cantador);
-      ui.actualizarPanelCantador(app.gameState.cantador);
-    }
-  }, 1000);
-
-  cerrarSesion: () => {
+  
+  cerrarSesion: function() {
     location.reload();
   },
   
-  invitarWhatsApp: () => {
+  invitarWhatsApp: function() {
     const url = window.location.href;
-    const mensaje = `🎊 ¡SABADITO ALEGRE EN LÍNEA! 🎊%0A%0A🌐 URL: ${url}%0A%0A¡Únete al juego!`;
-    window.open(`https://wa.me/?text=${mensaje}`, '_blank');
+    const mensaje = '🎊 ¡SABADITO ALEGRE EN LÍNEA! 🎊%0A%0A🌐 URL: ' + url + '%0A%0A¡Únete al juego!';
+    window.open('https://wa.me/?text=' + mensaje, '_blank');
   },
   
-  invitarEmail: () => {
+  invitarEmail: function() {
     const url = window.location.href;
-    window.open(`mailto:?subject=Sabadito Alegre&body=Únete: ${url}`, '_blank');
+    window.open('mailto:?subject=Sabadito Alegre&body=Únete: ' + url, '_blank');
   },
   
-  copiarEnlace: () => {
+  copiarEnlace: function() {
     navigator.clipboard.writeText(window.location.href);
     ui.mostrarNotificacion('🔗 Enlace copiado', 'success');
   }
@@ -73,7 +65,7 @@ const app = {
 window.app = app;
 
 // Inicializar cuando el DOM esté listo
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', function() {
   console.log('📄 DOM cargado, inicializando app...');
   socketClient.conectar();
   ui.inicializarModales();
