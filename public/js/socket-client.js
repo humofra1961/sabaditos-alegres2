@@ -1,183 +1,3 @@
-<<<<<<< HEAD
-// ============================================================================
-// 🔌 CLIENTE SOCKET.IO - CONEXIÓN Y EVENTOS
-// ============================================================================
-
-let socket;
-
-const socketClient = {
-  conectar: () => {
-    console.log('🔌 Conectando a Socket.io...');
-    
-    socket = io({
-      transports: ['websocket', 'polling'],
-      reconnection: true,
-      reconnectionDelay: 1000,
-      reconnectionAttempts: 10,
-      timeout: 20000
-    });
-    
-    socket.on('connect', () => {
-      console.log('✅ Socket conectado:', socket.id);
-      ui.actualizarEstadoConexion(true);
-    });
-    
-    socket.on('connect_error', (error) => {
-      console.error('❌ Error de conexión:', error);
-      ui.actualizarEstadoConexion(false);
-    });
-    
-    socket.on('disconnect', () => {
-      console.log('❌ Socket desconectado');
-      ui.actualizarEstadoConexion(false);
-    });
-    
-    // Registrar todos los event listeners
-    socketClient.registrarEventos();
-  },
-  
-  registrarEventos: () => {
-    socket.on('gameState', (state) => {
-      console.log('📊 Recibiendo gameState:', state);
-      if (!app.gameState) app.gameState = {};
-      app.gameState = state;
-      ui.renderizarTodo();
-    });
-    
-    socket.on('updateJugadores', (jugadores) => {
-      console.log('👥 Actualizando jugadores:', jugadores);
-      if (!app.gameState) app.gameState = {};
-      app.gameState.jugadores = jugadores || {};
-      ui.renderizarJugadores();
-      ui.actualizarSelectJugadores();
-      if (jugadores && jugadores[app.emailActual]) {
-        ui.actualizarMonedas(jugadores[app.emailActual].monedas);
-      }
-    });
-    
-    socket.on('updateCartones', (cartones) => {
-      console.log('🎴 Actualizando cartones:', cartones);
-      if (!app.gameState) app.gameState = {};
-      app.gameState.cartones = cartones || [];
-      if (typeof cartones !== 'undefined') {
-        cartones.renderizarGrid();
-        cartones.renderizarMisCartones();
-      }
-    });
-    
-    socket.on('updateCartasCantadas', (cartas) => {
-      console.log('🃏 Actualizando cartas cantadas:', cartas);
-      if (!app.gameState) app.gameState = {};
-      app.gameState.cartasCantadas = cartas || [];
-      ui.renderizarCartasPorPintas();
-      const contadorEl = document.getElementById('contadorCartas');
-      if (contadorEl) contadorEl.textContent = (cartas || []).length;
-    });
-    
-    socket.on('updateUltimaCarta', (carta) => {
-      console.log('🎴 Última carta:', carta);
-      ui.renderizarUltimaCarta(carta);
-    });
-    
-    socket.on('updateFaseJuego', (fase) => {
-      console.log('🔄 Fase del juego:', fase);
-      if (!app.gameState) app.gameState = {};
-      app.gameState.faseJuego = fase || 'seleccion';
-      ui.actualizarFaseJuego(fase);
-    });
-    
-    socket.on('updateCantador', (email) => {
-      console.log('🎤 Cantador:', email);
-      if (!app.gameState) app.gameState = {};
-      app.gameState.cantador = email;
-      ui.actualizarPanelCantador(email);
-    });
-    
-    socket.on('updatePozosDinamicos', (pozos) => {
-      console.log('🏆 Actualizando pozos:', pozos);
-      if (!app.gameState) app.gameState = {};
-      app.gameState.pozosDinamicos = pozos || {};
-      if (typeof pozos !== 'undefined') {
-        pozos.renderizar();
-      }
-    });
-    
-    socket.on('updateBanco', (banco) => {
-      console.log('🏦 Actualizando banco:', banco);
-      if (!app.gameState) app.gameState = {};
-      app.gameState.banco = banco || { totalRecaudado: 0, totalPagado: 0 };
-      ui.actualizarBanco(banco);
-    });
-    
-    socket.on('updateEstadisticas', (estadisticas) => {
-      console.log('📊 Actualizando estadísticas:', estadisticas);
-      if (!app.gameState) app.gameState = {};
-      app.gameState.estadisticas = estadisticas || {};
-      ui.renderizarEstadisticas();
-    });
-    
-    socket.on('validacionFallida', (data) => {
-      console.log('⚠️ Validación fallida:', data);
-      ui.mostrarValidacionFallida(data);
-    });
-    
-    socket.on('estadoApuestas', (data) => {
-      console.log('📋 Estado de apuestas:', data);
-      ui.mostrarEstadoApuestas(data);
-    });
-    
-    socket.on('juegoIniciado', (data) => {
-      console.log('🎮 Juego iniciado:', data);
-      ui.mostrarJuegoIniciado(data);
-    });
-    
-    socket.on('alertaGanador', (data) => {
-      console.log('🏆 Alerta de ganador:', data);
-      premio.mostrarAlerta(data);
-    });
-    
-    socket.on('premioConfirmado', (data) => {
-      console.log('✅ Premio confirmado:', data);
-      ui.mostrarNotificacion(`✅ ${data.jugador} ganó ${data.pozo}`, 'success');
-    });
-    
-    socket.on('premioRechazado', (data) => {
-      console.log('❌ Premio rechazado:', data);
-      ui.mostrarNotificacion(data.mensaje, 'error');
-    });
-    
-    socket.on('monedasAgregadas', (data) => {
-      console.log('💰 Monedas agregadas:', data);
-      ui.mostrarNotificacion(`💰 ${data.cantidad} fichas agregadas a ${data.jugador}`, 'success');
-    });
-    
-    socket.on('fichasCompradas', (data) => {
-      console.log('✅ Fichas compradas:', data);
-      ui.mostrarNotificacion(`✅ ${data.jugador} compró ${data.fichas} fichas`, 'success');
-    });
-    
-    socket.on('error', (mensaje) => {
-      console.error('❌ Error del servidor:', mensaje);
-      ui.mostrarNotificacion('❌ ' + mensaje, 'error');
-    });
-    
-    socket.on('reconexionExitosa', (data) => {
-      console.log('✅ Reconexión exitosa:', data);
-      ui.mostrarNotificacion('✅ ' + data.mensaje, 'success');
-    });
-    
-    socket.on('mazoAgotado', (data) => {
-      console.log('⚠️ Mazo agotado:', data);
-      ui.mostrarNotificacion(data.mensaje, 'error');
-    });
-    
-    socket.on('reporteFinalGenerado', (reporte) => {
-      console.log('📊 Reporte generado:', reporte);
-      banco.mostrarReporte(reporte);
-    });
-  }
-};
-=======
 // ============================================================================
 // 🔌 CLIENTE SOCKET.IO - CONEXIÓN Y EVENTOS
 // ============================================================================
@@ -220,7 +40,6 @@ const socketClient = {
       if (!window.app.gameState) window.app.gameState = {};
       window.app.gameState = state;
       
-      // ✅ IMPORTANTE: Renderizar cartones cuando llega gameState
       if (state.cartones && state.cartones.length > 0) {
         console.log('🎴 Cartones recibidos:', state.cartones.length);
         if (window.cartones) {
@@ -250,7 +69,6 @@ const socketClient = {
       if (!window.app.gameState) window.app.gameState = {};
       window.app.gameState.cartones = cartones || [];
       
-      // ✅ CORRECCIÓN: Llamar al módulo window.cartones
       if (window.cartones && Array.isArray(cartones)) {
         console.log('🎴 Renderizando grid de cartones...');
         window.cartones.renderizarGrid();
@@ -290,26 +108,9 @@ const socketClient = {
       console.log('🏆 Actualizando pozos:', pozos);
       if (!window.app.gameState) window.app.gameState = {};
       window.app.gameState.pozosDinamicos = pozos || {};
-      
-      // ✅ IMPORTANTE: Actualizar UI de pozos
-      if (window.pozos) {
-        window.pozos.renderizar();
-      }
-      
-      // ✅ IMPORTANTE: Actualizar display de cada pozo en el HTML
-      if (pozos) {
-        Object.keys(pozos).forEach(function(pozo) {
-          const pozoEl = document.getElementById('pozo-' + pozo);
-          if (pozoEl) {
-            const premioEl = pozoEl.querySelector('.pozo-premio');
-            const fichasEl = pozoEl.querySelector('.pozo-fichas');
-            if (premioEl) premioEl.textContent = '$' + pozos[pozo].total + ' (' + pozos[pozo].fichas + ' fichas)';
-            if (fichasEl) fichasEl.textContent = pozos[pozo].fichas + ' ficha' + (pozos[pozo].fichas > 1 ? 's' : '');
-          }
-        });
-      }
-    });    
-
+      if (window.pozos) window.pozos.renderizar();
+    });
+    
     socket.on('updateBanco', function(banco) {
       console.log('🏦 Actualizando banco:', banco);
       if (!window.app.gameState) window.app.gameState = {};
@@ -367,4 +168,3 @@ const socketClient = {
 };
 
 window.socketClient = socketClient;
->>>>>>> c3b6ca6cedb4a7dd4701c052655ac1ebd2af6f45
