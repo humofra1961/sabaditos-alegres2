@@ -27,7 +27,15 @@ const app = {
       ui.mostrarNotificacion('Ingresa correo y nombre', 'error');
       return;
     }
-    
+    verificarPanelApuestas: function() {
+      // Mostrar panel de apuestas si no ha apostado y está en fase de selección
+      const panelApuestas = document.getElementById('panelApuestas');
+      if (panelApuestas && window.app.gameState && window.app.gameState.faseJuego === 'seleccion') {
+        if (!window.app.yaAposto) {
+          panelApuestas.classList.remove('hidden');
+        }
+      }
+    }    
     app.emailActual = email;
     app.nombreActual = nombre;
     
