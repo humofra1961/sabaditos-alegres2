@@ -79,7 +79,8 @@ const cartones = {
              '<div class="carton-board-pro">' +
              carton.cartas.map(function(carta, index) {
                const estaTapada = carton.tapadas && carton.tapadas[index];
-               const nombreImagen = carta.codigo.replace('A', '1');
+               // ✅ CORRECCIÓN: Usar 1 para Ases y mapeo correcto de palos
+               const nombreImagen = carta.valor === 'A' ? '1' : carta.valor;
                const paloArchivo = carta.palo === '♠' ? 'p' : carta.palo === '♥' ? 'c' : carta.palo === '♦' ? 'd' : 't';
                
                return '<div class="carta-pro ' + (estaTapada ? 'tapada' : '') + '" onclick="window.cartones.taparCarta(' + carton.numero + ', ' + index + ')">' +
@@ -100,7 +101,7 @@ const cartones = {
     }).join('');
     
     console.log('✅ Mis cartones renderizados:', misCartones.length);
-  },
+  },  
   
   taparCarta: function(numeroCarton, index) {
     socket.emit('taparCarta', numeroCarton, index, window.app.emailActual);
