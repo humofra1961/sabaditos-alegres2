@@ -200,11 +200,12 @@ function verificarJugadoresListos() {
       return;
     }
     
+    // ✅ CAMBIO: Verificar fichasApostadas >= 6
     if (!jugador.fichasApostadas || jugador.fichasApostadas < 6) {
       jugadoresNoListos.push({
         email: email,
         nombre: jugador.nombre,
-        razon: 'No ha apostado las 6 fichas',
+        razon: 'No ha apostado las 6 fichas (tiene ' + (jugador.fichasApostadas || 0) + ')',
         monedas: jugador.monedas,
         apostado: jugador.fichasApostadas || 0
       });
@@ -431,7 +432,7 @@ io.on('connection', function(socket) {
     });
   });
   
-  // ✅ APOSTAR EN POZOS
+    // ✅ APOSTAR EN POZOS
   socket.on('apostarEnPozos', function(email) {
     if (!gameState.jugadores[email]) {
       socket.emit('error', 'Jugador no encontrado.');
@@ -447,9 +448,11 @@ io.on('connection', function(socket) {
       return;
     }
     
+    // ✅ IMPORTANTE: Descontar fichas y registrar apuesta
     jugador.monedas -= fichasRequeridas;
-    jugador.fichasApostadas += fichasRequeridas;
+    jugador.fichasApostadas = fichasRequeridas;  // ← CAMBIO: = en lugar de +=
     
+    // ✅ IMPORTANTE: Actualizar pozos dinámicos
     Object.keys(gameState.pozosDinamicos).forEach(function(pozo) {
       gameState.pozosDinamicos[pozo].acumulado += VALOR_FICHA;
       gameState.pozosDinamicos[pozo].total = gameState.pozosDinamicos[pozo].valorBase + gameState.pozosDinamicos[pozo].acumulado;
@@ -466,10 +469,13 @@ io.on('connection', function(socket) {
     
     gameState.banco.totalRecaudado += costoTotal;
     
+    // ✅ IMPORTANTE: Emitir actualizaciones a TODOS
     io.emit('updateJugadores', gameState.jugadores);
     io.emit('updateEstadisticas', gameState.estadisticas);
     io.emit('updateBanco', gameState.banco);
     io.emit('updatePozosDinamicos', gameState.pozosDinamicos);
+    
+    console.log('🎰 Apuesta registrada: ' + email + ' apostó ' + fichasRequeridas + ' fichas');
   });
   
   // ✅ AGREGAR MONEDAS (Cantador)
