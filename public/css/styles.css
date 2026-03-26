@@ -587,8 +587,11 @@ button.email {
   border-radius: 15px;
   padding: 20px;
   box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+  box-sizing: border-box;
   z-index: 1000;
-  min-width: 400px;
+  width: 30vw;
+  min-width: 300px;
+  max-width: 500px;
 }
 
 .panel-cantador-fijo h3 {
