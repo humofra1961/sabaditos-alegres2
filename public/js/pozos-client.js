@@ -1,35 +1,50 @@
 // ============================================================================
-// 🏆 POZOS - LÓGICA DEL CLIENTE
+// 🏆 POZOS - RENDERIZADO VISUAL PARA CANTADOR Y JUGADORES
 // ============================================================================
 
 const pozos = {
-  renderizar: () => {
-    const pozos = app.gameState?.pozosDinamicos;
-    if (!pozos) return;
-
-    Object.keys(pozos).forEach(pozo => {
-      const elemento = document.getElementById(`pozo-${pozo}`);
-      if (elemento) {
-        const pozoData = pozos[pozo];
-        const premioEl = elemento.querySelector('.pozo-premio');
-        const fichasEl = elemento.querySelector('.pozo-fichas');
-
-        if (premioEl) {
-          premioEl.textContent = `$${pozoData.total} (${pozoData.fichas} fichas)`;
-        }
-        if (fichasEl) {
-          fichasEl.textContent = `${pozoData.fichas} ficha${pozoData.fichas > 1 ? 's' : ''}`;
-        }
-
+  renderizar: function() {
+    console.log('🏆 Renderizando pozos...');
+    const pozosData = window.app.gameState ? window.app.gameState.pozosDinamicos : {};
+    
+    if (!pozosData || Object.keys(pozosData).length === 0) {
+      console.log('⚠️ No hay datos de pozos');
+      return;
+    }
+    
+    // ✅ Actualizar cada pozo en el HTML
+    const pozosNombres = {
+      pokino: 'POKINO',
+      cuatroEsquinas: '4 ESQUINAS',
+      full: 'FULL',
+      poker: 'POKER',
+      centro: 'CENTRO',
+      especial: 'ESPECIAL'
+    };
+    
+    Object.keys(pozosData).forEach(function(pozo) {
+      const pozoEl = document.getElementById('pozo-' + pozo);
+      if (pozoEl) {
+        const pozoData = pozosData[pozo];
+        const premioEl = pozoEl.querySelector('.pozo-premio');
+        const fichasEl = pozoEl.querySelector('.pozo-fichas');
+        const nombreEl = pozoEl.querySelector('.pozo-nombre');
+        
+        if (nombreEl) nombreEl.textContent = pozosNombres[pozo] || pozo;
+        if (premioEl) premioEl.textContent = '$' + (pozoData.total || 0) + ' COP';
+        if (fichasEl) fichasEl.textContent = (pozoData.fichas || 0) + ' fichas';
+        
+        // ✅ Marcar si está acumulado
         if (pozoData.acumulado > 0) {
-          elemento.classList.add('acumulado');
+          pozoEl.classList.add('acumulado');
         } else {
-          elemento.classList.remove('acumulado');
+          pozoEl.classList.remove('acumulado');
         }
       }
     });
+    
+    console.log('✅ Pozos renderizados');
   }
 };
 
-// ✅ IMPORTANTE: Hacer pozos global
 window.pozos = pozos;
