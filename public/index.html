@@ -1,243 +1,238 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Bingo para Poker - Sabadito Alegre</title>
-<link rel="stylesheet" href="/css/styles.css">
-<link rel="stylesheet" href="/css/cartones.css">
-<link rel="stylesheet" href="/css/pozos.css">
-<link rel="stylesheet" href="/css/panel.css">
-<link rel="stylesheet" href="/css/responsive.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bingo para Poker - Sabadito Alegre</title>
+  <link rel="stylesheet" href="/css/styles.css">
 </head>
 <body>
-<div class="container">
-<!-- Header -->
-<header>
-<h1>♠ ♥ ♦ ♣ BINGO PARA POKER ♣ ♦ ♥ ♠</h1>
-<p class="suites">
-<span class="black">♠</span>
-<span class="red">♥</span>
-<span class="red">♦</span>
-<span class="black">♣</span>
-</p>
-<h2>SABADITO ALEGRE - 13 CARTONES - 6 POZOS</h2>
-</header>
+  <div class="container">
+    
+    <!-- ===================================================================== -->
+    <!-- HEADER -->
+    <!-- ===================================================================== -->
+    <header>
+      <h1>♠ ♥ ♦ ♣ BINGO PARA POKER ♣ ♦ ♥ ♠</h1>
+      <p class="suites">
+        <span class="black">♠</span>
+        <span class="red">♥</span>
+        <span class="red">♦</span>
+        <span class="black">♣</span>
+      </p>
+      <h2>SABADITO ALEGRE - 13 CARTONES - 6 POZOS</h2>
+    </header>
 
-<!-- Login Section -->
-<div id="loginSection" class="login-section">
-<h3>👤 Iniciar Sesión</h3>
-<p>Ingresa tu correo para unirte al juego</p>
-<div class="correos-registrados">
-<p>📧 Correos registrados:</p>
-<p>humofra@yahoo.com.co | tatica2463@gmail.com | diana.molina7@gmail.com</p>
-<p>caromolina87@gmail.com | jmolinam@celsia.com</p>
-</div>
-<input type="email" id="emailInput" placeholder="Correo Electrónico">
-<input type="text" id="nombreInput" placeholder="Tu Nombre">
-<button onclick="app.iniciarSesion()">Entrar al Juego</button>
-<div id="estadoConexion" class="status disconnected">❌ Desconectado</div>
-</div>
+    <!-- ===================================================================== -->
+    <!-- LOGIN SECTION -->
+    <!-- ===================================================================== -->
+    <div id="loginSection" class="login-section">
+      <h3>👤 Iniciar Sesión</h3>
+      <p>Ingresa tu correo para unirte al juego</p>
+      <div class="correos-registrados">
+        <p>📧 Correos registrados:</p>
+        <p>humofra@yahoo.com.co | tatica2463@gmail.com | diana.molina7@gmail.com</p>
+        <p>caromolina87@gmail.com | jmolinam@celsia.com</p>
+      </div>
+      <input type="email" id="emailInput" placeholder="Correo Electrónico">
+      <input type="text" id="nombreInput" placeholder="Tu Nombre">
+      <button onclick="app.iniciarSesion()">Entrar al Juego</button>
+      <div id="estadoConexion" class="status disconnected">❌ Desconectado</div>
+    </div>
 
-<!-- Game Section -->
-<div id="gameSection" class="game-section hidden">
-<!-- Player Info -->
-<div class="player-info">
-<div>
-<h3>👤 <span id="jugadorNombre">-</span></h3>
-<div class="monedas-display">💰 Fichas: <span id="misMonedas">0</span> ($<span id="misMonedasValor">0</span> COP)</div>
-<span id="faseJuego" class="fase-indicator fase-seleccion">Fase: Selección</span>
-<div class="partida-info" id="partidaInfo">Partida: <span id="partidaActual">1</span>/6</div>
-</div>
-<button onclick="app.cerrarSesion()">Salir</button>
-</div>
+    <!-- ===================================================================== -->
+    <!-- GAME SECTION -->
+    <!-- ===================================================================== -->
+    <div id="gameSection" class="game-section hidden">
+      
+      <!-- Player Info Bar -->
+      <div class="player-info">
+        <div>
+          <h3>👤 <span id="jugadorNombre">-</span></h3>
+          <div class="monedas-display">
+            💰 Fichas: <span id="misMonedas">0</span> ($<span id="misMonedasValor">0</span> COP)
+          </div>
+          <span id="faseJuego" class="fase-indicator fase-seleccion">Fase: Selección</span>
+          <div class="partida-info" id="partidaInfo">
+            Partida: <span id="partidaActual">1</span>/6
+          </div>
+        </div>
+        <button onclick="app.cerrarSesion()">Salir</button>
+      </div>
 
-<!-- Invite Panel -->
-<div class="invitar-familiares-panel">
-<h4>📢 Invitar Familiares al Sabadito Alegre</h4>
-<div class="botones-invitar">
-<button class="whatsapp" onclick="app.invitarWhatsApp()">📱 WhatsApp</button>
-<button class="email" onclick="app.invitarEmail()">📧 Email</button>
-<button class="verde" onclick="app.copiarEnlace()">🔗 Copiar</button>
-</div>
-</div>
+      <!-- Invite Family Panel -->
+      <div class="invitar-familiares-panel">
+        <h4>📢 Invitar Familiares al Sabadito Alegre</h4>
+        <div class="botones-invitar">
+          <button class="whatsapp" onclick="app.invitarWhatsApp()">📱 WhatsApp</button>
+          <button class="email" onclick="app.invitarEmail()">📧 Email</button>
+          <button class="verde" onclick="app.copiarEnlace()">🔗 Copiar</button>
+        </div>
+      </div>
 
-<!-- Bet Panel -->
-<div id="panelApuestas" class="apostar-panel hidden">
-<h4>🎰 ¡Haz tu apuesta para esta partida!</h4>
-<p>6 fichas ($300 COP) - 1 ficha para cada uno de los 6 pozos</p>
-<button class="apostar" onclick="jugador.apostarEnPozos()">🎰 APOSTAR 6 FICHAS</button>
-<p id="estadoApuesta"></p>
-</div>
+      <!-- Betting Panel -->
+      <div id="panelApuestas" class="apostar-panel hidden">
+        <h4>🎰 ¡Haz tu apuesta para esta partida!</h4>
+        <p>6 fichas ($300 COP) - 1 ficha para cada uno de los 6 pozos</p>
+        <button class="apostar" onclick="jugador.apostarEnPozos()">🎰 APOSTAR 6 FICHAS</button>
+        <p id="estadoApuesta"></p>
+      </div>
 
-<!-- Main Layout -->
-<div class="panel-superior">
-<!-- Cantador Panel -->
-<div id="panelCantador" class="panel-cantador hidden">
-<div class="premios-pendientes-panel">
-<h4>🔍 Premios Completados</h4>
-<div id="premiosPendientesLista"></div>
-</div>
-<div class="verificacion-panel" id="panelVerificacionApuestas">
-<h4>📋 Verificación de Apuestas</h4>
-<div id="listaVerificacionApuestas"></div>
-<div id="mensajeValidacion"></div>
-</div>
-<div class="comprar-fichas-panel">
-<h4>💵 Agregar Fichas (Cantador)</h4>
-<select id="selectJugadorMonedas"></select>
-<input type="number" id="cantidadMonedas" placeholder="Fichas" min="1" max="100">
-<button class="verde" onclick="cantador.agregarMonedas()">Agregar</button>
-</div>
-<div class="banco-panel">
-<h4>🏦 Banco del Juego</h4>
-<p>Recaudado: $<span id="bancoRecaudado">0</span> | Pagado: $<span id="bancoPagado">0</span></p>
-<button class="banco" onclick="banco.generarReporteFinal()">📊 Reporte</button>
-</div>
-</div>
+      <!-- Main Layout - 3 Columns -->
+      <div class="layout-principal">
+        
+        <!-- Column 1: Left -->
+        <div class="columna columna-izquierda">
+          <div id="ultimaCartaPanel" class="ultima-carta-panel">
+            <div class="ultima-carta-label">Última Carta Cantada</div>
+            <div id="ultimaCartaDisplay" class="ultima-carta-display">-</div>
+          </div>
+          
+          <h3>🃏 Cartas Cantadas (<span id="contadorCartas">0</span>)</h3>
+          <div id="cartasPorPintas" class="cartas-por-pintas"></div>
+          
+          <h3>🏆 Los 6 Pozos</h3>
+          <div class="pozos-container" id="pozosContainer">
+            <div class="pozo-item" id="pozo-pokino">
+              <div class="pozo-nombre">POKINO</div>
+              <div class="pozo-premio">$0 COP</div>
+              <div class="pozo-fichas">0 fichas</div>
+            </div>
+            <div class="pozo-item" id="pozo-cuatroEsquinas">
+              <div class="pozo-nombre">4 ESQUINAS</div>
+              <div class="pozo-premio">$0 COP</div>
+              <div class="pozo-fichas">0 fichas</div>
+            </div>
+            <div class="pozo-item" id="pozo-full">
+              <div class="pozo-nombre">FULL</div>
+              <div class="pozo-premio">$0 COP</div>
+              <div class="pozo-fichas">0 fichas</div>
+            </div>
+            <div class="pozo-item" id="pozo-poker">
+              <div class="pozo-nombre">POKER</div>
+              <div class="pozo-premio">$0 COP</div>
+              <div class="pozo-fichas">0 fichas</div>
+            </div>
+            <div class="pozo-item" id="pozo-centro">
+              <div class="pozo-nombre">CENTRO</div>
+              <div class="pozo-premio">$0 COP</div>
+              <div class="pozo-fichas">0 fichas</div>
+            </div>
+            <div class="pozo-item" id="pozo-especial">
+              <div class="pozo-nombre">ESPECIAL</div>
+              <div class="pozo-premio">$0 COP</div>
+              <div class="pozo-fichas">0 fichas</div>
+            </div>
+          </div>
+        </div>
 
-<!-- Fixed Cantador Panel -->
-<div id="panelCantadorFijo" class="panel-cantador-fijo hidden">
-<h3>🎤 Panel del Cantador</h3>
-<div class="botones-cantador">
-<button class="verde" onclick="cantador.verificarEstadoApuestas()">📋 Verificar</button>
-<button class="cantador" onclick="cantador.cantarCarta()">🃏 Cantar</button>
-<button class="cantador" onclick="cantador.iniciarJuego()">▶️ Iniciar</button>
-<button class="cantador" onclick="cantador.toggleFase()">🔄 Selección</button>
-<button class="cantador" onclick="cantador.siguientePartida()">➡️ Siguiente</button>
-<button class="cantador" onclick="cantador.reiniciarJuego()">🔄 Reiniciar</button>
-</div>
-</div>
-</div>
+        <!-- Column 2: Center - Card Selection -->
+        <div class="columna columna-centro">
+          <div id="seleccionCartones">
+            <h3>🎯 Selecciona tus Cartones (Máx 3)</h3>
+            <div id="gridCartones" class="grid-cartones"></div>
+          </div>
+          
+          <div id="misCartones">
+            <h3>📋 Mis Cartones</h3>
+          </div>
+          
+          <div class="comprar-fichas-panel">
+            <h4>🏦 Comprar Fichas</h4>
+            <p>Valor por ficha: $50 COP</p>
+            <input type="number" id="cantidadFichasComprar" placeholder="Cantidad" min="1" max="100">
+            <button class="banco" onclick="jugador.comprarFichas()">Comprar</button>
+          </div>
+        </div>
 
-<!-- Winner Alert -->
-<div id="alertaGanador" class="alerta-ganador hidden">
-<h2>🏆 ¡GANADOR!</h2>
-<p id="mensajeGanador"></p>
-<button class="verde" onclick="premio.confirmar()">✅ Confirmar</button>
-<button class="cantador" onclick="premio.rechazar()">❌ Rechazar</button>
-</div>
+        <!-- Column 3: Right - Players & Options -->
+        <div class="columna columna-derecha">
+          <h3>👥 Jugadores (<span id="contadorJugadores">0</span>)</h3>
+          <div id="listaJugadores" class="jugadores-lista"></div>
+          
+          <div class="estadisticas-panel">
+            <h4>📊 Tus Estadísticas</h4>
+            <div id="estadisticas"></div>
+          </div>
+          
+          <div class="banco-estadisticas-panel">
+            <h4>🏦 Tu Balance</h4>
+            <div id="bancoPersonal"></div>
+          </div>
+          
+          <h3>⚙️ Opciones</h3>
+          <button onclick="ui.mostrarModalSolicitud()">📝 Solicitar Cambio</button>
+          <button id="btnSerCantador" onclick="cantador.establecerse()">🎤 Ser Cantador</button>
+          <button class="verde" onclick="cartones.verificarEspecial()">🔍 Verificar Especial</button>
+          <button class="banco" onclick="banco.verBalancePersonal()">📊 Ver Balance</button>
+        </div>
+      </div>
 
-<!-- Main Grid -->
-<div class="layout-principal">
-<!-- Left Column -->
-<div class="columna">
-<div id="ultimaCartaPanel" class="ultima-carta-panel">
-<div class="ultima-carta-label">Última Carta Cantada</div>
-<div id="ultimaCartaDisplay" class="ultima-carta-display">-</div>
-</div>
-<h3>🃏 Cartas Cantadas (<span id="contadorCartas">0</span>)</h3>
-<div id="cartasPorPintas" class="cartas-por-pintas"></div>
-<h3>🏆 Los 6 Pozos</h3>
-<div class="pozos-container" id="pozosContainer">
-<div class="pozo-item" id="pozo-pokino">
-<div class="pozo-nombre">POKINO</div>
-<div class="pozo-premio">$0 COP</div>
-<div class="pozo-fichas">0 fichas</div>
-</div>
-<div class="pozo-item" id="pozo-cuatroEsquinas">
-<div class="pozo-nombre">4 ESQUINAS</div>
-<div class="pozo-premio">$0 COP</div>
-<div class="pozo-fichas">0 fichas</div>
-</div>
-<div class="pozo-item" id="pozo-full">
-<div class="pozo-nombre">FULL</div>
-<div class="pozo-premio">$0 COP</div>
-<div class="pozo-fichas">0 fichas</div>
-</div>
-<div class="pozo-item" id="pozo-poker">
-<div class="pozo-nombre">POKER</div>
-<div class="pozo-premio">$0 COP</div>
-<div class="pozo-fichas">0 fichas</div>
-</div>
-<div class="pozo-item" id="pozo-centro">
-<div class="pozo-nombre">CENTRO</div>
-<div class="pozo-premio">$0 COP</div>
-<div class="pozo-fichas">0 fichas</div>
-</div>
-<div class="pozo-item" id="pozo-especial">
-<div class="pozo-nombre">ESPECIAL</div>
-<div class="pozo-premio">$0 COP</div>
-<div class="pozo-fichas">0 fichas</div>
-</div>
-</div>
-<!-- Center Column -->
-<div class="columna">
-<h3>🎯 Mis Cartones</h3>
-<div id="misCartones"></div>
-<div class="comprar-fichas-panel">
-<h4>🏦 Comprar Fichas</h4>
-<p>Valor por ficha: $50 COP</p>
-<input type="number" id="cantidadFichasComprar" placeholder="Cantidad" min="1" max="100">
-<button class="banco" onclick="jugador.comprarFichas()">Comprar</button>
-</div>
-</div>
+      <!-- Cantador Panel (Fixed) -->
+      <div id="panelCantadorFijo" class="panel-cantador-fijo hidden">
+        <h3>🎤 Panel del Cantador</h3>
+        <div class="botones-cantador">
+          <button class="verde" onclick="cantador.verificarEstadoApuestas()">📋 Verificar</button>
+          <button class="cantador" onclick="cantador.cantarCarta()">🃏 Cantar</button>
+          <button class="cantador" onclick="cantador.iniciarJuego()">▶️ Iniciar</button>
+          <button class="cantador" onclick="cantador.toggleFase()">🔄 Selección</button>
+          <button class="cantador" onclick="cantador.siguientePartida()">➡️ Siguiente</button>
+          <button class="cantador" onclick="cantador.reiniciarJuego()">🔄 Reiniciar</button>
+        </div>
+      </div>
 
-<!-- Right Column -->
-<div class="columna">
-<h3>👥 Jugadores (<span id="contadorJugadores">0</span>)</h3>
-<div id="listaJugadores" class="jugadores-lista"></div>
-<div class="estadisticas-panel">
-<h4>📊 Tus Estadísticas</h4>
-<div id="estadisticas"></div>
-</div>
-<div class="banco-estadisticas-panel">
-<h4>🏦 Tu Balance</h4>
-<div id="bancoPersonal"></div>
-</div>
-<h3>⚙️ Opciones</h3>
-<button onclick="ui.mostrarModalSolicitud()">📝 Solicitar Cambio</button>
-<button id="btnSerCantador" onclick="cantador.establecerse()">🎤 Ser Cantador</button>
-<button class="verde" onclick="cartones.verificarEspecial()">🔍 Verificar Especial</button>
-<button class="banco" onclick="banco.verBalancePersonal()">📊 Ver Balance</button>
-</div>
-</div>
+      <!-- Winner Alert -->
+      <div id="alertaGanador" class="alerta-ganador hidden">
+        <h2>🏆 ¡GANADOR!</h2>
+        <p id="mensajeGanador"></p>
+        <button class="verde" onclick="premio.confirmar()">✅ Confirmar</button>
+        <button class="cantador" onclick="premio.rechazar()">❌ Rechazar</button>
+      </div>
+    </div>
 
-<!-- Card Selection -->
-<div id="seleccionCartones">
-<h3>🎯 Selecciona tus Cartones (Máx 3)</h3>
-<div id="gridCartones" class="grid-cartones"></div>
-</div>
-</div>
-</div>
+    <!-- ===================================================================== -->
+    <!-- MODALS -->
+    <!-- ===================================================================== -->
+    <div id="modalSolicitud" class="modal">
+      <div class="modal-content">
+        <h3>📝 Solicitar Cambio</h3>
+        <textarea id="mensajeSolicitud" placeholder="Motivo..."></textarea>
+        <button onclick="ui.enviarSolicitud()">Enviar</button>
+        <button onclick="ui.cerrarModalSolicitud()">Cancelar</button>
+      </div>
+    </div>
 
-<!-- Modals -->
-<div id="modalSolicitud" class="modal">
-<div class="modal-content">
-<h3>📝 Solicitar Cambio</h3>
-<textarea id="mensajeSolicitud" placeholder="Motivo..."></textarea>
-<button onclick="ui.enviarSolicitud()">Enviar</button>
-<button onclick="ui.cerrarModalSolicitud()">Cancelar</button>
-</div>
-</div>
+    <div id="modalReporte" class="modal">
+      <div class="modal-content banco">
+        <h3>🏦 Reporte Final</h3>
+        <div id="reporteContenido"></div>
+        <button class="verde" onclick="banco.imprimirReporte()">🖨️ Imprimir</button>
+        <button onclick="ui.cerrarModalReporte()">Cerrar</button>
+      </div>
+    </div>
 
-<div id="modalReporte" class="modal">
-<div class="modal-content banco">
-<h3>🏦 Reporte Final</h3>
-<div id="reporteContenido"></div>
-<button class="verde" onclick="banco.imprimirReporte()">🖨️ Imprimir</button>
-<button onclick="ui.cerrarModalReporte()">Cerrar</button>
-</div>
-</div>
+    <div id="modalBalance" class="modal">
+      <div class="modal-content">
+        <h3>📊 Balance Personal</h3>
+        <div id="balanceContenido"></div>
+        <button onclick="ui.cerrarModalBalance()">Cerrar</button>
+      </div>
+    </div>
 
-<div id="modalBalance" class="modal">
-<div class="modal-content">
-<h3>📊 Balance Personal</h3>
-<div id="balanceContenido"></div>
-<button onclick="ui.cerrarModalBalance()">Cerrar</button>
-</div>
-</div>
+  </div>
 
-<!-- Client Scripts -->
-<script src="/socket.io/socket.io.js"></script>
-<script src="/js/app.js"></script>
-<script src="/js/socket-client.js"></script>
-<script src="/js/ui.js"></script>
-<script src="/js/cartones-client.js"></script>
-<script src="/js/pozos-client.js"></script>
-<script src="/js/jugador-client.js"></script>
-<script src="/js/cantador-client.js"></script>
-<script src="/js/banco-client.js"></script>
-<script src="/js/premio-client.js"></script>
+  <!-- ===================================================================== -->
+  <!-- SCRIPTS -->
+  <!-- ===================================================================== -->
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="/js/app.js"></script>
+  <script src="/js/socket-client.js"></script>
+  <script src="/js/ui.js"></script>
+  <script src="/js/cartones-client.js"></script>
+  <script src="/js/pozos-client.js"></script>
+  <script src="/js/jugador-client.js"></script>
+  <script src="/js/cantador-client.js"></script>
+  <script src="/js/banco-client.js"></script>
+  <script src="/js/premio-client.js"></script>
 </body>
 </html>
