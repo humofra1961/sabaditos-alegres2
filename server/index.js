@@ -56,7 +56,7 @@ const pozosConfig = {
 };
 
 const distribucionesCartones = [
-  { numero: 1, nombre: 'Cartón A', poker: 'A', full2: 'Q', full3: '5', pokerFila: 3, fullFila: 4, cartas: ['8c', 'jt', '2d', '9c', '8d', '6c', 'kc', '3p', 'kt', '3d', '7c', '1p', '1c', '1t', '1d', '5c', 'qc', '5d', '5p', 'qd', '4c', '10c', '4p', '4d', '6d'] },
+  { numero: 1, nombre: 'Cartón A', poker: 'A', full2: 'Q', full3: '5', pokerFila: 3, fullFila: 4, cartas: ['8c', 'jt', '2d', '9c', '8d', '6c', 'kc', '3p', 'kt', '3d', '7c', 'Ap', 'Ac', 'At', 'Ad', '5c', 'qc', '5d', '5p', 'qd', '4c', '10c', '4p', '4d', '6d'] },
   { numero: 2, nombre: 'Cartón 3', poker: '3', full2: '5', full3: 'J', pokerFila: 3, fullFila: 5, cartas: ['Ap', '10c', '7d', '8d', 'Ac', '2p', '6c', '6d', '9d', '2t', '3t', '3c', '3d', '8t', '3p', '7c', '4c', '4d', '10t', '4t', 'jp', 'jc', '5d', 'jt', '5p'] },
   { numero: 3, nombre: 'Cartón 4', poker: '4', full2: 'A', full3: '9', pokerFila: 1, fullFila: 2, cartas: ['4c', '7c', '4t', '4d', '4p', 'Ac', '9t', '9c', '9d', 'Ap', '2d', '8c', '8t', '8d', '3p', '3c', '10p', '10d', '5d', '5p', '5t', 'jt', 'qc', 'qd', '2p'] },
   { numero: 4, nombre: 'Cartón 5', poker: '5', full2: '9', full3: '7', pokerFila: 3, fullFila: 1, cartas: ['9p', '7c', '7d', '7p', '9c', '4d', '9d', '4c', '4p', '10c', '5c', '5d', '5t', '5p', 'kc', '6d', '6p', '3t', 'qp', 'qc', 'At', '8p', '6c', 'jp', 'jc'] },
