@@ -302,5 +302,117 @@ const ui = {
   }
 };
 
+// ============================================================================
+// 🎤 PANEL CANTADOR ARRASTRABLE
+// ============================================================================
+
+panelCantadorDraggable: function() {
+  const panel = document.getElementById('panelCantadorFijo');
+  const header = document.getElementById('panelCantadorHeader');
+  
+  if (!panel || !header) return;
+  
+  let isDragging = false;
+  let startX, startY, initialLeft, initialBottom;
+  
+  // Mouse down - iniciar arrastre
+  header.addEventListener('mousedown', function(e) {
+    isDragging = true;
+    startX = e.clientX;
+    startY = e.clientY;
+    
+    const rect = panel.getBoundingClientRect();
+    initialLeft = rect.left;
+    initialBottom = window.innerHeight - rect.bottom;
+    
+    panel.style.transition = 'none';
+    header.style.cursor = 'grabbing';
+  });
+  
+  // Mouse move - arrastrar
+  document.addEventListener('mousemove', function(e) {
+    if (!isDragging) return;
+    
+    const deltaX = e.clientX - startX;
+    const deltaY = e.clientY - startY;
+    
+    let newLeft = initialLeft + deltaX;
+    let newBottom = initialBottom - deltaY;
+    
+    // Límites de la pantalla
+    const panelRect = panel.getBoundingClientRect();
+    const maxX = window.innerWidth - panelRect.width;
+    const maxY = window.innerHeight - panelRect.height;
+    
+    newLeft = Math.max(0, Math.min(newLeft, maxX));
+    newBottom = Math.max(0, Math.min(newBottom, maxY));
+    
+    panel.style.left = newLeft + 'px';
+    panel.style.bottom = newBottom + 'px';
+    panel.style.right = 'auto';
+  });
+  
+  // Mouse up - soltar
+  document.addEventListener('mouseup', function() {
+    if (isDragging) {
+      isDragging = false;
+      panel.style.transition = 'box-shadow 0.3s ease';
+      header.style.cursor = 'grab';
+    }
+  });
+  
+  // Touch events para móviles
+  header.addEventListener('touchstart', function(e) {
+    isDragging = true;
+    startX = e.touches[0].clientX;
+    startY = e.touches[0].clientY;
+    
+    const rect = panel.getBoundingClientRect();
+    initialLeft = rect.left;
+    initialBottom = window.innerHeight - rect.bottom;
+    
+    panel.style.transition = 'none';
+  });
+  
+  document.addEventListener('touchmove', function(e) {
+    if (!isDragging) return;
+    
+    const deltaX = e.touches[0].clientX - startX;
+    const deltaY = e.touches[0].clientY - startY;
+    
+    let newLeft = initialLeft + deltaX;
+    let newBottom = initialBottom - deltaY;
+    
+    const panelRect = panel.getBoundingClientRect();
+    const maxX = window.innerWidth - panelRect.width;
+    const maxY = window.innerHeight - panelRect.height;
+    
+    newLeft = Math.max(0, Math.min(newLeft, maxX));
+    newBottom = Math.max(0, Math.min(newBottom, maxY));
+    
+    panel.style.left = newLeft + 'px';
+    panel.style.bottom = newBottom + 'px';
+    panel.style.right = 'auto';
+  });
+  
+  document.addEventListener('touchend', function() {
+    if (isDragging) {
+      isDragging = false;
+      panel.style.transition = 'box-shadow 0.3s ease';
+    }
+  });
+  
+  console.log('✅ Panel del Cantador ahora es arrastrable');
+},
+
+togglePanelCantador: function() {
+  const panel = document.getElementById('panelCantadorFijo');
+  if (panel) {
+    panel.classList.toggle('minimizado');
+    console.log('🎤 Panel minimizado/maximizado');
+  }
+}
+
+
 // ✅ IMPORTANTE: Hacer ui global
 window.ui = ui;
