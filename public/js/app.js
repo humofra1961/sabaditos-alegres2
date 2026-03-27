@@ -19,11 +19,7 @@ const app = {
   yaAposto: false,
   premioPendiente: null,
   
-<<<<<<< HEAD
-  iniciarSesion: () => {
-=======
   iniciarSesion: function() {
->>>>>>> c3b6ca6cedb4a7dd4701c052655ac1ebd2af6f45
     const email = document.getElementById('emailInput').value.trim();
     const nombre = document.getElementById('nombreInput').value.trim();
     
@@ -43,7 +39,6 @@ const app = {
     
     console.log('👤 Sesión iniciada:', email);
     
-    // ✅ Verificar panel de apuestas después de iniciar sesión
     setTimeout(function() {
       app.verificarPanelApuestas();
     }, 1000);
@@ -66,14 +61,10 @@ const app = {
   
   copiarEnlace: function() {
     navigator.clipboard.writeText(window.location.href);
-<<<<<<< HEAD
-    ui.mostrarNotificacion('🔗 Enlace copiado', 'success');
-=======
     if (window.ui) window.ui.mostrarNotificacion('🔗 Enlace copiado', 'success');
   },
   
   verificarPanelApuestas: function() {
-    // Mostrar panel de apuestas si no ha apostado y está en fase de selección
     const panelApuestas = document.getElementById('panelApuestas');
     if (panelApuestas && app.gameState && app.gameState.faseJuego === 'seleccion') {
       if (!app.yaAposto) {
@@ -84,28 +75,11 @@ const app = {
         console.log('🔒 Panel de apuestas oculto (ya apostó)');
       }
     }
->>>>>>> c3b6ca6cedb4a7dd4701c052655ac1ebd2af6f45
   }
 };
 
-// ✅ IMPORTANTE: Hacer app global
 window.app = app;
 
-// Inicializar cuando el DOM esté listo
-<<<<<<< HEAD
-document.addEventListener('DOMContentLoaded', () => {
-  console.log('📄 DOM cargado, inicializando app...');
-  socketClient.conectar();
-  ui.inicializarModales();
-});
-=======
-document.addEventListener('DOMContentLoaded', function() {
-  console.log('📄 DOM cargado, inicializando app...');
-  if (window.socketClient) window.socketClient.conectar();
-  if (window.ui) window.ui.inicializarModales();
-});
-
-// Inicializar cuando el DOM esté listo
 document.addEventListener('DOMContentLoaded', function() {
   console.log('📄 DOM cargado, inicializando app...');
   if (window.socketClient) window.socketClient.conectar();
@@ -114,4 +88,3 @@ document.addEventListener('DOMContentLoaded', function() {
     window.ui.panelCantadorDraggable();
   }
 });
->>>>>>> c3b6ca6cedb4a7dd4701c052655ac1ebd2af6f45
