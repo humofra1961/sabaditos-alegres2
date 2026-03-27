@@ -3,27 +3,44 @@
 // ============================================================================
 
 const premio = {
-  reclamar: (numeroCarton, pozo) => {
-    socket.emit('reclamarPremio', numeroCarton, pozo, app.emailActual);
+  reclamar: function(numeroCarton, pozo) {
+    console.log('🏆 Reclamando premio:', pozo, 'Cartón:', numeroCarton);
+    socket.emit('reclamarPremio', numeroCarton, pozo, window.app.emailActual);
   },
-
-  confirmar: () => {
-    if (app.premioPendiente) {
-      const pozoKey = Object.keys(pozosInfo).find(k => pozosInfo[k].nombre === app.premioPendiente.pozo);
-      socket.emit('confirmarPremio', app.premioPendiente.carton, pozoKey, app.premioPendiente.email, app.emailActual);
+  
+  confirmar: function() {
+    console.log('✅ Confirmando premio');
+    if (window.app.premioPendiente) {
+      const pozoKey = Object.keys(window.pozosInfo).find(function(k) { 
+        return window.pozosInfo[k].nombre === window.app.premioPendiente.pozo; 
+      });
+      socket.emit('confirmarPremio', 
+        window.app.premioPendiente.carton, 
+        pozoKey, 
+        window.app.premioPendiente.email, 
+        window.app.emailActual
+      );
     }
   },
-
-  rechazar: () => {
+  
+  rechazar: function() {
+    console.log('❌ Rechazando premio');
     document.getElementById('alertaGanador').classList.add('hidden');
-    app.premioPendiente = null;
-    ui.mostrarNotificacion('❌ Premio rechazado', 'error');
+    window.app.premioPendiente = null;
+    if (window.ui) window.ui.mostrarNotificacion('❌ Premio rechazado', 'error');
   },
-
-  mostrarAlerta: (data) => {
-    if (app.gameState?.cantador === app.emailActual) {
-      app.premioPendiente = data;
-      document.getElementById('mensajeGanador').textContent = data.mensaje;
+  
+  mostrarAlerta: function(data) {
+    console.log('🏆 Mostrando alerta de ganador:', data);
+    
+    if (window.app.gameState && window.app.gameState.cantador === window.app.emailActual) {
+      window.app.premioPendiente = data;
+      
+      const mensajeEl = document.getElementById('mensajeGanador');
+      if (mensajeEl) {
+        mensajeEl.textContent = data.mensaje;
+      }
+      
       const alerta = document.getElementById('alertaGanador');
       if (alerta) {
         alerta.classList.remove('hidden');
@@ -33,12 +50,23 @@ const premio = {
           alerta.classList.remove('especial');
         }
       }
+      
+      console.log('✅ Alerta de ganador mostrada al cantador');
     }
-    ui.mostrarNotificacion(data.mensaje, 'success');
+    
+    if (window.ui) {
+      window.ui.mostrarNotificacion(data.mensaje, 'success');
+    }
   }
 };
 
-app.premioPendiente = null;
+window.pozosInfo = {
+  pokino: { nombre: 'POKINO', premio: 50 },
+  cuatroEsquinas: { nombre: '4 ESQUINAS', premio: 150 },
+  full: { nombre: 'FULL', premio: 200 },
+  poker: { nombre: 'POKER', premio: 300 },
+  centro: { nombre: 'CENTRO', premio: 250 },
+  especial: { nombre: 'ESPECIAL', premio: 500 }
+};
 
-// ✅ IMPORTANTE: Hacer premio global
 window.premio = premio;
