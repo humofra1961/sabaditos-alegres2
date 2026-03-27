@@ -178,47 +178,93 @@ function barajarMazo(mazo) {
   }
   return mazoBarajado;
 }
-
 // ============================================================================
-// ✅ VALIDACIÓN DE APUESTAS - CORREGIDA
+// ✅ VALIDACIÓN COMPLETA DE APUESTAS - 3 NIVELES
 // ============================================================================
-
 function verificarJugadoresListos() {
   const jugadoresListos = [];
   const jugadoresNoListos = [];
+  let totalCartones = 0;
+  let totalFichasDeberianApostar = 0;
+  let totalFichasApostadas = 0;
   
   Object.keys(gameState.jugadores).forEach(function(email) {
     const jugador = gameState.jugadores[email];
+    const cartonesJugador = jugador.cartones ? jugador.cartones.length : 0;
+    const fichasDeberianApostar = cartonesJugador * 6; // 6 fichas por cartón
+    const fichasYaApostadas = jugador.fichasApostadas || 0;
     
-    // ✅ CORRECCIÓN: Verificar si APOSTÓ las 6 fichas (NO el saldo)
-    // El saldo de 40 fichas es para PODER apostar, no para validar
-    if (!jugador.fichasApostadas || jugador.fichasApostadas < 6) {
+    totalCartones += cartonesJugador;
+    totalFichasDeberianApostar += fichasDeberianApostar;
+    totalFichasApostadas += fichasYaApostadas;
+    
+    // NIVEL 1: Verificar mínimo 40 fichas
+    if (jugador.monedas < 40) {
       jugadoresNoListos.push({
         email: email,
         nombre: jugador.nombre,
-        razon: 'No ha apostado las 6 fichas (tiene ' + (jugador.fichasApostadas || 0) + ' apostadas)',
+        razon: 'Saldo insuficiente (' + jugador.monedas + ' fichas, mín. 40)',
         monedas: jugador.monedas,
-        apostado: jugador.fichasApostadas || 0
+        cartones: cartonesJugador,
+        fichasApostadas: fichasYaApostadas,
+        fichasDeberianApostar: fichasDeberianApostar,
+        nivel: 1
       });
       return;
     }
     
-    // ✅ Si ya apostó 6 fichas, está LISTO (independiente del saldo restante)
+    // NIVEL 2: Verificar al menos 1 cartón
+    if (cartonesJugador === 0) {
+      jugadoresNoListos.push({
+        email: email,
+        nombre: jugador.nombre,
+        razon: 'No ha seleccionado ningún cartón (mín. 1)',
+        monedas: jugador.monedas,
+        cartones: cartonesJugador,
+        fichasApostadas: fichasYaApostadas,
+        fichasDeberianApostar: fichasDeberianApostar,
+        nivel: 2
+      });
+      return;
+    }
+    
+    // NIVEL 3: Verificar apuesta según número de cartones
+    if (fichasYaApostadas < fichasDeberianApostar) {
+      jugadoresNoListos.push({
+        email: email,
+        nombre: jugador.nombre,
+        razon: 'Apuesta insuficiente. Tiene ' + cartonesJugador + ' cartón(es) → debe apostar ' + fichasDeberianApostar + ' fichas (lleva ' + fichasYaApostadas + ')',
+        monedas: jugador.monedas,
+        cartones: cartonesJugador,
+        fichasApostadas: fichasYaApostadas,
+        fichasDeberianApostar: fichasDeberianApostar,
+        nivel: 3
+      });
+      return;
+    }
+    
+    // ✅ Jugador listo
     jugadoresListos.push({
       email: email,
       nombre: jugador.nombre,
       monedas: jugador.monedas,
-      apostado: jugador.fichasApostadas
+      cartones: cartonesJugador,
+      fichasApostadas: fichasYaApostadas,
+      fichasDeberianApostar: fichasDeberianApostar
     });
   });
   
   return {
     listos: jugadoresListos,
     noListos: jugadoresNoListos,
-    todosListos: jugadoresNoListos.length === 0
+    todosListos: jugadoresNoListos.length === 0,
+    totalJugadores: Object.keys(gameState.jugadores).length,
+    totalCartones: totalCartones,
+    totalFichasDeberianApostar: totalFichasDeberianApostar,
+    totalFichasApostadas: totalFichasApostadas,
+    resumen: '📊 ' + totalCartones + ' cartones en juego → ' + totalFichasDeberianApostar + ' fichas en pozos ($' + (totalFichasDeberianApostar * 50) + ' COP)'
   };
 }
-
 // ============================================================================
 // ✅ VALIDACIÓN DE POZOS - CORREGIDA
 // ============================================================================
@@ -685,14 +731,27 @@ io.on('connection', function(socket) {
     console.log('🎮 Juego iniciado - ' + validacion.listos.length + ' jugadores listos');
   });
   
-  // ✅ SOLICITAR ESTADO DE APUESTAS
+    // ✅ SOLICITAR ESTADO DE APUESTAS (VERIFICACIÓN COMPLETA)
   socket.on('solicitarEstadoApuestas', function(email) {
     if (gameState.cantador !== email) {
       socket.emit('error', 'Solo el cantador puede verificar.');
       return;
     }
+    
     const validacion = verificarJugadoresListos();
+    console.log('📋 Validación completada:', validacion);
+    
+    // Enviar validación detallada al cantador
     socket.emit('estadoApuestas', validacion);
+    
+    // También enviar notificación a todos los jugadores
+    if (!validacion.todosListos) {
+      io.emit('notificacionCantador', {
+        tipo: 'verificacion',
+        mensaje: '📋 El cantador está verificando apuestas... ' + validacion.noListos.length + ' jugadores deben completar requisitos',
+        validacion: validacion
+      });
+    }
   });
   
   // ✅ RECLAMAR PREMIO
