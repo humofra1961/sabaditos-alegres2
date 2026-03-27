@@ -220,39 +220,86 @@ function verificarJugadoresListos() {
 }
 
 // ============================================================================
-// ✅ VALIDACIÓN DE POZOS
+// ✅ VALIDACIÓN DE POZOS - CORREGIDA
 // ============================================================================
 
 function verificarPozo(carton, pozo, codigosCantados) {
+  console.log('🔍 Verificando pozo:', pozo, 'Cartón:', carton.numero);
+  
   function verificarCartas(indices) {
+    console.log('  Verificando índices:', indices);
     for (let i = 0; i < indices.length; i++) {
-      if (!carton.tapadas[indices[i]]) return false;
-      const carta = carton.cartas[indices[i]];
-      if (codigosCantados.indexOf(carta.codigo) === -1) return false;
+      const index = indices[i];
+      
+      // Verificar si está tapada
+      if (!carton.tapadas[index]) {
+        console.log('  ❌ Carta', index, 'NO está tapada');
+        return false;
+      }
+      
+      // Verificar si fue cantada
+      const carta = carton.cartas[index];
+      if (!carta) {
+        console.log('  ❌ Carta', index, 'NO existe');
+        return false;
+      }
+      
+      const codigoEncontrado = codigosCantados.indexOf(carta.codigo);
+      if (codigoEncontrado === -1) {
+        console.log('  ❌ Carta', carta.codigo, 'NO está en cartas cantadas');
+        return false;
+      }
+      
+      console.log('  ✅ Carta', index, carta.codigo, 'OK (tapada y cantada)');
     }
     return true;
   }
   
+  // ESPECIAL - 25 cartas
   if (pozo === 'especial') {
     var indicesEspecial = [];
     for (var i = 0; i < 25; i++) indicesEspecial.push(i);
-    return verificarCartas(indicesEspecial);
+    const valido = verificarCartas(indicesEspecial);
+    console.log('  ESPECIAL:', valido ? '✅ VÁLIDO' : '❌ INVÁLIDO');
+    return valido;
   }
-  if (pozo === 'centro') return verificarCartas([12]);
-  if (pozo === 'cuatroEsquinas') return verificarCartas([0, 4, 20, 24]);
   
+  // CENTRO - 1 carta (índice 12)
+  if (pozo === 'centro') {
+    const valido = verificarCartas([12]);
+    console.log('  CENTRO:', valido ? '✅ VÁLIDO' : '❌ INVÁLIDO');
+    return valido;
+  }
+  
+  // CUATRO ESQUINAS - índices 0, 4, 20, 24
+  if (pozo === 'cuatroEsquinas') {
+    const valido = verificarCartas([0, 4, 20, 24]);
+    console.log('  4 ESQUINAS:', valido ? '✅ VÁLIDO' : '❌ INVÁLIDO');
+    return valido;
+  }
+  
+  // POKINO - 5 cartas en línea (horizontal, vertical o diagonal)
   if (pozo === 'pokino') {
     const lineas = [
+      // Horizontales
       [0,1,2,3,4], [5,6,7,8,9], [10,11,12,13,14], [15,16,17,18,19], [20,21,22,23,24],
+      // Verticales
       [0,5,10,15,20], [1,6,11,16,21], [2,7,12,17,22], [3,8,13,18,23], [4,9,14,19,24],
+      // Diagonales
       [0,6,12,18,24], [4,8,12,16,20]
     ];
+    
     for (let l = 0; l < lineas.length; l++) {
-      if (verificarCartas(lineas[l])) return true;
+      if (verificarCartas(lineas[l])) {
+        console.log('  POKINO: ✅ VÁLIDO (línea', l, ')');
+        return true;
+      }
     }
+    console.log('  POKINO: ❌ INVÁLIDO (ninguna línea completa)');
     return false;
   }
   
+  // POKER - 4 cartas del mismo valor (índices configurados en carton.pokerFila)
   if (pozo === 'poker') {
     const fila = carton.pokerFila || 3;
     let indices = [];
@@ -261,9 +308,13 @@ function verificarPozo(carton, pozo, codigosCantados) {
     else if (fila === 3) indices = [10, 11, 12, 13];
     else if (fila === 4) indices = [15, 16, 17, 18];
     else indices = [10, 11, 12, 13];
-    return verificarCartas(indices);
+    
+    const valido = verificarCartas(indices);
+    console.log('  POKER:', valido ? '✅ VÁLIDO' : '❌ INVÁLIDO');
+    return valido;
   }
   
+  // FULL - 5 cartas (2 de un valor + 3 de otro) (índices configurados en carton.fullFila)
   if (pozo === 'full') {
     const fila = carton.fullFila || 4;
     let indices = [];
@@ -273,41 +324,13 @@ function verificarPozo(carton, pozo, codigosCantados) {
     else if (fila === 4) indices = [15, 16, 17, 18, 19];
     else if (fila === 5) indices = [20, 21, 22, 23, 24];
     else indices = [15, 16, 17, 18, 19];
-    return verificarCartas(indices);
+    
+    const valido = verificarCartas(indices);
+    console.log('  FULL:', valido ? '✅ VÁLIDO' : '❌ INVÁLIDO');
+    return valido;
   }
   
   return false;
-}
-
-function verificarPremiosCompletados() {
-  const premiosDetectados = [];
-  const codigosCantados = gameState.cartasCantadas.map(function(c) { return c.codigo; });
-  
-  gameState.cartones.forEach(function(carton) {
-    if (!carton.dueño) return;
-    
-    Object.keys(pozosConfig).forEach(function(pozo) {
-      if (carton.pozos[pozo]) return;
-      
-      if (verificarPozo(carton, pozo, codigosCantados)) {
-        premiosDetectados.push({
-          carton: carton.numero,
-          nombreCarton: carton.nombre,
-          pozo: pozo,
-          nombrePozo: pozosConfig[pozo].nombre,
-          jugador: gameState.jugadores[carton.dueño] ? gameState.jugadores[carton.dueño].nombre : carton.dueño,
-          email: carton.dueño,
-          premio: gameState.pozosDinamicos[pozo].total,
-          fichas: gameState.pozosDinamicos[pozo].fichas,
-          timestamp: Date.now()
-        });
-      }
-    });
-  });
-  
-  if (premiosDetectados.length > 0 && gameState.cantador) {
-    gameState.premiosPendientes.push.apply(gameState.premiosPendientes, premiosDetectados);
-  }
 }
 
 // ============================================================================
