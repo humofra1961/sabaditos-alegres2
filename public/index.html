@@ -168,7 +168,26 @@
         </div>
       </div>
 
-      <!-- Cantador Panel (Fixed) -->
+      <!-- Cantador Panel (DRAGGABLE) -->
+      <div id="panelCantadorFijo" class="panel-cantador-fijo hidden">
+        <div class="panel-cantador-header" id="panelCantadorHeader">
+          <span>🎤 Panel del Cantador (Arrástrame)</span>
+          <button class="btn-minimizar" onclick="ui.togglePanelCantador()">➖</button>
+        </div>
+        <div class="panel-cantador-content">
+          <div class="botones-cantador">
+            <button class="verde" onclick="cantador.verificarEstadoApuestas()">📋 Verificar</button>
+            <button class="cantador" onclick="cantador.cantarCarta()">🃏 Cantar</button>
+            <button class="cantador" onclick="cantador.iniciarJuego()">▶️ Iniciar</button>
+            <button class="cantador" onclick="cantador.toggleFase()">🔄 Selección</button>
+            <button class="cantador" onclick="cantador.siguientePartida()">➡️ Siguiente</button>
+            <button class="cantador" onclick="cantador.reiniciarJuego()">🔄 Reiniciar</button>
+          </div>
+        </div>
+      </div>
+      
+      
+      <!-- Cantador Panel (Fixed) 
       <div id="panelCantadorFijo" class="panel-cantador-fijo hidden">
         <h3>🎤 Panel del Cantador</h3>
         <div class="botones-cantador">
@@ -179,7 +198,7 @@
           <button class="cantador" onclick="cantador.siguientePartida()">➡️ Siguiente</button>
           <button class="cantador" onclick="cantador.reiniciarJuego()">🔄 Reiniciar</button>
         </div>
-      </div>
+      </div>-->
 
       <!-- Winner Alert -->
       <div id="alertaGanador" class="alerta-ganador hidden">
