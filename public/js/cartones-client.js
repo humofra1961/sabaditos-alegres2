@@ -79,13 +79,40 @@ const cartones = {
              '<div class="carton-board-pro">' +
              carton.cartas.map(function(carta, index) {
                const estaTapada = carton.tapadas && carton.tapadas[index];
-               // ✅ CORRECCIÓN: Usar 1 para Ases y mapeo correcto de palos
-               const nombreImagen = carta.valor === 'A' ? '1' : carta.valor;
-               const paloArchivo = carta.palo === '♠' ? 'p' : carta.palo === '♥' ? 'c' : carta.palo === '♦' ? 'd' : 't';
+               
+               // ✅ CORRECCIÓN DEFINITIVA: Mapeo correcto de valores a nombres de archivo
+               var nombreImagen = carta.valor;
+               
+               // Ases: 'A' → '1' (porque las imágenes se llaman 1p.png, 1c.png, etc.)
+               if (carta.valor === 'A' || carta.valor === '1') {
+                 nombreImagen = '1';
+               }
+               // Diez: '10' → '10' (las imágenes se llaman 10p.png, 10c.png, etc.)
+               else if (carta.valor === '10') {
+                 nombreImagen = '10';
+               }
+               // Figuras: 'J', 'Q', 'K' → se mantienen igual
+               else if (carta.valor === 'J' || carta.valor === 'Q' || carta.valor === 'K') {
+                 nombreImagen = carta.valor;
+               }
+               // Números: '2'-'9' → se mantienen igual
+               else {
+                 nombreImagen = carta.valor;
+               }
+               
+               // ✅ Mapeo correcto de palos a nombres de archivo
+               // ♠ (picas) → p, ♥ (corazones) → c, ♦ (diamantes) → d, ♣ (tréboles) → t
+               var paloArchivo = 't'; // default tréboles
+               if (carta.palo === '♠') paloArchivo = 'p';
+               else if (carta.palo === '♥') paloArchivo = 'c';
+               else if (carta.palo === '♦') paloArchivo = 'd';
+               else if (carta.palo === '♣') paloArchivo = 't';
+               
+               console.log('  Carta:', carta.valor + carta.palo, '→ Archivo:', nombreImagen + paloArchivo + '.png');
                
                return '<div class="carta-pro ' + (estaTapada ? 'tapada' : '') + '" onclick="window.cartones.taparCarta(' + carton.numero + ', ' + index + ')">' +
                       (estaTapada ? '<span style="color: #f39c12; font-size: 2em;">✓</span>' : '') +
-                      '<img src="/img/cartas/' + nombreImagen + paloArchivo + '.png" alt="' + carta.valor + carta.palo + '" style="width: 100%; height: 100%; object-fit: contain;"/>' +
+                      '<img src="/img/cartas/' + nombreImagen + paloArchivo + '.png" alt="' + carta.valor + carta.palo + '" style="width: 100%; height: 100%; object-fit: contain;" onerror="console.error(\'❌ Error cargando imagen:\', \'/img/cartas/' + nombreImagen + paloArchivo + '.png\')"/>' +
                       '</div>';
              }).join('') +
              '</div>' +
