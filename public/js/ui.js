@@ -380,23 +380,26 @@ const ui = {
       }
     }
   },
-  
   // ============================================================================
   // CERRAR PANEL DE VERIFICACIÓN
   // ============================================================================
-  
   cerrarPanelVerificacion: function() {
+    console.log('🔒 Cerrando panel de verificación...');
+    
     const panel = document.getElementById('panelVerificacionApuestas');
     const overlay = document.getElementById('panelVerificacionOverlay');
+    
     if (panel) {
       panel.classList.add('hidden');
       panel.style.display = 'none';
+      console.log('✅ Panel ocultado');
     }
+    
     if (overlay) {
       overlay.classList.add('hidden');
       overlay.style.display = 'none';
+      console.log('✅ Overlay ocultado');
     }
-    console.log('🔒 Panel de verificación cerrado');
   },
   // ============================================================================
   // NOTIFICACIONES
