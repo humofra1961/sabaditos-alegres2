@@ -227,9 +227,9 @@ const ui = {
     
     if (!panel || !lista) {
       console.error('❌ No se encontraron elementos de verificación');
+      this.crearPanelVerificacion();
       return;
     }
-    
     panel.style.display = 'block';
     
     // Encabezado con resumen
