@@ -3,51 +3,57 @@
 // ============================================================================
 
 const cantador = {
-  establecerse: () => {
-    socket.emit('establecerCantador', app.emailActual);
+  establecerse: function() {
+    console.log('🎤 Estableciéndose como cantador...');
+    socket.emit('establecerCantador', window.app.emailActual);
   },
-
-  cantarCarta: () => {
-    socket.emit('cantarCartaAleatoria', app.emailActual);
+  
+  cantarCarta: function() {
+    console.log('🃏 Cantando carta...');
+    socket.emit('cantarCartaAleatoria', window.app.emailActual);
   },
-
-  iniciarJuego: () => {
-    socket.emit('iniciarJuego', app.emailActual);
+  
+  iniciarJuego: function() {
+    console.log('▶️ Iniciando juego...');
+    socket.emit('iniciarJuego', window.app.emailActual);
   },
-
-  toggleFase: () => {
-    socket.emit('toggleFaseSeleccion', app.emailActual);
+  
+  toggleFase: function() {
+    console.log('🔄 Cambiando fase...');
+    socket.emit('toggleFaseSeleccion', window.app.emailActual);
   },
-
-  siguientePartida: () => {
-    socket.emit('siguientePartida', app.emailActual);
+  
+  siguientePartida: function() {
+    console.log('➡️ Siguiente partida...');
+    socket.emit('siguientePartida', window.app.emailActual);
   },
-
-  reiniciarJuego: () => {
-    if (confirm('¿Reiniciar todo el juego?')) {
-      socket.emit('reiniciarJuego', app.emailActual);
+  
+  reiniciarJuego: function() {
+    console.log('🔄 Reiniciando juego...');
+    if (confirm('¿Estás seguro de reiniciar todo el juego?')) {
+      socket.emit('reiniciarJuego', window.app.emailActual);
     }
   },
-
-  verificarEstadoApuestas: () => {
-    socket.emit('solicitarEstadoApuestas', app.emailActual);
+  
+  verificarEstadoApuestas: function() {
+    console.log('📋 Verificando estado de apuestas...');
+    socket.emit('solicitarEstadoApuestas', window.app.emailActual);
   },
-
-  agregarMonedas: () => {
+  
+  agregarMonedas: function() {
     const emailJugador = document.getElementById('selectJugadorMonedas').value;
-    const cantidad = parseInt(document.getElementById('cantidadMonedas').value);
+    const cantidadInput = document.getElementById('cantidadMonedas');
+    const cantidad = parseInt(cantidadInput ? cantidadInput.value : 0);
+    
     if (!cantidad || cantidad < 1 || cantidad > 100) {
-      ui.mostrarNotificacion('Ingresa cantidad válida (1-100)', 'error');
+      if (window.ui) window.ui.mostrarNotificacion('Ingresa cantidad válida (1-100)', 'error');
       return;
     }
-
-  // Al final de cantador-client.js
-  window.cantador = cantador;    
     
-    socket.emit('agregarMonedas', emailJugador, cantidad, app.emailActual);
-    document.getElementById('cantidadMonedas').value = '';
+    console.log('💰 Agregando ' + cantidad + ' fichas a ' + emailJugador);
+    socket.emit('agregarMonedas', emailJugador, cantidad, window.app.emailActual);
+    if (cantidadInput) cantidadInput.value = '';
   }
 };
 
-// ✅ IMPORTANTE: Hacer cantador global
 window.cantador = cantador;
