@@ -1124,19 +1124,76 @@ button.apostar {
   background: #f39c12;
   border-radius: 10px;
 }
+/* ============================================================================ */
+/* PANEL DE VERIFICACIÓN DE APUESTAS */
+/* ============================================================================ */
 
-/* Overlay */
 .panel-verificacion-overlay {
   position: fixed;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(0,0,0,0.7);
+  background: rgba(0, 0, 0, 0.6);
   z-index: 9998;
   display: none;
+  cursor: pointer;
 }
 
 .panel-verificacion-overlay:not(.hidden) {
   display: block !important;
+}
+
+.panel-verificacion-apuestas {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: linear-gradient(135deg, #2c3e50, #34495e);
+  border-radius: 15px;
+  padding: 25px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.7);
+  z-index: 9999;
+  min-width: 500px;
+  max-width: 700px;
+  max-height: 80vh;
+  overflow-y: auto;
+  border: 3px solid #f39c12;
+  display: none;
+  pointer-events: auto;
+}
+
+.panel-verificacion-apuestas:not(.hidden) {
+  display: block !important;
+}
+
+/* Asegurar que el botón de cerrar sea clickable */
+.panel-verificacion-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding-bottom: 15px;
+  border-bottom: 2px solid #f39c12;
+  position: relative;
+  z-index: 10000;
+}
+
+.btn-cerrar-panel {
+  background: rgba(231, 76, 60, 0.8);
+  border: none;
+  color: white;
+  width: 35px;
+  height: 35px;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 1.2em;
+  transition: background 0.3s ease;
+  position: relative;
+  z-index: 10001;
+}
+
+.btn-cerrar-panel:hover {
+  background: rgba(231, 76, 60, 1);
+  transform: scale(1.1);
 }
