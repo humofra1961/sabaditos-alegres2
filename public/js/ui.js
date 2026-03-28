@@ -213,8 +213,39 @@ const ui = {
       btnIniciar.textContent = '⛔ Esperando apuestas...';
     }
   },
-
-    // ============================================================================
+  // ============================================================================
+  // CREAR PANEL DE VERIFICACIÓN DINÁMICAMENTE
+  // ============================================================================
+  
+  crearPanelVerificacion: function() {
+    console.log('🔨 Creando panel de verificación...');
+    
+    // Crear overlay
+    const overlay = document.createElement('div');
+    overlay.id = 'panelVerificacionOverlay';
+    overlay.className = 'panel-verificacion-overlay';
+    overlay.onclick = function() {
+      document.getElementById('panelVerificacionApuestas').style.display = 'none';
+    };
+    document.body.appendChild(overlay);
+    
+    // Crear panel
+    const panel = document.createElement('div');
+    panel.id = 'panelVerificacionApuestas';
+    panel.className = 'panel-verificacion-apuestas';
+    panel.innerHTML = 
+      '<div class="panel-verificacion-header">' +
+        '<h3>📋 Verificación de Apuestas</h3>' +
+        '<button class="btn-cerrar-panel" onclick="document.getElementById(\'panelVerificacionApuestas\').style.display=\'none\'; document.getElementById(\'panelVerificacionOverlay\').style.display=\'none\';">✕</button>' +
+      '</div>' +
+      '<div id="mensajeValidacion" class="mensaje-validacion"></div>' +
+      '<div id="listaVerificacionApuestas" class="lista-verificacion"></div>';
+    
+    document.body.appendChild(panel);
+    
+    console.log('✅ Panel de verificación creado');
+  },
+  // ============================================================================
   // MOSTRAR ESTADO DE APUESTAS (VERIFICACIÓN DEL CANTADOR)
   // ============================================================================
 
