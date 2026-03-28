@@ -214,45 +214,130 @@ const ui = {
     }
   },
 
+    // ============================================================================
+  // MOSTRAR ESTADO DE APUESTAS (VERIFICACIÓN DEL CANTADOR)
+  // ============================================================================
+
   mostrarEstadoApuestas: function(data) {
+    console.log('📋 Estado de apuestas:', data);
+    
     const panel = document.getElementById('panelVerificacionApuestas');
     const lista = document.getElementById('listaVerificacionApuestas');
-
-    if (panel && lista) {
-      panel.style.display = 'block';
-
-      if (data.todosListos) {
-        lista.innerHTML = (data.listos || []).map(function(j) {
-          return '<div class="verificacion-item listo">' +
-                 '<strong>✅ ' + j.nombre + '</strong><br>' +
-                 '<span style="font-size: 0.75em;">💰 ' + j.monedas + ' fichas | 🎰 ' + j.apostado + ' fichas apostadas</span>' +
-                 '</div>';
-        }).join('');
-
-        if (document.getElementById('mensajeValidacion')) {
-          document.getElementById('mensajeValidacion').innerHTML = '<span style="color: #27ae60;">✅ Todos los ' + (data.listos || []).length + ' jugadores están listos</span>';
+    const mensaje = document.getElementById('mensajeValidacion');
+    
+    if (!panel || !lista) {
+      console.error('❌ No se encontraron elementos de verificación');
+      return;
+    }
+    
+    panel.style.display = 'block';
+    
+    // Encabezado con resumen
+    let html = '<div style="background: rgba(0,0,0,0.3); padding: 15px; border-radius: 10px; margin-bottom: 15px;">';
+    html += '<h4 style="margin: 0 0 10px 0; color: #f39c12;">📊 RESUMEN DE LA PARTIDA</h4>';
+    html += '<div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;">';
+    html += '<div>👥 Jugadores: ' + (data.totalJugadores || 0) + '</div>';
+    html += '<div>🎴 Total Cartones: ' + (data.totalCartones || 0) + '</div>';
+    html += '<div>💰 Fichas en Pozos: ' + (data.totalFichasApostadas || 0) + ' / ' + (data.totalFichasDeberianApostar || 0) + '</div>';
+    html += '<div>💵 Valor Pozos: $' + ((data.totalFichasApostadas || 0) * 50) + ' / $' + ((data.totalFichasDeberianApostar || 0) * 50) + ' COP</div>';
+    html += '</div>';
+    html += '</div>';
+    
+    if (data.todosListos) {
+      // ✅ TODOS LISTOS
+      html += '<div style="background: linear-gradient(135deg, #27ae60, #219a52); padding: 20px; border-radius: 10px; text-align: center;">';
+      html += '<h3 style="margin: 0; color: white;">✅ ¡TODOS LISTOS PARA JUGAR!</h3>';
+      html += '<p style="margin: 10px 0 0 0; color: white; font-size: 1.1em;">' + data.resumen + '</p>';
+      html += '<p style="margin: 10px 0 0 0; color: #fff; font-size: 0.9em;">El cantador puede iniciar la partida</p>';
+      html += '</div>';
+      
+      if (mensaje) {
+        mensaje.innerHTML = '<span style="color: #27ae60; font-weight: bold; font-size: 1.2em;">✅ Todos los ' + (data.listos || []).length + ' jugadores están listos</span>';
+      }
+    } else {
+      // ❌ FALTAN REQUISITOS
+      html += '<div style="background: linear-gradient(135deg, #e74c3c, #c0392b); padding: 15px; border-radius: 10px; margin-bottom: 15px;">';
+      html += '<h4 style="margin: 0 0 10px 0; color: white;">❌ FALTAN REQUISITOS</h4>';
+      html += '<p style="margin: 0; color: #fff;">' + (data.noListos || []).length + ' de ' + (data.totalJugadores || 0) + ' jugadores NO están listos</p>';
+      html += '</div>';
+      
+      // Lista de jugadores NO listos con detalle
+      html += '<div style="margin-bottom: 15px;">';
+      html += '<h4 style="color: #e74c3c; margin-bottom: 10px;">⚠️ Jugadores que deben completar requisitos:</h4>';
+      (data.noListos || []).forEach(function(j) {
+        const nivelColor = j.nivel === 1 ? '#e74c3c' : j.nivel === 2 ? '#f39c12' : '#e67e22';
+        const nivelIcono = j.nivel === 1 ? '💰' : j.nivel === 2 ? '🎴' : '🎰';
+        
+        html += '<div style="background: rgba(231, 76, 60, 0.2); border-left: 4px solid ' + nivelColor + '; padding: 15px; margin-bottom: 10px; border-radius: 5px;">';
+        html += '<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">';
+        html += '<strong style="color: ' + nivelColor + '; font-size: 1.1em;">' + nivelIcono + ' ' + j.nombre + '</strong>';
+        html += '<span style="background: ' + nivelColor + '; color: white; padding: 3px 8px; border-radius: 5px; font-size: 0.8em;">Nivel ' + j.nivel + '</span>';
+        html += '</div>';
+        html += '<div style="color: #fff; margin-bottom: 5px;">' + j.razon + '</div>';
+        html += '<div style="font-size: 0.85em; color: #bdc3c7;">';
+        html += '💰 Fichas: ' + j.monedas + ' | ';
+        html += '🎴 Cartones: ' + j.cartones + ' | ';
+        html += '🎰 Apuesta: ' + j.fichasApostadas + ' / ' + j.fichasDeberianApostar + ' fichas';
+        html += '</div>';
+        
+        // Mensaje específico según nivel
+        if (j.nivel === 1) {
+          html += '<div style="margin-top: 8px; padding: 8px; background: rgba(231, 76, 60, 0.3); border-radius: 5px; font-size: 0.85em; color: #ffcccc;">';
+          html += '⚠️ Este jugador debe COMPRAR al menos 40 fichas antes de apostar';
+          html += '</div>';
+        } else if (j.nivel === 2) {
+          html += '<div style="margin-top: 8px; padding: 8px; background: rgba(243, 156, 28, 0.3); border-radius: 5px; font-size: 0.85em; color: #ffe6cc;">';
+          html += '⚠️ Este jugador debe SELECCIONAR al menos 1 cartón';
+          html += '</div>';
+        } else if (j.nivel === 3) {
+          html += '<div style="margin-top: 8px; padding: 8px; background: rgba(230, 126, 34, 0.3); border-radius: 5px; font-size: 0.85em; color: #ffe6cc;">';
+          html += '⚠️ Este jugador tiene ' + j.cartones + ' cartón(es) → debe apostar ' + j.fichasDeberianApostar + ' fichas (6 × ' + j.cartones + ')';
+          html += '</div>';
         }
+        
+        html += '</div>';
+      });
+      html += '</div>';
+      
+      // Lista de jugadores listos
+      if (data.listos && data.listos.length > 0) {
+        html += '<div>';
+        html += '<h4 style="color: #27ae60; margin-bottom: 10px;">✅ Jugadores Listos:</h4>';
+        (data.listos || []).forEach(function(j) {
+          html += '<div style="background: rgba(39, 174, 96, 0.2); border-left: 4px solid #27ae60; padding: 10px; margin-bottom: 8px; border-radius: 5px;">';
+          html += '<strong style="color: #27ae60;">' + j.nombre + '</strong> - ';
+          html += '🎴 ' + j.cartones + ' cartón(es) - ';
+          html += '🎰 ' + j.fichasApostadas + ' fichas apostadas';
+          html += '</div>';
+        });
+        html += '</div>';
+      }
+    }
+    
+    lista.innerHTML = html;
+    
+    if (mensaje) {
+      if (!data.todosListos) {
+        mensaje.innerHTML = '<span style="color: #e74c3c; font-weight: bold;">❌ ' + (data.noListos || []).length + ' jugadores NO están listos</span>';
+      }
+    }
+    
+    // Actualizar botón Iniciar
+    const btnIniciar = document.getElementById('btnIniciarJuego');
+    if (btnIniciar) {
+      if (data.todosListos) {
+        btnIniciar.disabled = false;
+        btnIniciar.style.opacity = '1';
+        btnIniciar.style.background = 'linear-gradient(135deg, #27ae60, #219a52)';
+        btnIniciar.textContent = '▶️ Iniciar Partida';
       } else {
-        lista.innerHTML = '<div><strong style="color: #27ae60;">Listos:</strong> ' + (data.listos || []).map(function(j) { return j.nombre; }).join(', ') + '</div>' +
-                          '<div><strong style="color: #e74c3c;">No Listos:</strong> ' + (data.noListos || []).map(function(j) { return j.nombre; }).join(', ') + '</div>';
+        btnIniciar.disabled = true;
+        btnIniciar.style.opacity = '0.5';
+        btnIniciar.style.background = 'linear-gradient(135deg, #e74c3c, #c0392b)';
+        btnIniciar.textContent = '⛔ Esperando jugadores...';
       }
     }
   },
-
-  mostrarJuegoIniciado: function(data) {
-    const btnIniciar = document.getElementById('btnIniciarJuego');
-    if (btnIniciar) {
-      btnIniciar.disabled = false;
-      btnIniciar.style.opacity = '1';
-      btnIniciar.textContent = '▶️ Iniciar';
-    }
-
-    const panel = document.getElementById('panelVerificacionApuestas');
-    if (panel) panel.style.display = 'none';
-
-    this.mostrarNotificacion(data.mensaje, 'success');
-  },
-
   // ============================================================================
   // NOTIFICACIONES
   // ============================================================================
