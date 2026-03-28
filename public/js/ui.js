@@ -266,14 +266,17 @@ const ui = {
       alert('Error: Panel de verificación no encontrado. Recarga la página.');
       return;
     }
-    
     // Mostrar overlay y panel
-    if (overlay) overlay.classList.remove('hidden');
+    if (overlay) {
+      overlay.classList.remove('hidden');
+      overlay.style.display = 'block';
+      console.log('✅ Overlay mostrado');
+    }
+    
     panel.classList.remove('hidden');
     panel.style.display = 'block';
     
-    console.log('✅ Panel de verificación mostrado');
-    
+    console.log('✅ Panel de verificación mostrado');    
     // Encabezado con resumen
     let html = '<div style="background: rgba(0,0,0,0.3); padding: 15px; border-radius: 10px; margin-bottom: 15px;">';
     html += '<h4 style="margin: 0 0 10px 0; color: #f39c12;">📊 RESUMEN DE LA PARTIDA</h4>';
