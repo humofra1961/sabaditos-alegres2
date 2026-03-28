@@ -249,28 +249,39 @@ const ui = {
   // MOSTRAR ESTADO DE APUESTAS (VERIFICACIÓN DEL CANTADOR)
   // ============================================================================
 
+    // ============================================================================
+  // MOSTRAR ESTADO DE APUESTAS (VERIFICACIÓN DEL CANTADOR)
+  // ============================================================================
+
   mostrarEstadoApuestas: function(data) {
     console.log('📋 Estado de apuestas:', data);
     
     const panel = document.getElementById('panelVerificacionApuestas');
     const lista = document.getElementById('listaVerificacionApuestas');
     const mensaje = document.getElementById('mensajeValidacion');
+    const overlay = document.getElementById('panelVerificacionOverlay');
     
     if (!panel || !lista) {
       console.error('❌ No se encontraron elementos de verificación');
-      this.crearPanelVerificacion();
+      alert('Error: Panel de verificación no encontrado. Recarga la página.');
       return;
     }
+    
+    // Mostrar overlay y panel
+    if (overlay) overlay.classList.remove('hidden');
+    panel.classList.remove('hidden');
     panel.style.display = 'block';
+    
+    console.log('✅ Panel de verificación mostrado');
     
     // Encabezado con resumen
     let html = '<div style="background: rgba(0,0,0,0.3); padding: 15px; border-radius: 10px; margin-bottom: 15px;">';
     html += '<h4 style="margin: 0 0 10px 0; color: #f39c12;">📊 RESUMEN DE LA PARTIDA</h4>';
     html += '<div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;">';
-    html += '<div>👥 Jugadores: ' + (data.totalJugadores || 0) + '</div>';
-    html += '<div>🎴 Total Cartones: ' + (data.totalCartones || 0) + '</div>';
-    html += '<div>💰 Fichas en Pozos: ' + (data.totalFichasApostadas || 0) + ' / ' + (data.totalFichasDeberianApostar || 0) + '</div>';
-    html += '<div>💵 Valor Pozos: $' + ((data.totalFichasApostadas || 0) * 50) + ' / $' + ((data.totalFichasDeberianApostar || 0) * 50) + ' COP</div>';
+    html += '<div style="color: white;">👥 Jugadores: ' + (data.totalJugadores || 0) + '</div>';
+    html += '<div style="color: white;">🎴 Total Cartones: ' + (data.totalCartones || 0) + '</div>';
+    html += '<div style="color: white;">💰 Fichas en Pozos: ' + (data.totalFichasApostadas || 0) + ' / ' + (data.totalFichasDeberianApostar || 0) + '</div>';
+    html += '<div style="color: white;">💵 Valor Pozos: $' + ((data.totalFichasApostadas || 0) * 50) + ' / $' + ((data.totalFichasDeberianApostar || 0) * 50) + ' COP</div>';
     html += '</div>';
     html += '</div>';
     
@@ -368,6 +379,24 @@ const ui = {
         btnIniciar.textContent = '⛔ Esperando jugadores...';
       }
     }
+  },
+  
+  // ============================================================================
+  // CERRAR PANEL DE VERIFICACIÓN
+  // ============================================================================
+  
+  cerrarPanelVerificacion: function() {
+    const panel = document.getElementById('panelVerificacionApuestas');
+    const overlay = document.getElementById('panelVerificacionOverlay');
+    if (panel) {
+      panel.classList.add('hidden');
+      panel.style.display = 'none';
+    }
+    if (overlay) {
+      overlay.classList.add('hidden');
+      overlay.style.display = 'none';
+    }
+    console.log('🔒 Panel de verificación cerrado');
   },
   // ============================================================================
   // NOTIFICACIONES
