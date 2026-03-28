@@ -1040,3 +1040,92 @@ button.apostar {
 .justify-between { justify-content: space-between; }
 .align-center { align-items: center; }
 .justify-center { justify-content: center; }
+/* ============================================================================ */
+/* PANEL DE VERIFICACIÓN DE APUESTAS */
+/* ============================================================================ */
+
+.panel-verificacion-apuestas {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: linear-gradient(135deg, #2c3e50, #34495e);
+  border-radius: 15px;
+  padding: 25px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.7);
+  z-index: 2000;
+  min-width: 500px;
+  max-width: 700px;
+  max-height: 80vh;
+  overflow-y: auto;
+  border: 3px solid #f39c12;
+}
+
+.panel-verificacion-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding-bottom: 15px;
+  border-bottom: 2px solid #f39c12;
+}
+
+.panel-verificacion-header h3 {
+  margin: 0;
+  color: #f39c12;
+  font-size: 1.5em;
+}
+
+.btn-cerrar-panel {
+  background: rgba(231, 76, 60, 0.8);
+  border: none;
+  color: white;
+  width: 35px;
+  height: 35px;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 1.2em;
+  transition: background 0.3s ease;
+}
+
+.btn-cerrar-panel:hover {
+  background: rgba(231, 76, 60, 1);
+}
+
+.mensaje-validacion {
+  margin-bottom: 20px;
+  padding: 15px;
+  border-radius: 10px;
+  font-weight: bold;
+  text-align: center;
+}
+
+.lista-verificacion {
+  max-height: 500px;
+  overflow-y: auto;
+}
+
+.lista-verificacion::-webkit-scrollbar {
+  width: 8px;
+}
+
+.lista-verificacion::-webkit-scrollbar-track {
+  background: rgba(0,0,0,0.2);
+  border-radius: 10px;
+}
+
+.lista-verificacion::-webkit-scrollbar-thumb {
+  background: #f39c12;
+  border-radius: 10px;
+}
+
+/* Overlay para cuando el panel está visible */
+.panel-verificacion-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.7);
+  z-index: 1999;
+}
