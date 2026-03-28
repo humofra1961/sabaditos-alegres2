@@ -1040,6 +1040,7 @@ button.apostar {
 .justify-between { justify-content: space-between; }
 .align-center { align-items: center; }
 .justify-center { justify-content: center; }
+
 /* ============================================================================ */
 /* PANEL DE VERIFICACIÓN DE APUESTAS */
 /* ============================================================================ */
@@ -1053,12 +1054,17 @@ button.apostar {
   border-radius: 15px;
   padding: 25px;
   box-shadow: 0 20px 60px rgba(0,0,0,0.7);
-  z-index: 2000;
+  z-index: 9999;
   min-width: 500px;
   max-width: 700px;
   max-height: 80vh;
   overflow-y: auto;
   border: 3px solid #f39c12;
+  display: none;
+}
+
+.panel-verificacion-apuestas:not(.hidden) {
+  display: block !important;
 }
 
 .panel-verificacion-header {
@@ -1119,7 +1125,7 @@ button.apostar {
   border-radius: 10px;
 }
 
-/* Overlay para cuando el panel está visible */
+/* Overlay */
 .panel-verificacion-overlay {
   position: fixed;
   top: 0;
@@ -1127,5 +1133,10 @@ button.apostar {
   width: 100%;
   height: 100%;
   background: rgba(0,0,0,0.7);
-  z-index: 1999;
+  z-index: 9998;
+  display: none;
+}
+
+.panel-verificacion-overlay:not(.hidden) {
+  display: block !important;
 }
