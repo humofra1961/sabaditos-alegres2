@@ -77,7 +77,27 @@ const app = {
     }
   }
 };
-
+  manejarReconexion: function(datos) {
+    console.log('🔄 Manejando reconexión...', datos);
+    
+    // Mostrar notificación de recuperación
+    if (window.ui && datos.estadoRecuperado) {
+      window.ui.mostrarNotificacion('✅ Estado recuperado: ' + datos.estadoRecuperado, 'success', true);
+    }
+    
+    // Restaurar estado de apuesta
+    if (datos.fichasApostadas && datos.fichasApostadas >= 6) {
+      app.yaAposto = true;
+      console.log('✅ Apuesta restaurada: ' + datos.fichasApostadas + ' fichas');
+    }
+    
+    // Si era cantador, mostrar panel
+    if (datos.esCantador && window.ui) {
+      setTimeout(function() {
+        window.ui.actualizarPanelCantador(app.emailActual);
+      }, 500);
+    }
+  }
 window.app = app;
 
 document.addEventListener('DOMContentLoaded', function() {
