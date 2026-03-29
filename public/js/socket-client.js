@@ -159,7 +159,11 @@ const socketClient = {
       console.log('✅ Fichas compradas:', data);
       if (window.ui) window.ui.mostrarNotificacion('✅ ' + data.jugador + ' compró ' + data.fichas + ' fichas', 'success');
     });
-    
+    socket.on('reconexionExitosa', function(data) {
+      console.log('✅ Reconexión exitosa:', data);
+      if (window.ui) window.ui.mostrarNotificacion('✅ ' + data.mensaje, 'success', true);
+      if (window.app && window.app.manejarReconexion) window.app.manejarReconexion(data);
+    });    
     socket.on('monedasAgregadas', function(data) {
       console.log('💰 Monedas agregadas:', data);
       if (window.ui) window.ui.mostrarNotificacion('💰 ' + data.cantidad + ' fichas agregadas a ' + data.jugador, 'success');
