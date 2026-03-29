@@ -394,34 +394,52 @@ io.on('connection', function(socket) {
   
   socket.emit('gameState', gameState);
   
-  // ✅ REGISTRO DE JUGADOR
+  // ✅ REGISTRO DE JUGADOR - CON RECUPERACIÓN DE ESTADO
   socket.on('registerPlayer', function(email, nombre) {
-    console.log('👤 Jugador registrado: ' + nombre + ' (' + email + ')');
+    console.log('👤 Jugador registrado/reconectado: ' + nombre + ' (' + email + ')');
+    
+    let esReconexion = false;
+    let estadoRecuperado = '';
     
     if (gameState.jugadores[email]) {
+      // ✅ JUGADOR YA EXISTE - RECUPERAR ESTADO
+      esReconexion = true;
       gameState.jugadores[email].socketId = socket.id;
       gameState.jugadores[email].timestamp = Date.now();
       gameState.jugadores[email].desconectado = false;
       
+      // Construir mensaje de recuperación
+      const jugador = gameState.jugadores[email];
+      estadoRecuperado = 'Fichas: ' + jugador.monedas + ' | Cartones: ' + (jugador.cartones ? jugador.cartones.length : 0) + ' | Apuesta: ' + (jugador.fichasApostadas || 0) + ' fichas';
+      
+      console.log('✅ Reconexión - Estado recuperado: ' + estadoRecuperado);
+      
+      // Si era cantador, restaurar rol
       if (gameState.cantadorAnterior === email && !gameState.cantador) {
         gameState.cantador = email;
         io.emit('updateCantador', email);
         io.emit('updateJugadores', gameState.jugadores);
+        
         socket.emit('reconexionExitosa', {
-          mensaje: 'Reconectado como CANTADOR. Tu posición fue restaurada.',
-          monedas: gameState.jugadores[email].monedas,
-          cartones: gameState.jugadores[email].cartones,
-          esCantador: true
+          mensaje: '✅ Reconectado como CANTADOR. Tu posición fue restaurada.',
+          monedas: jugador.monedas,
+          cartones: jugador.cartones,
+          fichasApostadas: jugador.fichasApostadas,
+          esCantador: true,
+          estadoRecuperado: estadoRecuperado
         });
       } else {
         socket.emit('reconexionExitosa', {
-          mensaje: 'Reconectado. Tu estado se mantuvo.',
-          monedas: gameState.jugadores[email].monedas,
-          cartones: gameState.jugadores[email].cartones,
-          esCantador: gameState.cantador === email
+          mensaje: '✅ Reconectado. Tu estado se mantuvo: ' + estadoRecuperado,
+          monedas: jugador.monedas,
+          cartones: jugador.cartones,
+          fichasApostadas: jugador.fichasApostadas,
+          esCantador: gameState.cantador === email,
+          estadoRecuperado: estadoRecuperado
         });
       }
     } else {
+      // ✅ JUGADOR NUEVO - CREAR REGISTRO
       gameState.jugadores[email] = { 
         nombre: nombre, 
         timestamp: Date.now(), 
@@ -443,15 +461,28 @@ io.on('connection', function(socket) {
           fichasCompradas: 0, fichasGanadas: 0, fichasApostadas: 0, balanceFinal: 0
         };
       }
+      
+      socket.emit('registroNuevo', {
+        mensaje: '✅ Bienvenido ' + nombre + '. Compra fichas para comenzar.',
+        monedas: 0
+      });
     }
     
+    // ✅ Emitir estado actualizado a TODOS (incluyendo al nuevo/reconectado)
     io.emit('updateJugadores', gameState.jugadores);
     io.emit('updateEstadisticas', gameState.estadisticas);
     io.emit('updateBanco', gameState.banco);
     io.emit('updatePozosDinamicos', gameState.pozosDinamicos);
-    socket.emit('updateCantador', gameState.cantador);
-  });
-  
+    io.emit('updateCartones', gameState.cartones);
+    io.emit('updateCartasCantadas', gameState.cartasCantadas);
+    io.emit('updateFaseJuego', gameState.faseJuego);
+    io.emit('updateCantador', gameState.cantador);
+    
+    // Enviar gameState completo al jugador que se conecta
+    socket.emit('gameState', gameState);
+    
+    console.log('📊 Estado del juego enviado al jugador. Cantador actual: ' + (gameState.cantador || 'Ninguno'));
+  });  
   // ✅ COMPRAR FICHAS
   socket.on('comprarFichas', function(email, cantidadFichas) {
     if (!gameState.jugadores[email]) {
@@ -493,7 +524,7 @@ io.on('connection', function(socket) {
     });
   });
   
-      // ✅ APOSTAR EN POZOS - CORREGIDO
+    // ✅ APOSTAR EN POZOS - DINÁMICO SEGÚN CARTONES
   socket.on('apostarEnPozos', function(email) {
     if (!gameState.jugadores[email]) {
       socket.emit('error', 'Jugador no encontrado.');
@@ -501,28 +532,44 @@ io.on('connection', function(socket) {
     }
     
     const jugador = gameState.jugadores[email];
-    const fichasRequeridas = 6;
-    const costoTotal = fichasRequeridas * VALOR_FICHA;
+    const cartonesJugador = jugador.cartones ? jugador.cartones.length : 0;
     
-    // ✅ Verificar si YA apostó en esta partida
-    if (jugador.fichasApostadas >= 6) {
-      socket.emit('error', 'Ya apostaste en esta partida.');
+    // Validar que tenga cartones
+    if (cartonesJugador === 0) {
+      socket.emit('error', 'Debes seleccionar al menos 1 cartón antes de apostar.');
       return;
     }
     
-    // ✅ Verificar si tiene suficientes fichas para apostar
+    // Calcular apuesta: 6 fichas × número de cartones
+    const fichasRequeridas = cartonesJugador * 6;
+    const costoTotal = fichasRequeridas * VALOR_FICHA;
+    
+    // Validar si YA apostó en esta partida
+    if (jugador.fichasApostadas >= fichasRequeridas) {
+      socket.emit('error', 'Ya apostaste ' + jugador.fichasApostadas + ' fichas para ' + cartonesJugador + ' cartones en esta partida.');
+      return;
+    }
+    
+    // Validar saldo mínimo después de apostar (debe quedar con al menos 18 fichas)
+    const saldoDespuesDeApuesta = jugador.monedas - fichasRequeridas;
+    if (saldoDespuesDeApuesta < 18) {
+      socket.emit('error', 'Saldo insuficiente. Después de apostar ' + fichasRequeridas + ' fichas, te quedarían ' + saldoDespuesDeApuesta + ' fichas. Necesitas mantener al menos 18 fichas para la siguiente partida. Compra más fichas.');
+      return;
+    }
+    
+    // Validar saldo actual
     if (jugador.monedas < fichasRequeridas) {
-      socket.emit('error', 'No tienes suficientes fichas. Necesitas ' + fichasRequeridas + ' fichas ($' + costoTotal + ' COP). Compra más fichas.');
+      socket.emit('error', 'No tienes suficientes fichas. Necesitas ' + fichasRequeridas + ' fichas ($' + costoTotal + ' COP) para ' + cartonesJugador + ' cartones. Compra más fichas.');
       return;
     }
     
     // ✅ Descontar fichas y registrar apuesta
     jugador.monedas -= fichasRequeridas;
-    jugador.fichasApostadas = 6;  // ← Marcar como que YA apostó
+    jugador.fichasApostadas = fichasRequeridas;
     
-    // ✅ Actualizar pozos dinámicos
+    // ✅ Actualizar pozos dinámicos (1 ficha por pozo por cartón)
     Object.keys(gameState.pozosDinamicos).forEach(function(pozo) {
-      gameState.pozosDinamicos[pozo].acumulado += VALOR_FICHA;
+      gameState.pozosDinamicos[pozo].acumulado += fichasRequeridas;
       gameState.pozosDinamicos[pozo].total = gameState.pozosDinamicos[pozo].valorBase + gameState.pozosDinamicos[pozo].acumulado;
       gameState.pozosDinamicos[pozo].fichas = Math.floor(gameState.pozosDinamicos[pozo].total / VALOR_FICHA);
     });
@@ -532,7 +579,8 @@ io.on('connection', function(socket) {
       fichas: fichasRequeridas,
       valor: costoTotal,
       fecha: new Date().toISOString(),
-      partida: gameState.partidaActual
+      partida: gameState.partidaActual,
+      cartones: cartonesJugador
     });
     
     gameState.banco.totalRecaudado += costoTotal;
@@ -543,7 +591,29 @@ io.on('connection', function(socket) {
     io.emit('updateBanco', gameState.banco);
     io.emit('updatePozosDinamicos', gameState.pozosDinamicos);
     
-    console.log('🎰 Apuesta registrada: ' + email + ' apostó ' + fichasRequeridas + ' fichas. Ahora tiene ' + jugador.fichasApostadas + ' fichas apostadas');
+    // ✅ Notificación especial al jugador
+    socket.emit('apuestaRealizada', {
+      fichas: fichasRequeridas,
+      cartones: cartonesJugador,
+      valor: costoTotal,
+      saldoRestante: jugador.monedas,
+      mensaje: '✅ Apostaste ' + fichasRequeridas + ' fichas (' + cartonesJugador + ' cartones × 6). Saldo restante: ' + jugador.monedas + ' fichas'
+    });
+    
+    // ✅ Notificación al cantador
+    if (gameState.cantador && gameState.cantador !== email) {
+      const cantadorSocket = io.sockets.sockets.get(gameState.jugadores[gameState.cantador] ? gameState.jugadores[gameState.cantador].socketId : null);
+      if (cantadorSocket) {
+        cantadorSocket.emit('notificacionJugador', {
+          tipo: 'apuesta',
+          jugador: jugador.nombre,
+          mensaje: jugador.nombre + ' apostó ' + fichasRequeridas + ' fichas (' + cartonesJugador + ' cartones)',
+          email: email
+        });
+      }
+    }
+    
+    console.log('🎰 Apuesta registrada: ' + email + ' apostó ' + fichasRequeridas + ' fichas para ' + cartonesJugador + ' cartones. Saldo: ' + jugador.monedas);
   });
   
   // ✅ AGREGAR MONEDAS (Cantador)
