@@ -492,8 +492,7 @@ io.on('connection', function(socket) {
       total: gameState.jugadores[email].monedas
     });
   });
-  
-      // ✅ APOSTAR EN POZOS - CORREGIDO
+
   socket.on('apostarEnPozos', function(email) {
     if (!gameState.jugadores[email]) {
       socket.emit('error', 'Jugador no encontrado.');
@@ -501,32 +500,45 @@ io.on('connection', function(socket) {
     }
     
     const jugador = gameState.jugadores[email];
-    const fichasRequeridas = 6;
-    const costoTotal = fichasRequeridas * VALOR_FICHA;
+    const cartonesJugador = jugador.cartones ? jugador.cartones.length : 0;
     
-    // ✅ Verificar si YA apostó en esta partida
-    if (jugador.fichasApostadas >= 6) {
-      socket.emit('error', 'Ya apostaste en esta partida.');
+    if (cartonesJugador === 0) {
+      socket.emit('error', 'Debes seleccionar al menos 1 cartón antes de apostar.');
       return;
     }
     
-    // ✅ Verificar si tiene suficientes fichas para apostar
+    const fichasRequeridas = cartonesJugador * 6;
+    const costoTotal = fichasRequeridas * VALOR_FICHA;
+    
+    // Validar si YA apostó en esta partida
+    if (jugador.fichasApostadas >= fichasRequeridas) {
+      socket.emit('error', 'Ya apostaste ' + jugador.fichasApostadas + ' fichas para ' + cartonesJugador + ' cartones en esta partida.');
+      return;
+    }
+    
+    // Validar saldo mínimo después de apostar (18 fichas)
+    const saldoDespuesDeApuesta = jugador.monedas - fichasRequeridas;
+    if (saldoDespuesDeApuesta < 18) {
+      socket.emit('error', 'Saldo insuficiente. Después de apostar te quedarían ' + saldoDespuesDeApuesta + ' fichas. Necesitas mantener al menos 18 fichas para la siguiente partida.');
+      return;
+    }
+    
+    // Validar saldo actual
     if (jugador.monedas < fichasRequeridas) {
-      socket.emit('error', 'No tienes suficientes fichas. Necesitas ' + fichasRequeridas + ' fichas ($' + costoTotal + ' COP). Compra más fichas.');
+      socket.emit('error', 'No tienes suficientes fichas. Necesitas ' + fichasRequeridas + ' fichas ($' + costoTotal + ' COP) para ' + cartonesJugador + ' cartones.');
       return;
     }
     
     // ✅ Descontar fichas y registrar apuesta
     jugador.monedas -= fichasRequeridas;
-    jugador.fichasApostadas = 6;  // ← Marcar como que YA apostó
+    jugador.fichasApostadas = fichasRequeridas;
     
-    // ✅ Actualizar pozos dinámicos
+    // ✅ Actualizar pozos dinámicos (1 ficha por pozo por cartón)
     Object.keys(gameState.pozosDinamicos).forEach(function(pozo) {
-      gameState.pozosDinamicos[pozo].acumulado += VALOR_FICHA;
+      gameState.pozosDinamicos[pozo].acumulado += fichasRequeridas;
       gameState.pozosDinamicos[pozo].total = gameState.pozosDinamicos[pozo].valorBase + gameState.pozosDinamicos[pozo].acumulado;
       gameState.pozosDinamicos[pozo].fichas = Math.floor(gameState.pozosDinamicos[pozo].total / VALOR_FICHA);
     });
-    
     jugador.historialTransacciones.push({
       tipo: 'APUESTA_POZOS',
       fichas: fichasRequeridas,
