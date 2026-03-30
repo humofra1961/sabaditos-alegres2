@@ -178,9 +178,11 @@ function barajarMazo(mazo) {
   }
   return mazoBarajado;
 }
+
 // ============================================================================
 // ✅ VALIDACIÓN COMPLETA DE APUESTAS - 3 NIVELES
 // ============================================================================
+
 function verificarJugadoresListos() {
   const jugadoresListos = [];
   const jugadoresNoListos = [];
@@ -191,14 +193,13 @@ function verificarJugadoresListos() {
   Object.keys(gameState.jugadores).forEach(function(email) {
     const jugador = gameState.jugadores[email];
     const cartonesJugador = jugador.cartones ? jugador.cartones.length : 0;
-    const fichasDeberianApostar = cartonesJugador * 6; // 6 fichas por cartón
+    const fichasDeberianApostar = cartonesJugador * 6;
     const fichasYaApostadas = jugador.fichasApostadas || 0;
     
     totalCartones += cartonesJugador;
     totalFichasDeberianApostar += fichasDeberianApostar;
     totalFichasApostadas += fichasYaApostadas;
     
-    // NIVEL 1: Verificar mínimo 40 fichas
     if (jugador.monedas < 40) {
       jugadoresNoListos.push({
         email: email,
@@ -213,7 +214,6 @@ function verificarJugadoresListos() {
       return;
     }
     
-    // NIVEL 2: Verificar al menos 1 cartón
     if (cartonesJugador === 0) {
       jugadoresNoListos.push({
         email: email,
@@ -228,7 +228,6 @@ function verificarJugadoresListos() {
       return;
     }
     
-    // NIVEL 3: Verificar apuesta según número de cartones
     if (fichasYaApostadas < fichasDeberianApostar) {
       jugadoresNoListos.push({
         email: email,
@@ -243,7 +242,6 @@ function verificarJugadoresListos() {
       return;
     }
     
-    // ✅ Jugador listo
     jugadoresListos.push({
       email: email,
       nombre: jugador.nombre,
@@ -265,87 +263,44 @@ function verificarJugadoresListos() {
     resumen: '📊 ' + totalCartones + ' cartones en juego → ' + totalFichasDeberianApostar + ' fichas en pozos ($' + (totalFichasDeberianApostar * 50) + ' COP)'
   };
 }
+
 // ============================================================================
-// ✅ VALIDACIÓN DE POZOS - CORREGIDA
+// ✅ VALIDACIÓN DE POZOS
 // ============================================================================
 
 function verificarPozo(carton, pozo, codigosCantados) {
-  console.log('🔍 Verificando pozo:', pozo, 'Cartón:', carton.numero);
-  
   function verificarCartas(indices) {
-    console.log('  Verificando índices:', indices);
     for (let i = 0; i < indices.length; i++) {
       const index = indices[i];
-      
-      // Verificar si está tapada
-      if (!carton.tapadas[index]) {
-        console.log('  ❌ Carta', index, 'NO está tapada');
-        return false;
-      }
-      
-      // Verificar si fue cantada
+      if (!carton.tapadas[index]) return false;
       const carta = carton.cartas[index];
-      if (!carta) {
-        console.log('  ❌ Carta', index, 'NO existe');
-        return false;
-      }
-      
+      if (!carta) return false;
       const codigoEncontrado = codigosCantados.indexOf(carta.codigo);
-      if (codigoEncontrado === -1) {
-        console.log('  ❌ Carta', carta.codigo, 'NO está en cartas cantadas');
-        return false;
-      }
-      
-      console.log('  ✅ Carta', index, carta.codigo, 'OK (tapada y cantada)');
+      if (codigoEncontrado === -1) return false;
     }
     return true;
   }
   
-  // ESPECIAL - 25 cartas
   if (pozo === 'especial') {
     var indicesEspecial = [];
     for (var i = 0; i < 25; i++) indicesEspecial.push(i);
-    const valido = verificarCartas(indicesEspecial);
-    console.log('  ESPECIAL:', valido ? '✅ VÁLIDO' : '❌ INVÁLIDO');
-    return valido;
+    return verificarCartas(indicesEspecial);
   }
+  if (pozo === 'centro') return verificarCartas([12]);
+  if (pozo === 'cuatroEsquinas') return verificarCartas([0, 4, 20, 24]);
   
-  // CENTRO - 1 carta (índice 12)
-  if (pozo === 'centro') {
-    const valido = verificarCartas([12]);
-    console.log('  CENTRO:', valido ? '✅ VÁLIDO' : '❌ INVÁLIDO');
-    return valido;
-  }
-  
-  // CUATRO ESQUINAS - índices 0, 4, 20, 24
-  if (pozo === 'cuatroEsquinas') {
-    const valido = verificarCartas([0, 4, 20, 24]);
-    console.log('  4 ESQUINAS:', valido ? '✅ VÁLIDO' : '❌ INVÁLIDO');
-    return valido;
-  }
-  
-  // POKINO - 5 cartas en línea (horizontal, vertical o diagonal)
   if (pozo === 'pokino') {
     const lineas = [
-      // Horizontales
       [0,1,2,3,4], [5,6,7,8,9], [10,11,12,13,14], [15,16,17,18,19], [20,21,22,23,24],
-      // Verticales
       [0,5,10,15,20], [1,6,11,16,21], [2,7,12,17,22], [3,8,13,18,23], [4,9,14,19,24],
-      // Diagonales
       [0,6,12,18,24], [4,8,12,16,20]
     ];
-    
     for (let l = 0; l < lineas.length; l++) {
-      if (verificarCartas(lineas[l])) {
-        console.log('  POKINO: ✅ VÁLIDO (línea', l, ')');
-        return true;
-      }
+      if (verificarCartas(lineas[l])) return true;
     }
-    console.log('  POKINO: ❌ INVÁLIDO (ninguna línea completa)');
     return false;
   }
   
-  // POKER - 4 cartas del mismo valor (índices configurados en carton.pokerFila)
   if (pozo === 'poker') {
     const fila = carton.pokerFila || 3;
     let indices = [];
@@ -354,13 +309,9 @@ function verificarPozo(carton, pozo, codigosCantados) {
     else if (fila === 3) indices = [10, 11, 12, 13];
     else if (fila === 4) indices = [15, 16, 17, 18];
     else indices = [10, 11, 12, 13];
-    
-    const valido = verificarCartas(indices);
-    console.log('  POKER:', valido ? '✅ VÁLIDO' : '❌ INVÁLIDO');
-    return valido;
+    return verificarCartas(indices);
   }
   
-  // FULL - 5 cartas (2 de un valor + 3 de otro) (índices configurados en carton.fullFila)
   if (pozo === 'full') {
     const fila = carton.fullFila || 4;
     let indices = [];
@@ -370,13 +321,45 @@ function verificarPozo(carton, pozo, codigosCantados) {
     else if (fila === 4) indices = [15, 16, 17, 18, 19];
     else if (fila === 5) indices = [20, 21, 22, 23, 24];
     else indices = [15, 16, 17, 18, 19];
-    
-    const valido = verificarCartas(indices);
-    console.log('  FULL:', valido ? '✅ VÁLIDO' : '❌ INVÁLIDO');
-    return valido;
+    return verificarCartas(indices);
   }
   
   return false;
+}
+
+// ============================================================================
+// ✅ VERIFICAR PREMIOS COMPLETADOS
+// ============================================================================
+
+function verificarPremiosCompletados() {
+  const premiosDetectados = [];
+  const codigosCantados = gameState.cartasCantadas.map(function(c) { return c.codigo; });
+  
+  gameState.cartones.forEach(function(carton) {
+    if (!carton.dueño) return;
+    
+    Object.keys(pozosConfig).forEach(function(pozo) {
+      if (carton.pozos[pozo]) return;
+      
+      if (verificarPozo(carton, pozo, codigosCantados)) {
+        premiosDetectados.push({
+          carton: carton.numero,
+          nombreCarton: carton.nombre,
+          pozo: pozo,
+          nombrePozo: pozosConfig[pozo].nombre,
+          jugador: gameState.jugadores[carton.dueño] ? gameState.jugadores[carton.dueño].nombre : carton.dueño,
+          email: carton.dueño,
+          premio: gameState.pozosDinamicos[pozo].total,
+          fichas: gameState.pozosDinamicos[pozo].fichas,
+          timestamp: Date.now()
+        });
+      }
+    });
+  });
+  
+  if (premiosDetectados.length > 0 && gameState.cantador) {
+    gameState.premiosPendientes.push.apply(gameState.premiosPendientes, premiosDetectados);
+  }
 }
 
 // ============================================================================
@@ -386,7 +369,6 @@ function verificarPozo(carton, pozo, codigosCantados) {
 io.on('connection', function(socket) {
   console.log('✅ Jugador conectado:', socket.id);
   
-  // Inicializar cartones y mazo si está vacío
   if (gameState.cartones.length === 0) {
     gameState.cartones = generarCartonesFijos();
     gameState.mazo = barajarMazo(generarMazo());
@@ -496,42 +478,9 @@ io.on('connection', function(socket) {
       valor: costoTotal,
       total: gameState.jugadores[email].monedas
     });
-  });  
-    
-    const costoTotal = cantidadFichas * VALOR_FICHA;
-    
-    gameState.jugadores[email].monedas += cantidadFichas;
-    gameState.jugadores[email].fichasCompradas += cantidadFichas;
-    gameState.jugadores[email].historialTransacciones.push({
-      tipo: 'COMPRA',
-      fichas: cantidadFichas,
-      valor: costoTotal,
-      fecha: new Date().toISOString(),
-      partida: gameState.partidaActual
-    });
-    
-    gameState.banco.totalRecaudado += costoTotal;
-    gameState.banco.transacciones.push({
-      tipo: 'COMPRA',
-      jugador: email,
-      nombre: gameState.jugadores[email].nombre,
-      fichas: cantidadFichas,
-      valor: costoTotal,
-      fecha: new Date().toISOString(),
-      partida: gameState.partidaActual
-    });
-    
-    io.emit('updateJugadores', gameState.jugadores);
-    io.emit('updateEstadisticas', gameState.estadisticas);
-    io.emit('updateBanco', gameState.banco);
-    io.emit('fichasCompradas', {
-      jugador: gameState.jugadores[email].nombre,
-      fichas: cantidadFichas,
-      valor: costoTotal,
-      total: gameState.jugadores[email].monedas
-    });
   });
-
+  
+  // ✅ APOSTAR EN POZOS
   socket.on('apostarEnPozos', function(email) {
     if (!gameState.jugadores[email]) {
       socket.emit('error', 'Jugador no encontrado.');
@@ -549,35 +498,31 @@ io.on('connection', function(socket) {
     const fichasRequeridas = cartonesJugador * 6;
     const costoTotal = fichasRequeridas * VALOR_FICHA;
     
-    // Validar si YA apostó en esta partida
     if (jugador.fichasApostadas >= fichasRequeridas) {
       socket.emit('error', 'Ya apostaste ' + jugador.fichasApostadas + ' fichas para ' + cartonesJugador + ' cartones en esta partida.');
       return;
     }
     
-    // Validar saldo mínimo después de apostar (18 fichas)
     const saldoDespuesDeApuesta = jugador.monedas - fichasRequeridas;
     if (saldoDespuesDeApuesta < 18) {
       socket.emit('error', 'Saldo insuficiente. Después de apostar te quedarían ' + saldoDespuesDeApuesta + ' fichas. Necesitas mantener al menos 18 fichas para la siguiente partida.');
       return;
     }
     
-    // Validar saldo actual
     if (jugador.monedas < fichasRequeridas) {
       socket.emit('error', 'No tienes suficientes fichas. Necesitas ' + fichasRequeridas + ' fichas ($' + costoTotal + ' COP) para ' + cartonesJugador + ' cartones.');
       return;
     }
     
-    // ✅ Descontar fichas y registrar apuesta
     jugador.monedas -= fichasRequeridas;
     jugador.fichasApostadas = fichasRequeridas;
     
-    // ✅ Actualizar pozos dinámicos (1 ficha por pozo por cartón)
     Object.keys(gameState.pozosDinamicos).forEach(function(pozo) {
       gameState.pozosDinamicos[pozo].acumulado += fichasRequeridas;
       gameState.pozosDinamicos[pozo].total = gameState.pozosDinamicos[pozo].valorBase + gameState.pozosDinamicos[pozo].acumulado;
       gameState.pozosDinamicos[pozo].fichas = Math.floor(gameState.pozosDinamicos[pozo].total / VALOR_FICHA);
     });
+    
     jugador.historialTransacciones.push({
       tipo: 'APUESTA_POZOS',
       fichas: fichasRequeridas,
@@ -588,7 +533,6 @@ io.on('connection', function(socket) {
     
     gameState.banco.totalRecaudado += costoTotal;
     
-    // ✅ Emitir actualizaciones a TODOS
     io.emit('updateJugadores', gameState.jugadores);
     io.emit('updateEstadisticas', gameState.estadisticas);
     io.emit('updateBanco', gameState.banco);
@@ -782,7 +726,7 @@ io.on('connection', function(socket) {
     console.log('🎮 Juego iniciado - ' + validacion.listos.length + ' jugadores listos');
   });
   
-    // ✅ SOLICITAR ESTADO DE APUESTAS (VERIFICACIÓN COMPLETA)
+  // ✅ SOLICITAR ESTADO DE APUESTAS
   socket.on('solicitarEstadoApuestas', function(email) {
     if (gameState.cantador !== email) {
       socket.emit('error', 'Solo el cantador puede verificar.');
@@ -792,10 +736,8 @@ io.on('connection', function(socket) {
     const validacion = verificarJugadoresListos();
     console.log('📋 Validación completada:', validacion);
     
-    // Enviar validación detallada al cantador
     socket.emit('estadoApuestas', validacion);
     
-    // También enviar notificación a todos los jugadores
     if (!validacion.todosListos) {
       io.emit('notificacionCantador', {
         tipo: 'verificacion',
@@ -905,7 +847,7 @@ io.on('connection', function(socket) {
     io.emit('updateFaseJuego', gameState.faseJuego);
   });
   
-  // ✅ SIGUIENTE PARTIDA CORREGIDA
+  // ✅ SIGUIENTE PARTIDA
   socket.on('siguientePartida', function(email) {
     if (gameState.cantador !== email) {
       socket.emit('error', 'Solo el cantador.');
@@ -928,8 +870,7 @@ io.on('connection', function(socket) {
       carton.tapadas.fill(false);
       Object.keys(carton.pozos).forEach(function(k) { carton.pozos[k] = false; });
     });
-
-    // ✅ IMPORTANTE: Resetear fichasApostadas de TODOS los jugadores para la nueva partida
+    
     Object.keys(gameState.jugadores).forEach(function(email) {
       gameState.jugadores[email].fichasApostadas = 0;
     });
@@ -1073,11 +1014,17 @@ server.listen(PORT, '0.0.0.0', function() {
   console.log('║  🎪 BINGO POKER - SABADITO ALEGRE - SERVIDOR ACTIVO      ║');
   console.log('╠═══════════════════════════════════════════════════════════╣');
   console.log('║ 📡 Puerto: ' + PORT);
-  console.log('║ 🌐 URL: https://sabaditos-alegres2.onrender.com');
+  console.log('║ 🌐 URL: https://sabaditos-alegres2-1.onrender.com');
   console.log('║  🎴 13 cartones oficiales');
-  console.log('║  🃏 52 cartas individuales en PNG');
-  console.log('║  🏆 6 Pozos dinámicos (inician en $0)');
+  console.log('║  🏆 6 Pozos dinámicos');
   console.log('║  💰 VALOR FICHA: $50 COP');
-  console.log('║  🎰 APUESTA POR PARTIDA: 6 fichas ($300 COP)');
   console.log('╚═══════════════════════════════════════════════════════════╝');
+});
+
+process.on('uncaughtException', function(err) {
+  console.error('❌ Error no capturado:', err);
+});
+
+process.on('unhandledRejection', function(reason, promise) {
+  console.error('❌ Promesa rechazada:', reason);
 });
