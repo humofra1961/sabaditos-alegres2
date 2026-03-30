@@ -91,7 +91,14 @@ const socketClient = {
         window.cartones.renderizarMisCartones();
       }
     });
-    
+    // ✅ IMPORTANTE: Verificar panel de apuestas después de actualizar cartones
+      setTimeout(function() {
+        if (window.app && window.app.verificarPanelApuestas) {
+          console.log('🎰 Llamando a verificarPanelApuestas desde socket-client.js');
+          window.app.verificarPanelApuestas();
+        }
+      }, 500);
+    });    
     socket.on('updateCartasCantadas', function(cartas) {
       console.log('🃏 Actualizando cartas cantadas:', cartas);
       if (!window.app.gameState) window.app.gameState = {};
