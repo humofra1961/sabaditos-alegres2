@@ -2,7 +2,7 @@ let socket;
 
 const socketClient = {
   conectar: function() {
-    console.log('Conectando a Socket.io...');
+    console.log('🔌 Conectando a Socket.io...');
     
     socket = io({
       transports: ['websocket', 'polling'],
@@ -36,16 +36,16 @@ const socketClient = {
     socket.on('gameState', function(state) {
       console.log('📊 Recibiendo gameState:', state);
       if (!window.app.gameState) window.app.gameState = {};
-      window.app.gameState = state;      
-    });
-    // ✅ IMPORTANTE: Renderizar cartones cuando llega gameState
-    setTimeout(function() {
-      if (window.cartones && window.cartones.renderizarGrid) {
-        console.log('🎴 Llamando renderizarGrid desde gameState');
-        window.cartones.renderizarGrid();
+      window.app.gameState = state;
+      
+      setTimeout(function() {
+        if (window.cartones && window.cartones.renderizarGrid) {
+          console.log('🎴 Llamando renderizarGrid desde gameState');
+          window.cartones.renderizarGrid();
         }
       }, 500);
-    });    
+    });
+    
     socket.on('updateJugadores', function(jugadores) {
       console.log('👥 Actualizando jugadores:', jugadores);
       if (!window.app.gameState) window.app.gameState = {};
@@ -103,6 +103,13 @@ const socketClient = {
       if (window.ui) window.ui.actualizarBanco(banco);
     });
     
+    socket.on('updateEstadisticas', function(estadisticas) {
+      console.log('📊 Actualizando estadísticas:', estadisticas);
+      if (!window.app.gameState) window.app.gameState = {};
+      window.app.gameState.estadisticas = estadisticas || {};
+      if (window.ui) window.ui.renderizarEstadisticas();
+    });
+    
     socket.on('registroNuevo', function(data) {
       console.log('✅ Registro nuevo:', data);
       if (window.app) window.app.marcarRegistroCompletado();
@@ -117,6 +124,41 @@ const socketClient = {
     socket.on('fichasCompradas', function(data) {
       console.log('✅ Fichas compradas:', data);
       if (window.ui) window.ui.mostrarNotificacion('✅ ' + data.jugador + ' compró ' + data.fichas + ' fichas', 'success');
+    });
+    
+    socket.on('monedasAgregadas', function(data) {
+      console.log('💰 Monedas agregadas:', data);
+      if (window.ui) window.ui.mostrarNotificacion('💰 ' + data.cantidad + ' fichas agregadas a ' + data.jugador, 'success');
+    });
+    
+    socket.on('apuestaRealizada', function(data) {
+      console.log('🎰 Apuesta realizada:', data);
+      if (window.ui) window.ui.mostrarNotificacion('✅ ' + data.mensaje, 'success');
+    });
+    
+    socket.on('validacionFallida', function(data) {
+      console.log('⚠️ Validación fallida:', data);
+      if (window.ui) window.ui.mostrarValidacionFallida(data);
+    });
+    
+    socket.on('estadoApuestas', function(data) {
+      console.log('📋 Estado de apuestas:', data);
+      if (window.ui) window.ui.mostrarEstadoApuestas(data);
+    });
+    
+    socket.on('juegoIniciado', function(data) {
+      console.log('🎮 Juego iniciado:', data);
+      if (window.ui) window.ui.mostrarJuegoIniciado(data);
+    });
+    
+    socket.on('alertaGanador', function(data) {
+      console.log('🏆 Alerta de ganador:', data);
+      if (window.premio) window.premio.mostrarAlerta(data);
+    });
+    
+    socket.on('premioConfirmado', function(data) {
+      console.log('✅ Premio confirmado:', data);
+      if (window.ui) window.ui.mostrarNotificacion('✅ ' + data.jugador + ' ganó ' + data.pozo, 'success');
     });
     
     socket.on('error', function(mensaje) {
