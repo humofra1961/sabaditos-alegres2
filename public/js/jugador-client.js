@@ -52,7 +52,7 @@ const jugador = {
       return;
     }
     
-    var confirmar = confirm('¿Confirmar apuesta de ' + fichasRequeridas + ' fichas (' + cartonesJugador + ' cartones)?');
+    var confirmar = confirm('¿Confirmar apuesta de ' + fichasRequeridas + ' fichas (' + cartonesJugador + ' cartones)?\n\nSaldo actual: ' + saldoActual + ' fichas\nSaldo después: ' + saldoDespues + ' fichas\n\nLas fichas se distribuirán en los 6 pozos.');
     
     if (confirmar) {
       console.log('✅ Apuesta confirmada:', fichasRequeridas, 'fichas');
