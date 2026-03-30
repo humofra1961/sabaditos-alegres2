@@ -114,3 +114,63 @@ document.addEventListener('DOMContentLoaded', function() {
     window.socketClient.conectar();
   }
 });
+  verificarPanelApuestas: function() {
+    var panelApuestas = document.getElementById('panelApuestas');
+    var detalleCartones = document.getElementById('detalleCartones');
+    var detalleApuesta = document.getElementById('detalleApuesta');
+    var detalleSaldo = document.getElementById('detalleSaldo');
+    var detalleSaldoRestante = document.getElementById('detalleSaldoRestante');
+    
+    if (!panelApuestas) {
+      console.error('❌ No se encontró #panelApuestas');
+      return;
+    }
+    
+    // Obtener número de cartones
+    var cartonesJugador = 0;
+    var saldoActual = 0;
+    
+    if (this.gameState && this.gameState.jugadores && this.gameState.jugadores[this.emailActual]) {
+      cartonesJugador = this.gameState.jugadores[this.emailActual].cartones.length;
+      saldoActual = this.gameState.jugadores[this.emailActual].monedas;
+    }
+    
+    console.log('Verificando panel de apuestas. Cartones:', cartonesJugador, 'Saldo:', saldoActual, 'Ya apostó:', this.yaAposto);
+    
+    if (cartonesJugador > 0 && !this.yaAposto && this.gameState && this.gameState.faseJuego === 'seleccion') {
+      var fichasRequeridas = cartonesJugador * 6;
+      var saldoDespuesDeApuesta = saldoActual - fichasRequeridas;
+      var valorEnPesos = fichasRequeridas * 50;
+      
+      panelApuestas.classList.remove('hidden');
+      panelApuestas.style.display = 'block';
+      
+      if (detalleCartones) {
+        detalleCartones.textContent = '🎴 Cartones seleccionados: ' + cartonesJugador + ' (máx 3)';
+      }
+      
+      if (detalleApuesta) {
+        detalleApuesta.textContent = '🎰 Apuesta: ' + cartonesJugador + ' cartón(es) × 6 fichas = ' + fichasRequeridas + ' fichas ($' + valorEnPesos + ' COP)';
+      }
+      
+      if (detalleSaldo) {
+        detalleSaldo.textContent = '💰 Saldo actual: ' + saldoActual + ' fichas ($' + (saldoActual * 50) + ' COP)';
+      }
+      
+      if (detalleSaldoRestante) {
+        if (saldoDespuesDeApuesta < 18) {
+          detalleSaldoRestante.textContent = '⚠️ Saldo después: ' + saldoDespuesDeApuesta + ' fichas (INSUFICIENTE - mín. 18 para siguiente partida)';
+          detalleSaldoRestante.style.color = '#e74c3c';
+        } else {
+          detalleSaldoRestante.textContent = '✅ Saldo después: ' + saldoDespuesDeApuesta + ' fichas ($' + (saldoDespuesDeApuesta * 50) + ' COP)';
+          detalleSaldoRestante.style.color = '#27ae60';
+        }
+      }
+      
+      console.log('✅ Panel de apuestas visible');
+    } else {
+      panelApuestas.classList.add('hidden');
+      panelApuestas.style.display = 'none';
+      console.log('🔒 Panel de apuestas oculto (cartones: ' + cartonesJugador + ', ya apostó: ' + this.yaAposto + ')');
+    }
+  },
