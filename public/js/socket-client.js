@@ -1,34 +1,55 @@
-// ============================================================================
-// 🔌 CLIENTE SOCKET.IO - CONEXIÓN Y EVENTOS
-// ============================================================================
-
 let socket;
 
 const socketClient = {
   conectar: function() {
-    console.log('🔌 Conectando a Socket.io...');
+    console.log('Conectando a Socket.io...');
     
     socket = io({
       transports: ['websocket', 'polling'],
       reconnection: true,
       reconnectionDelay: 1000,
       reconnectionAttempts: 10,
-      timeout: 20000
+      timeout: 20000,
+      forceNew: false
     });
     
     socket.on('connect', function() {
       console.log('✅ Socket conectado:', socket.id);
       if (window.ui) window.ui.actualizarEstadoConexion(true);
+      if (window.app) {
+        window.app.socketConectado = true;
+        window.app.actualizarEstadoCarga('✅ Conectado. Esperando registro...', 30);
+      }
+      
+      if (window.app && window.app.emailActual && window.app.nombreActual) {
+        console.log('Re-registrando jugador:', window.app.emailActual);
+        socket.emit('registerPlayer', window.app.emailActual, window.app.nombreActual);
+      }
     });
     
     socket.on('connect_error', function(error) {
       console.error('❌ Error de conexión:', error);
       if (window.ui) window.ui.actualizarEstadoConexion(false);
+      if (window.app) {
+        window.app.actualizarEstadoCarga('❌ Error de conexión. Reintentando...', 10);
+      }
     });
     
     socket.on('disconnect', function() {
-      console.log('❌ Socket desconectado');
+      console.log('❌ Socket desconectado - reconectando...');
       if (window.ui) window.ui.actualizarEstadoConexion(false);
+      if (window.app) {
+        window.app.socketConectado = false;
+        window.app.actualizarEstadoCarga('⚠️ Reconectando...', 20);
+      }
+    });
+    
+    socket.on('reconnect', function(attemptNumber) {
+      console.log('✅ Reconectado después de ' + attemptNumber + ' intentos');
+      if (window.ui) window.ui.mostrarNotificacion('✅ Reconectado al servidor', 'success');
+      if (window.app) {
+        window.app.actualizarEstadoCarga('✅ Reconectado. Registrando...', 40);
+      }
     });
     
     socketClient.registrarEventos();
@@ -39,38 +60,33 @@ const socketClient = {
       console.log('📊 Recibiendo gameState:', state);
       if (!window.app.gameState) window.app.gameState = {};
       window.app.gameState = state;
-      
-      if (state.cartones && state.cartones.length > 0) {
-        console.log('🎴 Cartones recibidos:', state.cartones.length);
-        if (window.cartones) {
-          window.cartones.renderizarGrid();
-          window.cartones.renderizarMisCartones();
-        }
+    });
+    
+    socket.on('registroNuevo', function(data) {
+      console.log('✅ Registro nuevo:', data);
+      if (window.app) window.app.marcarRegistroCompletado();
+    });
+    
+    socket.on('reconexionExitosa', function(data) {
+      console.log('✅ Reconexión exitosa:', data);
+      if (window.ui) window.ui.mostrarNotificacion('✅ ' + data.mensaje, 'success');
+      if (window.app) {
+        window.app.marcarRegistroCompletado();
       }
-      
-      if (window.ui) window.ui.renderizarTodo();
     });
     
     socket.on('updateJugadores', function(jugadores) {
       console.log('👥 Actualizando jugadores:', jugadores);
       if (!window.app.gameState) window.app.gameState = {};
       window.app.gameState.jugadores = jugadores || {};
-      if (window.ui) {
-        window.ui.renderizarJugadores();
-        window.ui.actualizarSelectJugadores();
-      }
-      if (jugadores && jugadores[window.app.emailActual]) {
-        if (window.ui) window.ui.actualizarMonedas(jugadores[window.app.emailActual].monedas);
-      }
+      if (window.ui) window.ui.renderizarJugadores();
     });
     
     socket.on('updateCartones', function(cartones) {
       console.log('🎴 Actualizando cartones:', cartones);
       if (!window.app.gameState) window.app.gameState = {};
       window.app.gameState.cartones = cartones || [];
-      
-      if (window.cartones && Array.isArray(cartones)) {
-        console.log('🎴 Renderizando grid de cartones...');
+      if (window.cartones) {
         window.cartones.renderizarGrid();
         window.cartones.renderizarMisCartones();
       }
@@ -81,8 +97,6 @@ const socketClient = {
       if (!window.app.gameState) window.app.gameState = {};
       window.app.gameState.cartasCantadas = cartas || [];
       if (window.ui) window.ui.renderizarCartasPorPintas();
-      const contadorEl = document.getElementById('contadorCartas');
-      if (contadorEl) contadorEl.textContent = (cartas || []).length;
     });
     
     socket.on('updateUltimaCarta', function(carta) {
@@ -118,43 +132,6 @@ const socketClient = {
       if (window.ui) window.ui.actualizarBanco(banco);
     });
     
-    socket.on('updateEstadisticas', function(estadisticas) {
-      console.log('📊 Actualizando estadísticas:', estadisticas);
-      if (!window.app.gameState) window.app.gameState = {};
-      window.app.gameState.estadisticas = estadisticas || {};
-      if (window.ui) window.ui.renderizarEstadisticas();
-    });
-    
-    socket.on('validacionFallida', function(data) {
-      console.log('⚠️ Validación fallida:', data);
-      if (window.ui) window.ui.mostrarValidacionFallida(data);
-    });
-    
-    socket.on('estadoApuestas', function(data) {
-      console.log('📋 Estado de apuestas:', data);
-      if (window.ui) window.ui.mostrarEstadoApuestas(data);
-    });
-    
-    socket.on('juegoIniciado', function(data) {
-      console.log('🎮 Juego iniciado:', data);
-      if (window.ui) window.ui.mostrarJuegoIniciado(data);
-    });
-    
-    socket.on('alertaGanador', function(data) {
-      console.log('🏆 Alerta de ganador:', data);
-      if (window.premio) window.premio.mostrarAlerta(data);
-    });
-    
-    socket.on('premioConfirmado', function(data) {
-      console.log('✅ Premio confirmado:', data);
-      if (window.ui) window.ui.mostrarNotificacion('✅ ' + data.jugador + ' ganó ' + data.pozo, 'success');
-    });
-    
-    socket.on('error', function(mensaje) {
-      console.error('❌ Error del servidor:', mensaje);
-      if (window.ui) window.ui.mostrarNotificacion('❌ ' + mensaje, 'error');
-    });
-    
     socket.on('fichasCompradas', function(data) {
       console.log('✅ Fichas compradas:', data);
       if (window.ui) window.ui.mostrarNotificacion('✅ ' + data.jugador + ' compró ' + data.fichas + ' fichas', 'success');
@@ -163,6 +140,11 @@ const socketClient = {
     socket.on('monedasAgregadas', function(data) {
       console.log('💰 Monedas agregadas:', data);
       if (window.ui) window.ui.mostrarNotificacion('💰 ' + data.cantidad + ' fichas agregadas a ' + data.jugador, 'success');
+    });
+    
+    socket.on('error', function(mensaje) {
+      console.error('❌ Error del servidor:', mensaje);
+      if (window.ui) window.ui.mostrarNotificacion('❌ ' + mensaje, 'error');
     });
   }
 };
