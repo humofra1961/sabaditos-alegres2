@@ -1,12 +1,5 @@
 const jugador = {
   comprarFichas: function() {
-    // Validar que puede jugar
-    if (window.app && window.app.verificarPuedeJugar) {
-      if (!window.app.verificarPuedeJugar()) {
-        return;
-      }
-    }
-    
     var cantidadInput = document.getElementById('cantidadFichasComprar');
     var cantidad = parseInt(cantidadInput ? cantidadInput.value : 0);
     
@@ -15,27 +8,19 @@ const jugador = {
       return;
     }
     
-    console.log('Comprando ' + cantidad + ' fichas...');
+    console.log('💰 Comprando ' + cantidad + ' fichas...');
     socket.emit('comprarFichas', window.app.emailActual, cantidad);
     if (cantidadInput) cantidadInput.value = '';
   },
   
   apostarEnPozos: function() {
-    // Validar que puede jugar
-    if (window.app && window.app.verificarPuedeJugar) {
-      if (!window.app.verificarPuedeJugar()) {
-        return;
-      }
-    }
-    
-    console.log('Intentando apostar...');
+    console.log('🎰 Intentando apostar...');
     
     if (window.app.yaAposto) {
       if (window.ui) window.ui.mostrarNotificacion('❌ Ya apostaste en esta partida', 'error');
       return;
     }
     
-    // Obtener número de cartones
     var cartonesJugador = 0;
     var saldoActual = 0;
     
@@ -49,40 +34,27 @@ const jugador = {
       return;
     }
     
-    // Calcular apuesta dinámica
     var fichasRequeridas = cartonesJugador * 6;
     var saldoDespuesDeApuesta = saldoActual - fichasRequeridas;
     
-    // Validar saldo mínimo después de apostar (18 fichas)
     if (saldoDespuesDeApuesta < 18) {
-      if (window.ui) window.ui.mostrarNotificacion('⚠️ Saldo insuficiente. Después de apostar te quedarían ' + saldoDespuesDeApuesta + ' fichas. Necesitas mantener al menos 18 fichas para la siguiente partida. Compra más fichas.', 'error');
+      if (window.ui) window.ui.mostrarNotificacion('⚠️ Saldo insuficiente. Después de apostar te quedarían ' + saldoDespuesDeApuesta + ' fichas. Necesitas mantener al menos 18 fichas para la siguiente partida.', 'error');
       return;
     }
     
-    // Confirmación al jugador con TODA la información
-    var mensajeConfirmacion = '¿Confirmar apuesta para esta partida?\n\n' +
-                              '🎴 Cartones: ' + cartonesJugador + '\n' +
-                              '🎰 Apuesta: ' + fichasRequeridas + ' fichas ($' + (fichasRequeridas * 50) + ' COP)\n' +
-                              '💰 Saldo actual: ' + saldoActual + ' fichas\n' +
-                              '✅ Saldo después: ' + saldoDespuesDeApuesta + ' fichas\n\n' +
-                              'Las fichas se distribuirán en los 6 pozos.';
-    
-    var confirmar = confirm(mensajeConfirmacion);
+    var confirmar = confirm('¿Confirmar apuesta de ' + fichasRequeridas + ' fichas (' + cartonesJugador + ' cartones)?\n\nSaldo actual: ' + saldoActual + ' fichas\nSaldo después: ' + saldoDespuesDeApuesta + ' fichas');
     
     if (confirmar) {
-      console.log('Apuesta confirmada: ' + fichasRequeridas + ' fichas');
+      console.log('✅ Apuesta confirmada: ' + fichasRequeridas + ' fichas');
       socket.emit('apostarEnPozos', window.app.emailActual);
       window.app.yaAposto = true;
       
-      // Ocultar panel después de apostar
       setTimeout(function() {
         var panelApuestas = document.getElementById('panelApuestas');
         if (panelApuestas) {
-          panelApuestas.classList.add('hidden');
+          panelApuestas.style.display = 'none';
         }
       }, 1000);
-    } else {
-      console.log('Apuesta cancelada por el jugador');
     }
   }
 };
