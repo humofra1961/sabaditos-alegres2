@@ -3,13 +3,10 @@ const cartones = {
     console.log('🎴 renderizarGrid llamado');
     
     var grid = document.getElementById('gridCartones');
-    console.log('Grid element:', grid);
-    
     var cartones = window.app.gameState ? window.app.gameState.cartones : [];
-    console.log('Cartones recibidos:', cartones ? cartones.length : 0);
     
     if (!grid) {
-      console.error('❌ NO se encontró #gridCartones en el HTML');
+      console.error('❌ No se encontró #gridCartones');
       return;
     }
     
@@ -24,14 +21,18 @@ const cartones = {
       var seleccionado = carton.dueño === window.app.emailActual;
       var bloqueado = carton.dueño && carton.dueño !== window.app.emailActual;
       
-      html += '<div style="background: linear-gradient(135deg, #2c3e50, #34495e); border-radius: 10px; padding: 15px; text-align: center; cursor: pointer; border: 3px solid ' + (seleccionado ? '#27ae60' : bloqueado ? '#e74c3c' : 'transparent') + '; margin-bottom: 10px;" onclick="window.cartones.seleccionarCarton(' + carton.numero + ')">';
-      html += '<strong style="color: #f39c12; font-size: 1.2em;">' + carton.nombre + '</strong>';
-      html += '<p style="font-size: 0.9em; margin: 8px 0 0 0; color: ' + (seleccionado ? '#27ae60' : bloqueado ? '#e74c3c' : '#95a5a6') + ';">' + (seleccionado ? '✅ Tuyo' : bloqueado ? '🔒 Ocupado' : '📋 Libre') + '</p>';
+      // ✅ IMAGEN DEL CARTÓN
+      var imagenCarton = '<img src="/img/cartones/carton_' + carton.numero + '.png" alt="' + carton.nombre + '" style="width: 100%; border-radius: 6px; margin-bottom: 8px;">';
+      
+      html += '<div class="carton-item ' + (seleccionado ? 'seleccionado' : '') + ' ' + (bloqueado ? 'bloqueado' : '') + '" onclick="window.cartones.seleccionarCarton(' + carton.numero + ')">';
+      html += imagenCarton;
+      html += '<strong style="color: #f39c12;">' + carton.nombre + '</strong>';
+      html += '<p style="font-size: 0.75em; margin: 4px 0;">' + (seleccionado ? '✅ Tuyo' : bloqueado ? '🔒 Ocupado' : '📋 Libre') + '</p>';
       html += '</div>';
     }
     
     grid.innerHTML = html;
-    console.log('✅ Grid renderizado con', cartones.length, 'cartones');
+    console.log('✅ Grid de cartones renderizado con', cartones.length, 'cartones');
   },
   
   seleccionarCarton: function(numero) {
@@ -58,7 +59,7 @@ const cartones = {
       if (window.app && window.app.verificarPanelApuestas) {
         window.app.verificarPanelApuestas();
       }
-    }, 1500);
+    }, 1000);
   },
   
   renderizarMisCartones: function() {
@@ -68,7 +69,7 @@ const cartones = {
     var cartones = window.app.gameState ? window.app.gameState.cartones : [];
     
     if (!container) {
-      console.error('❌ NO se encontró #misCartones');
+      console.error('❌ No se encontró #misCartones');
       return;
     }
     
@@ -87,10 +88,54 @@ const cartones = {
     var html = '';
     for (var j = 0; j < misCartones.length; j++) {
       var carton = misCartones[j];
-      html += '<div style="background: linear-gradient(135deg, #3498db, #2980b9); border-radius: 12px; padding: 15px; margin-bottom: 15px;">';
-      html += '<div style="color: #f39c12; font-size: 1.3em; font-weight: bold; margin-bottom: 10px;">' + carton.nombre + '</div>';
-      html += '<p style="color: #ecf0f1; margin: 5px 0;">★ Poker: ' + carton.valorPoker + '</p>';
-      html += '<p style="color: #ecf0f1; margin: 5px 0;">★ Full: ' + carton.valorFull2 + '+' + carton.valorFull3 + '</p>';
+      
+      if (!carton.cartas || !Array.isArray(carton.cartas) || carton.cartas.length !== 25) {
+        html += '<div class="carton-bingo-pro"><p style="color: #e74c3c;">Error en cartón ' + carton.numero + '</p></div>';
+        continue;
+      }
+      
+      html += '<div class="carton-bingo-pro">';
+      html += '<div class="carton-header-pro">' + carton.nombre + '</div>';
+      html += '<div class="carton-info-pro">';
+      html += '<span>★ Poker: ' + carton.valorPoker + '</span>';
+      html += '<span>★ Full: ' + carton.valorFull2 + '+' + carton.valorFull3 + '</span>';
+      html += '</div>';
+      html += '<div class="carton-board-pro">';
+      
+      for (var k = 0; k < carton.cartas.length; k++) {
+        var carta = carton.cartas[k];
+        var estaTapada = carton.tapadas && carton.tapadas[k];
+        
+        // ✅ MAPEO CORRECTO DE CARTAS A IMÁGENES
+        var nombreImagen = carta.valor;
+        if (carta.valor === 'A' || carta.valor === '1') {
+          nombreImagen = '1';
+        }
+        
+        var paloArchivo = 't';
+        if (carta.palo === '♠') paloArchivo = 'p';
+        else if (carta.palo === '♥') paloArchivo = 'c';
+        else if (carta.palo === '♦') paloArchivo = 'd';
+        else if (carta.palo === '♣') paloArchivo = 't';
+        
+        html += '<div class="carta-pro ' + (estaTapada ? 'tapada' : '') + '" onclick="window.cartones.taparCarta(' + carton.numero + ', ' + k + ')">';
+        if (estaTapada) {
+          html += '<span style="color: #f39c12; font-size: 2em;">✓</span>';
+        } else {
+          html += '<img src="/img/cartas/' + nombreImagen + paloArchivo + '.png" alt="' + carta.valor + carta.palo + '" style="width: 100%; height: 100%; object-fit: contain;">';
+        }
+        html += '</div>';
+      }
+      
+      html += '</div>';
+      html += '<div class="botones-pozos">';
+      html += '<button class="boton-pozo" onclick="window.premio.reclamar(' + carton.numero + ', \'pokino\')">POKINO</button>';
+      html += '<button class="boton-pozo" onclick="window.premio.reclamar(' + carton.numero + ', \'cuatroEsquinas\')">4 ESQ</button>';
+      html += '<button class="boton-pozo" onclick="window.premio.reclamar(' + carton.numero + ', \'full\')">FULL</button>';
+      html += '<button class="boton-pozo" onclick="window.premio.reclamar(' + carton.numero + ', \'poker\')">POKER</button>';
+      html += '<button class="boton-pozo" onclick="window.premio.reclamar(' + carton.numero + ', \'centro\')">CENTRO</button>';
+      html += '<button class="boton-pozo" onclick="window.premio.reclamar(' + carton.numero + ', \'especial\')">ESPECIAL</button>';
+      html += '</div>';
       html += '</div>';
     }
     
@@ -113,7 +158,7 @@ const cartones = {
           }
         }
         if (tapadasCount === 25) {
-          if (window.ui) window.ui.mostrarNotificacion('¡CARTÓN ' + carton.nombre + ' LLENO! (' + tapadasCount + '/25)', 'success', true);
+          if (window.ui) window.ui.mostrarNotificacion('¡CARTÓN ' + cartones[i].nombre + ' LLENO! (' + tapadasCount + '/25)', 'success', true);
         }
       }
     }
