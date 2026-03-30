@@ -454,10 +454,49 @@ io.on('connection', function(socket) {
   
   // ✅ COMPRAR FICHAS
   socket.on('comprarFichas', function(email, cantidadFichas) {
+    console.log('💰 Compra solicitada:', email, cantidadFichas);
+    
     if (!gameState.jugadores[email]) {
+      console.error('❌ Jugador no encontrado:', email);
       socket.emit('error', 'Jugador no encontrado.');
       return;
     }
+    
+    const costoTotal = cantidadFichas * VALOR_FICHA;
+    
+    gameState.jugadores[email].monedas += cantidadFichas;
+    gameState.jugadores[email].fichasCompradas += cantidadFichas;
+    gameState.jugadores[email].historialTransacciones.push({
+      tipo: 'COMPRA',
+      fichas: cantidadFichas,
+      valor: costoTotal,
+      fecha: new Date().toISOString(),
+      partida: gameState.partidaActual
+    });
+    
+    gameState.banco.totalRecaudado += costoTotal;
+    gameState.banco.transacciones.push({
+      tipo: 'COMPRA',
+      jugador: email,
+      nombre: gameState.jugadores[email].nombre,
+      fichas: cantidadFichas,
+      valor: costoTotal,
+      fecha: new Date().toISOString(),
+      partida: gameState.partidaActual
+    });
+    
+    console.log('✅ Compra registrada:', gameState.jugadores[email].nombre, cantidadFichas, 'fichas. Total:', gameState.jugadores[email].monedas);
+    
+    io.emit('updateJugadores', gameState.jugadores);
+    io.emit('updateEstadisticas', gameState.estadisticas);
+    io.emit('updateBanco', gameState.banco);
+    io.emit('fichasCompradas', {
+      jugador: gameState.jugadores[email].nombre,
+      fichas: cantidadFichas,
+      valor: costoTotal,
+      total: gameState.jugadores[email].monedas
+    });
+  });  
     
     const costoTotal = cantidadFichas * VALOR_FICHA;
     
