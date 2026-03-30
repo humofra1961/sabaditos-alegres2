@@ -54,6 +54,11 @@ const ui = {
     }).join('');
 
     if (contador) contador.textContent = Object.keys(jugadores).length;
+    
+    // ✅ CORRECCIÓN: Actualizar billetera del jugador actual cuando se renderizan jugadores
+    if (window.app.emailActual && jugadores[window.app.emailActual]) {
+      ui.actualizarMonedas(jugadores[window.app.emailActual].monedas);
+    }
   },
 
   actualizarSelectJugadores: function() {
@@ -68,11 +73,28 @@ const ui = {
     }).join('');
   },
 
+  // ✅ CORRECCIÓN: Actualizar billetera en TODAS las ubicaciones
   actualizarMonedas: function(monedas) {
     const monedasEl = document.getElementById('misMonedas');
     const valorEl = document.getElementById('misMonedasValor');
+    
+    // Actualizar display de monedas
     if (monedasEl) monedasEl.textContent = monedas || 0;
     if (valorEl) valorEl.textContent = (monedas || 0) * 50;
+    
+    // ✅ CORRECCIÓN: Actualizar header de fichas si existe
+    const fichasHeader = document.querySelector('.fichas-header');
+    if (fichasHeader) {
+      fichasHeader.innerHTML = '💰 Fichas: ' + (monedas || 0) + ' ($' + ((monedas || 0) * 50) + ' COP)';
+    }
+    
+    // ✅ CORRECCIÓN: Actualizar display de fichas en player-info si existe
+    const fichasDisplay = document.getElementById('fichasDisplay');
+    if (fichasDisplay) {
+      fichasDisplay.textContent = '💰 Fichas: ' + (monedas || 0) + ' ($' + ((monedas || 0) * 50) + ' COP)';
+    }
+    
+    console.log('💰 Billetera actualizada:', monedas, 'fichas ($' + ((monedas || 0) * 50) + ' COP)');
   },
 
   // ============================================================================
@@ -213,6 +235,7 @@ const ui = {
       btnIniciar.textContent = '⛔ Esperando apuestas...';
     }
   },
+  
   // ============================================================================
   // CREAR PANEL DE VERIFICACIÓN DINÁMICAMENTE
   // ============================================================================
@@ -245,11 +268,8 @@ const ui = {
     
     console.log('✅ Panel de verificación creado');
   },
+  
   // ============================================================================
-  // MOSTRAR ESTADO DE APUESTAS (VERIFICACIÓN DEL CANTADOR)
-  // ============================================================================
-
-    // ============================================================================
   // MOSTRAR ESTADO DE APUESTAS (VERIFICACIÓN DEL CANTADOR)
   // ============================================================================
 
@@ -266,6 +286,7 @@ const ui = {
       alert('Error: Panel de verificación no encontrado. Recarga la página.');
       return;
     }
+    
     // Mostrar overlay y panel
     if (overlay) {
       overlay.classList.remove('hidden');
@@ -276,7 +297,8 @@ const ui = {
     panel.classList.remove('hidden');
     panel.style.display = 'block';
     
-    console.log('✅ Panel de verificación mostrado');    
+    console.log('✅ Panel de verificación mostrado');
+    
     // Encabezado con resumen
     let html = '<div style="background: rgba(0,0,0,0.3); padding: 15px; border-radius: 10px; margin-bottom: 15px;">';
     html += '<h4 style="margin: 0 0 10px 0; color: #f39c12;">📊 RESUMEN DE LA PARTIDA</h4>';
@@ -383,9 +405,11 @@ const ui = {
       }
     }
   },
+  
   // ============================================================================
   // CERRAR PANEL DE VERIFICACIÓN
   // ============================================================================
+  
   cerrarPanelVerificacion: function() {
     console.log('🔒 Cerrando panel de verificación...');
     
@@ -404,6 +428,7 @@ const ui = {
       console.log('✅ Overlay ocultado');
     }
   },
+  
   // ============================================================================
   // NOTIFICACIONES
   // ============================================================================
