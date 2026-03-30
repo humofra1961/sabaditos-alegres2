@@ -1,23 +1,33 @@
 const jugador = {
   comprarFichas: function() {
-    var cantidadInput = document.getElementById('cantidadFichasComprar');
-    var cantidad = parseInt(cantidadInput ? cantidadInput.value : 0);
+    console.log('🔘 Botón Comprar clickeado');
     
-    if (!cantidad || cantidad < 1 || cantidad > 100) {
-      if (window.ui) window.ui.mostrarNotificacion('Ingresa cantidad válida (1-100)', 'error');
+    var cantidadInput = document.getElementById('cantidadFichasComprar');
+    console.log('Input:', cantidadInput);
+    
+    if (!cantidadInput) {
+      alert('Error: No se encontró el campo de cantidad');
       return;
     }
     
-    console.log('💰 Comprando ' + cantidad + ' fichas...');
+    var cantidad = parseInt(cantidadInput.value);
+    console.log('Cantidad a comprar:', cantidad);
+    
+    if (!cantidad || cantidad < 1 || cantidad > 100) {
+      alert('Ingresa cantidad válida (1-100)');
+      return;
+    }
+    
+    console.log('Enviando compra:', window.app.emailActual, cantidad);
     socket.emit('comprarFichas', window.app.emailActual, cantidad);
-    if (cantidadInput) cantidadInput.value = '';
+    cantidadInput.value = '';
   },
   
   apostarEnPozos: function() {
     console.log('🎰 Intentando apostar...');
     
     if (window.app.yaAposto) {
-      if (window.ui) window.ui.mostrarNotificacion('❌ Ya apostaste en esta partida', 'error');
+      alert('Ya apostaste en esta partida');
       return;
     }
     
@@ -30,30 +40,28 @@ const jugador = {
     }
     
     if (cartonesJugador === 0) {
-      if (window.ui) window.ui.mostrarNotificacion('⚠️ Selecciona al menos 1 cartón antes de apostar', 'error');
+      alert('Selecciona al menos 1 cartón antes de apostar');
       return;
     }
     
     var fichasRequeridas = cartonesJugador * 6;
-    var saldoDespuesDeApuesta = saldoActual - fichasRequeridas;
+    var saldoDespues = saldoActual - fichasRequeridas;
     
-    if (saldoDespuesDeApuesta < 18) {
-      if (window.ui) window.ui.mostrarNotificacion('⚠️ Saldo insuficiente. Después de apostar te quedarían ' + saldoDespuesDeApuesta + ' fichas. Necesitas mantener al menos 18 fichas para la siguiente partida.', 'error');
+    if (saldoDespues < 18) {
+      alert('Saldo insuficiente. Después de apostar te quedarían ' + saldoDespues + ' fichas. Necesitas 18 mínimo.');
       return;
     }
     
-    var confirmar = confirm('¿Confirmar apuesta de ' + fichasRequeridas + ' fichas (' + cartonesJugador + ' cartones)?\n\nSaldo actual: ' + saldoActual + ' fichas\nSaldo después: ' + saldoDespuesDeApuesta + ' fichas');
+    var confirmar = confirm('¿Confirmar apuesta de ' + fichasRequeridas + ' fichas (' + cartonesJugador + ' cartones)?');
     
     if (confirmar) {
-      console.log('✅ Apuesta confirmada: ' + fichasRequeridas + ' fichas');
+      console.log('✅ Apuesta confirmada:', fichasRequeridas, 'fichas');
       socket.emit('apostarEnPozos', window.app.emailActual);
       window.app.yaAposto = true;
       
       setTimeout(function() {
-        var panelApuestas = document.getElementById('panelApuestas');
-        if (panelApuestas) {
-          panelApuestas.style.display = 'none';
-        }
+        var panel = document.getElementById('panelApuestas');
+        if (panel) panel.style.display = 'none';
       }, 1000);
     }
   }
