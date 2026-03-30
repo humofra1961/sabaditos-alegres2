@@ -41,13 +41,30 @@ const cartones = {
   
   seleccionarCarton: function(numero) {
     console.log('🎴 Seleccionando cartón:', numero);
-    const carton = window.app.gameState ? window.app.gameState.cartones.find(function(c) { return c.numero === numero; }) : null;
+    var carton = null;
+    if (window.app.gameState && window.app.gameState.cartones) {
+      for (var i = 0; i < window.app.gameState.cartones.length; i++) {
+        if (window.app.gameState.cartones[i].numero === numero) {
+          carton = window.app.gameState.cartones[i];
+          break;
+        }
+      }
+    }
+    
     if (carton && carton.dueño === window.app.emailActual) {
       socket.emit('liberarCarton', numero, window.app.emailActual);
     } else {
       socket.emit('seleccionarCarton', numero, window.app.emailActual, window.app.nombreActual);
     }
-  },
+    
+    // ✅ IMPORTANTE: Llamar a verificarPanelApuestas DESPUÉS de seleccionar
+    setTimeout(function() {
+      if (window.app && window.app.verificarPanelApuestas) {
+        console.log('🎰 Llamando a verificarPanelApuestas desde cartones-client.js');
+        window.app.verificarPanelApuestas();
+      }
+    }, 1000);
+  }, 
   
   renderizarMisCartones: function() {
     console.log('🎴 renderizarMisCartones llamado');
