@@ -36,9 +36,16 @@ const socketClient = {
     socket.on('gameState', function(state) {
       console.log('📊 Recibiendo gameState:', state);
       if (!window.app.gameState) window.app.gameState = {};
-      window.app.gameState = state;
+      window.app.gameState = state;      
     });
-    
+// ✅ IMPORTANTE: Renderizar cartones cuando llega gameState
+      setTimeout(function() {
+        if (window.cartones && window.cartones.renderizarGrid) {
+          console.log('🎴 Llamando renderizarGrid desde gameState');
+          window.cartones.renderizarGrid();
+        }
+      }, 500);
+    });    
     socket.on('updateJugadores', function(jugadores) {
       console.log('👥 Actualizando jugadores:', jugadores);
       if (!window.app.gameState) window.app.gameState = {};
