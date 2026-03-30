@@ -41,6 +41,7 @@ const cartones = {
   
   seleccionarCarton: function(numero) {
     console.log('🎴 Seleccionando cartón:', numero);
+    
     var carton = null;
     if (window.app.gameState && window.app.gameState.cartones) {
       for (var i = 0; i < window.app.gameState.cartones.length; i++) {
@@ -56,6 +57,14 @@ const cartones = {
     } else {
       socket.emit('seleccionarCarton', numero, window.app.emailActual, window.app.nombreActual);
     }
+    
+    setTimeout(function() {
+      console.log('🎰 LLAMANDO A verificarPanelApuestas DESPUÉS DE SELECCIONAR');
+      if (window.app && window.app.verificarPanelApuestas) {
+        window.app.verificarPanelApuestas();
+      }
+    }, 1500);
+  },  
     
     // ✅ IMPORTANTE: Llamar a verificarPanelApuestas DESPUÉS de seleccionar
     setTimeout(function() {
