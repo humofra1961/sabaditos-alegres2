@@ -8,8 +8,8 @@ const socketClient = {
       transports: ['websocket', 'polling'],
       reconnection: true,
       reconnectionDelay: 1000,
-      reconnectionAttempts: 10,
-      timeout: 20000
+      reconnectionAttempts: 100,
+      timeout: 60000
     });
     
     socket.on('connect', function() {
@@ -24,9 +24,14 @@ const socketClient = {
     });
     
     socket.on('disconnect', function() {
-      console.log('❌ Socket desconectado');
+      console.log('❌ Socket desconectado - reconectando...');
       if (window.app) window.app.socketConectado = false;
       if (window.ui) window.ui.actualizarEstadoConexion(false);
+    });
+    
+    socket.on('reconnect', function(attemptNumber) {
+      console.log('✅ Reconectado después de ' + attemptNumber + ' intentos');
+      if (window.ui) window.ui.mostrarNotificacion('✅ Reconectado al servidor', 'success');
     });
     
     socketClient.registrarEventos();
@@ -50,7 +55,10 @@ const socketClient = {
       console.log('👥 Actualizando jugadores:', jugadores);
       if (!window.app.gameState) window.app.gameState = {};
       window.app.gameState.jugadores = jugadores || {};
-      if (window.ui) window.ui.renderizarJugadores();
+      if (window.ui) {
+        window.ui.renderizarJugadores();
+        window.ui.actualizarMonedas(jugadores[window.app.emailActual] ? jugadores[window.app.emailActual].monedas : 0);
+      }
     });
     
     socket.on('updateCartones', function(cartones) {
