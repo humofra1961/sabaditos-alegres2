@@ -9,47 +9,24 @@ const socketClient = {
       reconnection: true,
       reconnectionDelay: 1000,
       reconnectionAttempts: 10,
-      timeout: 20000,
-      forceNew: false
+      timeout: 20000
     });
     
     socket.on('connect', function() {
       console.log('✅ Socket conectado:', socket.id);
+      if (window.app) window.app.socketConectado = true;
       if (window.ui) window.ui.actualizarEstadoConexion(true);
-      if (window.app) {
-        window.app.socketConectado = true;
-        window.app.actualizarEstadoCarga('✅ Conectado. Esperando registro...', 30);
-      }
-      
-      if (window.app && window.app.emailActual && window.app.nombreActual) {
-        console.log('Re-registrando jugador:', window.app.emailActual);
-        socket.emit('registerPlayer', window.app.emailActual, window.app.nombreActual);
-      }
     });
     
     socket.on('connect_error', function(error) {
       console.error('❌ Error de conexión:', error);
       if (window.ui) window.ui.actualizarEstadoConexion(false);
-      if (window.app) {
-        window.app.actualizarEstadoCarga('❌ Error de conexión. Reintentando...', 10);
-      }
     });
     
     socket.on('disconnect', function() {
-      console.log('❌ Socket desconectado - reconectando...');
+      console.log('❌ Socket desconectado');
+      if (window.app) window.app.socketConectado = false;
       if (window.ui) window.ui.actualizarEstadoConexion(false);
-      if (window.app) {
-        window.app.socketConectado = false;
-        window.app.actualizarEstadoCarga('⚠️ Reconectando...', 20);
-      }
-    });
-    
-    socket.on('reconnect', function(attemptNumber) {
-      console.log('✅ Reconectado después de ' + attemptNumber + ' intentos');
-      if (window.ui) window.ui.mostrarNotificacion('✅ Reconectado al servidor', 'success');
-      if (window.app) {
-        window.app.actualizarEstadoCarga('✅ Reconectado. Registrando...', 40);
-      }
     });
     
     socketClient.registrarEventos();
@@ -60,19 +37,6 @@ const socketClient = {
       console.log('📊 Recibiendo gameState:', state);
       if (!window.app.gameState) window.app.gameState = {};
       window.app.gameState = state;
-    });
-    
-    socket.on('registroNuevo', function(data) {
-      console.log('✅ Registro nuevo:', data);
-      if (window.app) window.app.marcarRegistroCompletado();
-    });
-    
-    socket.on('reconexionExitosa', function(data) {
-      console.log('✅ Reconexión exitosa:', data);
-      if (window.ui) window.ui.mostrarNotificacion('✅ ' + data.mensaje, 'success');
-      if (window.app) {
-        window.app.marcarRegistroCompletado();
-      }
     });
     
     socket.on('updateJugadores', function(jugadores) {
@@ -91,14 +55,7 @@ const socketClient = {
         window.cartones.renderizarMisCartones();
       }
     });
-    // ✅ IMPORTANTE: Verificar panel de apuestas después de actualizar cartones
-      setTimeout(function() {
-        if (window.app && window.app.verificarPanelApuestas) {
-          console.log('🎰 Llamando a verificarPanelApuestas desde socket-client.js');
-          window.app.verificarPanelApuestas();
-        }
-      }, 500);
-    });    
+    
     socket.on('updateCartasCantadas', function(cartas) {
       console.log('🃏 Actualizando cartas cantadas:', cartas);
       if (!window.app.gameState) window.app.gameState = {};
@@ -139,14 +96,20 @@ const socketClient = {
       if (window.ui) window.ui.actualizarBanco(banco);
     });
     
+    socket.on('registroNuevo', function(data) {
+      console.log('✅ Registro nuevo:', data);
+      if (window.app) window.app.marcarRegistroCompletado();
+    });
+    
+    socket.on('reconexionExitosa', function(data) {
+      console.log('✅ Reconexión exitosa:', data);
+      if (window.ui) window.ui.mostrarNotificacion('✅ ' + data.mensaje, 'success');
+      if (window.app) window.app.marcarRegistroCompletado();
+    });
+    
     socket.on('fichasCompradas', function(data) {
       console.log('✅ Fichas compradas:', data);
       if (window.ui) window.ui.mostrarNotificacion('✅ ' + data.jugador + ' compró ' + data.fichas + ' fichas', 'success');
-    });
-    
-    socket.on('monedasAgregadas', function(data) {
-      console.log('💰 Monedas agregadas:', data);
-      if (window.ui) window.ui.mostrarNotificacion('💰 ' + data.cantidad + ' fichas agregadas a ' + data.jugador, 'success');
     });
     
     socket.on('error', function(mensaje) {
