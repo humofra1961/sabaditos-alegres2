@@ -56,18 +56,6 @@
           <div class="loading-hint" id="loadingHint">Esto puede tomar 30-50 segundos la primera vez</div>
         </div>
       </div>
-      <!-- PANEL DE APUESTAS -->
-      <div id="panelApuestas" class="apostar-panel hidden">
-        <h4 style="color: #fff; margin: 0 0 10px 0;">🎰 ¡Haz tu apuesta para esta partida!</h4>
-        <p style="color: #ecf0f1; margin: 5px 0;">1 ficha para cada uno de los 6 pozos</p>
-        <div style="background: rgba(0, 0, 0, 0.3); border-radius: 10px; padding: 15px; margin: 15px 0;">
-          <p id="detalleCartones" style="color: #3498db; font-weight: bold; margin: 8px 0;"></p>
-          <p id="detalleApuesta" style="color: #f39c12; font-weight: bold; margin: 8px 0;"></p>
-          <p id="detalleSaldo" style="color: #27ae60; font-weight: bold; margin: 8px 0;"></p>
-          <p id="detalleSaldoRestante" style="color: #e74c3c; font-weight: bold; margin: 8px 0;"></p>
-        </div>
-        <button onclick="jugador.apostarEnPozos()" style="background: linear-gradient(135deg, #f39c12, #e67e22); color: white; border: none; padding: 15px 40px; font-size: 1.2em; font-weight: bold; border-radius: 10px; cursor: pointer; margin-top: 15px;">🎰 APOSTAR</button>
-        <p style="color: #f39c12; font-size: 0.85em; margin-top: 15px; font-style: italic;">⚠️ Debes mantener al menos 18 fichas para la siguiente partida</p>
       </div>
       <!-- Player Info Bar -->
       <div class="player-info">
@@ -82,6 +70,19 @@
             Partida: <span id="partidaActual">1</span>/6
           </div>
           <!-- Invite Family Panel -->
+          <!-- PANEL DE APUESTAS -->
+          <div id="panelApuestas" class="apostar-panel" style="display: none; background: linear-gradient(135deg, #9b59b6, #8e44ad); border-radius: 15px; padding: 25px; margin: 20px 0; text-align: center; border: 3px solid #8e44ad;">
+            <h4 style="color: #fff; margin: 0 0 10px 0;">🎰 ¡Haz tu apuesta para esta partida!</h4>
+            <p style="color: #ecf0f1; margin: 5px 0;">1 ficha para cada uno de los 6 pozos</p>
+            <div style="background: rgba(0, 0, 0, 0.3); border-radius: 10px; padding: 15px; margin: 15px 0;">
+              <p id="detalleCartones" style="color: #3498db; font-weight: bold; margin: 8px 0;"></p>
+              <p id="detalleApuesta" style="color: #f39c12; font-weight: bold; margin: 8px 0;"></p>
+              <p id="detalleSaldo" style="color: #27ae60; font-weight: bold; margin: 8px 0;"></p>
+              <p id="detalleSaldoRestante" style="color: #e74c3c; font-weight: bold; margin: 8px 0;"></p>
+            </div>
+            <button onclick="jugador.apostarEnPozos()" style="background: linear-gradient(135deg, #f39c12, #e67e22); color: white; border: none; padding: 15px 40px; font-size: 1.2em; font-weight: bold; border-radius: 10px; cursor: pointer;">🎰 APOSTAR</button>
+            <p style="color: #f39c12; font-size: 0.85em; margin-top: 15px;">⚠️ Debes mantener al menos 18 fichas para la siguiente partida</p>
+          </div>          
           <div class="invitar-familiares-panel">
           <h4>📢 Invitar Familiares al Sabadito Alegre</h4>
           <div class="botones-invitar">
@@ -91,20 +92,7 @@
           </div>
           </div>
           </div>
-      <!-- PANEL DE APUESTAS -->
-      <div id="panelApuestas" class="apostar-panel hidden">
-        <h4>🎰 ¡Haz tu apuesta para esta partida!</h4>
-        <p class="apuesta-info">1 ficha para cada uno de los 6 pozos</p>
-        <div class="apuesta-detalle">
-          <p id="detalleCartones" style="color: #3498db; font-weight: bold;"></p>
-          <p id="detalleApuesta" style="color: #f39c12; font-weight: bold;"></p>
-          <p id="detalleSaldo" style="color: #27ae60; font-weight: bold;"></p>
-          <p id="detalleSaldoRestante" style="color: #e74c3c; font-weight: bold;"></p>
-        </div>
-        <button class="apostar" onclick="jugador.apostarEnPozos()">🎰 APOSTAR</button>
-        <p class="apuesta-hint">⚠️ Debes mantener al menos 18 fichas para la siguiente partida</p>
-      </div>      
-        
+      
       </div>
 
       <!-- Betting Panel -->
