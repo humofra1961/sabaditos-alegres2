@@ -7,12 +7,10 @@
   <link rel="stylesheet" href="/css/styles.css">
 </head>
 <body>
-  <!-- Overlay para panel de verificación -->
-  <div id="panelVerificacionOverlay" class="panel-verificacion-overlay hidden" onclick="ui.cerrarPanelVerificacion()"></div>  
+  <div id="panelVerificacionOverlay" class="panel-verificacion-overlay hidden" onclick="ui.cerrarPanelVerificacion()"></div>
+  
   <div class="container">
-    <!-- ===================================================================== -->
     <!-- HEADER -->
-    <!-- ===================================================================== -->
     <header>
       <h1>♠ ♥ ♦ ♣ BINGO PARA POKER ♣ ♦ ♥ ♠</h1>
       <p class="suites">
@@ -24,9 +22,7 @@
       <h2>SABADITO ALEGRE - 13 CARTONES - 6 POZOS</h2>
     </header>
 
-    <!-- ===================================================================== -->
     <!-- LOGIN SECTION -->
-    <!-- ===================================================================== -->
     <div id="loginSection" class="login-section">
       <h3>👤 Iniciar Sesión</h3>
       <p>Ingresa tu correo para unirte al juego</p>
@@ -41,11 +37,10 @@
       <div id="estadoConexion" class="status disconnected">❌ Desconectado</div>
     </div>
 
-    <!-- ===================================================================== -->
     <!-- GAME SECTION -->
-    <!-- ===================================================================== -->
     <div id="gameSection" class="game-section hidden">
-            <!-- BARRA DE CARGA / ESTADO -->
+      
+      <!-- BARRA DE CARGA -->
       <div id="loadingBar" class="loading-bar">
         <div class="loading-content">
           <div class="loading-spinner"></div>
@@ -56,12 +51,12 @@
           <div class="loading-hint" id="loadingHint">Esto puede tomar 30-50 segundos la primera vez</div>
         </div>
       </div>
-      </div>
-      <!-- Player Info Bar -->
+
+      <!-- PLAYER INFO BAR -->
       <div class="player-info">
         <div>
           <h3>👤 <span id="jugadorNombre">-</span></h3>
-           <button onclick="app.cerrarSesion()">Salir</button>
+          <button onclick="app.cerrarSesion()">Salir</button>
           <div class="monedas-display">
             💰 Fichas: <span id="misMonedas">0</span> ($<span id="misMonedasValor">0</span> COP)
           </div>
@@ -69,35 +64,37 @@
           <div class="partida-info" id="partidaInfo">
             Partida: <span id="partidaActual">1</span>/6
           </div>
-          <!-- Invite Family Panel -->
-          <!-- PANEL DE APUESTAS -->
-          <div id="panelApuestas" class="apostar-panel" style="display: none; background: linear-gradient(135deg, #9b59b6, #8e44ad); border-radius: 15px; padding: 25px; margin: 20px 0; text-align: center; border: 3px solid #8e44ad;">
-            <h4 style="color: #fff; margin: 0 0 10px 0;">🎰 ¡Haz tu apuesta para esta partida!</h4>
-            <p style="color: #ecf0f1; margin: 5px 0;">1 ficha para cada uno de los 6 pozos</p>
-            <div style="background: rgba(0, 0, 0, 0.3); border-radius: 10px; padding: 15px; margin: 15px 0;">
-              <p id="detalleCartones" style="color: #3498db; font-weight: bold; margin: 8px 0;"></p>
-              <p id="detalleApuesta" style="color: #f39c12; font-weight: bold; margin: 8px 0;"></p>
-              <p id="detalleSaldo" style="color: #27ae60; font-weight: bold; margin: 8px 0;"></p>
-              <p id="detalleSaldoRestante" style="color: #e74c3c; font-weight: bold; margin: 8px 0;"></p>
-            </div>
-            <button onclick="jugador.apostarEnPozos()" style="background: linear-gradient(135deg, #f39c12, #e67e22); color: white; border: none; padding: 15px 40px; font-size: 1.2em; font-weight: bold; border-radius: 10px; cursor: pointer;">🎰 APOSTAR</button>
-            <p style="color: #f39c12; font-size: 0.85em; margin-top: 15px;">⚠️ Debes mantener al menos 18 fichas para la siguiente partida</p>
-          </div>          
-          <div class="invitar-familiares-panel">
-          <h4>📢 Invitar Familiares al Sabadito Alegre</h4>
-          <div class="botones-invitar">
-            <button class="whatsapp" onclick="app.invitarWhatsApp()">📱 WhatsApp</button>
-            <button class="email" onclick="app.invitarEmail()">📧 Email</button>
-            <button class="verde" onclick="app.copiarEnlace()">🔗 Copiar</button>
-          </div>
-          </div>
-          </div>
-      
+        </div>
       </div>
-      <!-- Main Layout - 3 Columns -->
+
+      <!-- INVITAR FAMILIARES -->
+      <div class="invitar-familiares-panel">
+        <h4>📢 Invitar Familiares al Sabadito Alegre</h4>
+        <div class="botones-invitar">
+          <button class="whatsapp" onclick="app.invitarWhatsApp()">📱 WhatsApp</button>
+          <button class="email" onclick="app.invitarEmail()">📧 Email</button>
+          <button class="verde" onclick="app.copiarEnlace()">🔗 Copiar</button>
+        </div>
+      </div>
+
+      <!-- PANEL DE APUESTAS -->
+      <div id="panelApuestas" style="display: none; background: linear-gradient(135deg, #9b59b6, #8e44ad); border-radius: 15px; padding: 25px; margin: 20px 0; text-align: center; border: 3px solid #8e44ad;">
+        <h4 style="color: #fff; margin: 0 0 10px 0;">🎰 ¡Haz tu apuesta para esta partida!</h4>
+        <p style="color: #ecf0f1; margin: 5px 0;">1 ficha para cada uno de los 6 pozos</p>
+        <div style="background: rgba(0, 0, 0, 0.3); border-radius: 10px; padding: 15px; margin: 15px 0;">
+          <p id="detalleCartones" style="color: #3498db; font-weight: bold; margin: 8px 0;"></p>
+          <p id="detalleApuesta" style="color: #f39c12; font-weight: bold; margin: 8px 0;"></p>
+          <p id="detalleSaldo" style="color: #27ae60; font-weight: bold; margin: 8px 0;"></p>
+          <p id="detalleSaldoRestante" style="color: #e74c3c; font-weight: bold; margin: 8px 0;"></p>
+        </div>
+        <button onclick="jugador.apostarEnPozos()" style="background: linear-gradient(135deg, #f39c12, #e67e22); color: white; border: none; padding: 15px 40px; font-size: 1.2em; font-weight: bold; border-radius: 10px; cursor: pointer;">🎰 APOSTAR</button>
+        <p style="color: #f39c12; font-size: 0.85em; margin-top: 15px;">⚠️ Debes mantener al menos 18 fichas para la siguiente partida</p>
+      </div>
+
+      <!-- MAIN LAYOUT - 3 COLUMNS -->
       <div class="layout-principal">
         
-        <!-- Column 1: Left -->
+        <!-- COLUMN 1: LEFT -->
         <div class="columna columna-izquierda">
           <div id="ultimaCartaPanel" class="ultima-carta-panel">
             <div class="ultima-carta-label">Última Carta Cantada</div>
@@ -142,7 +139,7 @@
           </div>
         </div>
 
-        <!-- Column 2: Center - Card Selection -->
+        <!-- COLUMN 2: CENTER -->
         <div class="columna columna-centro">
           <div id="seleccionCartones">
             <h3>🎯 Selecciona tus Cartones (Máx 3)</h3>
@@ -161,7 +158,7 @@
           </div>
         </div>
 
-        <!-- Column 3: Right - Players & Options -->
+        <!-- COLUMN 3: RIGHT -->
         <div class="columna columna-derecha">
           <h3>👥 Jugadores (<span id="contadorJugadores">0</span>)</h3>
           <div id="listaJugadores" class="jugadores-lista"></div>
@@ -183,9 +180,8 @@
           <button class="banco" onclick="banco.verBalancePersonal()">📊 Ver Balance</button>
         </div>
       </div>
-      <!-- ===================================================================== -->
-      <!-- PANEL DE VERIFICACIÓN DE APUESTAS -->
-      <!-- ===================================================================== -->
+
+      <!-- PANEL DE VERIFICACIÓN -->
       <div id="panelVerificacionApuestas" class="panel-verificacion-apuestas hidden">
         <div class="panel-verificacion-header">
           <h3>📋 Verificación de Apuestas</h3>
@@ -194,9 +190,8 @@
         <div id="mensajeValidacion" class="mensaje-validacion"></div>
         <div id="listaVerificacionApuestas" class="lista-verificacion"></div>
       </div>
-      <!-- ===================================================================== -->
-      <!-- PANEL DEL CANTADOR (ARRASTRABLE) -->
-      <!-- ===================================================================== -->
+
+      <!-- PANEL DEL CANTADOR -->
       <div id="panelCantadorFijo" class="panel-cantador-fijo hidden">
         <div class="panel-cantador-header" id="panelCantadorHeader">
           <span>🎤 Panel del Cantador (Arrástrame)</span>
@@ -213,7 +208,8 @@
           </div>
         </div>
       </div>
-      <!-- Winner Alert -->
+
+      <!-- ALERTA GANADOR -->
       <div id="alertaGanador" class="alerta-ganador hidden">
         <h2>🏆 ¡GANADOR!</h2>
         <p id="mensajeGanador"></p>
@@ -222,9 +218,7 @@
       </div>
     </div>
 
-    <!-- ===================================================================== -->
     <!-- MODALS -->
-    <!-- ===================================================================== -->
     <div id="modalSolicitud" class="modal">
       <div class="modal-content">
         <h3>📝 Solicitar Cambio</h3>
@@ -253,9 +247,7 @@
 
   </div>
 
-  <!-- ===================================================================== -->
   <!-- SCRIPTS -->
-  <!-- ===================================================================== -->
   <script src="/socket.io/socket.io.js"></script>
   <script src="/js/app.js"></script>
   <script src="/js/socket-client.js"></script>
