@@ -1,7 +1,7 @@
 // ============================================================================
 // 🎪 BINGO POKER - SABADITO ALEGRE - SERVIDOR PRINCIPAL
 // ============================================================================
-// Versión: 2.0 (Arquitectura Modular)
+// Versión: 2.0 (Arquitectura Modular con Persistencia)
 // ============================================================================
 
 const express = require('express');
@@ -23,7 +23,9 @@ const io = new Server(server, {
     methods: ['GET', 'POST'],
     credentials: true
   },
-  transports: ['websocket', 'polling']
+  transports: ['websocket', 'polling'],
+  pingTimeout: 60000,
+  pingInterval: 25000
 });
 
 // ============================================================================
@@ -57,18 +59,18 @@ const pozosConfig = {
 
 const distribucionesCartones = [
   { numero: 1, nombre: 'Cartón A', poker: 'A', full2: 'Q', full3: '5', pokerFila: 3, fullFila: 4, cartas: ['8c', 'jt', '2d', '9c', '8d', '6c', 'kc', '3p', 'kt', '3d', '7c', 'Ap', 'Ac', 'At', 'Ad', '5c', 'qc', '5d', '5p', 'qd', '4c', '10c', '4p', '4d', '6d'] },
-  { numero: 2, nombre: 'Cartón 3', poker: '3', full2: '5', full3: 'J', pokerFila: 3, fullFila: 5, cartas: ['Ap', '10c', '7d', '8d', 'Ac', '2p', '6c', '6d', '9d', '2t', '3t', '3c', '3d', '8t', '3p', '7c', '4c', '4d', '10t', '4t', 'jp', 'jc', '5d', 'jt', '5p'] },
+  { numero: 2, nombre: 'Cartón 3', poker: '3', full2: '5', full3: 'J', pokerFila: 3, fullFila: 5, cartas: ['Ap', '10c', '7d', '8d', '1c', '2p', '6c', '6d', '9d', '2t', '3t', '3c', '3d', '8t', '3p', '7c', '4c', '4d', '10t', '4t', 'jp', 'jc', '5d', 'jt', '5p'] },
   { numero: 3, nombre: 'Cartón 4', poker: '4', full2: 'A', full3: '9', pokerFila: 1, fullFila: 2, cartas: ['4c', '7c', '4t', '4d', '4p', 'Ac', '9t', '9c', '9d', 'Ap', '2d', '8c', '8t', '8d', '3p', '3c', '10p', '10d', '5d', '5p', '5t', 'jt', 'qc', 'qd', '2p'] },
-  { numero: 4, nombre: 'Cartón 5', poker: '5', full2: '9', full3: '7', pokerFila: 3, fullFila: 1, cartas: ['9p', '7c', '7d', '7p', '9c', '4d', '9d', '4c', '4p', '10c', '5c', '5d', '5t', '5p', 'kc', '6d', '6p', '3t', 'qp', 'qc', 'At', '8p', '6c', 'jp', 'jc'] },
+  { numero: 4, nombre: 'Cartón 5', poker: '5', full2: '9', full3: '7', pokerFila: 3, fullFila: 1, cartas: ['9p', '7c', '7d', '7p', '9c', '4d', '9d', '4c', '4p', '10c', '5c', '5d', '5t', '5p', 'kc', '6d', '6p', '3t', 'qp', 'qc', '1t', '8p', '6c', 'jp', 'jc'] },
   { numero: 5, nombre: 'Cartón 6', poker: '6', full2: '2', full3: '8', pokerFila: 3, fullFila: 5, cartas: ['9t', '4c', '5d', '5c', 'qt', '10d', '9p', '4p', '9c', '4t', '6d', 'jd', '6p', '6c', '6t', '7d', 'kp', '3t', '7c', '7t', '8t', '8d', '2c', '8c', '2t'] },
   { numero: 6, nombre: 'Cartón 7', poker: '7', full2: 'A', full3: '6', pokerFila: 3, fullFila: 4, cartas: ['8p', '8d', '9d', 'jt', '4d', '5p', '4p', 'jd', '4t', '5d', '7p', '7t', '7d', 'kp', '7c', '6p', '6d', 'Ad', 'Ac', '6c', '9p', '5t', '3d', '3c', '3p'] },
-  { numero: 7, nombre: 'Cartón 8', poker: '8', full2: '7', full3: '10', pokerFila: 3, fullFila: 4, cartas: ['kc', '4p', '7c', 'kp', '4c', 'jc', '5d', '9c', 'jd', 'jp', '8c', '8d', '8t', '9d', '8p', '10c', '7d', '10p', '10t', '7t', 'Ac', '6d', '6p', 'qc', '10d'] },
-  { numero: 8, nombre: 'Cartón 9', poker: '9', full2: '8', full3: '5', pokerFila: 3, fullFila: 4, cartas: ['Ac', '8p', 'jd', '2p', 'jt', '3p', '6d', '10d', '3c', '3t', '9c', '9p', '9d', '6c', '9t', '5t', '5d', '8d', '5p', '8t', 'kd', '7p', '7c', '4p', '4t'] },
+  { numero: 7, nombre: 'Cartón 8', poker: '8', full2: '7', full3: '10', pokerFila: 3, fullFila: 4, cartas: ['kc', '4p', '7c', 'kp', '4c', 'jc', '5d', '9c', 'jd', 'jp', '8c', '8d', '8t', '9d', '8p', '10c', '7d', '10p', '10t', '7t', '1c', '6d', '6p', 'qc', '10d'] },
+  { numero: 8, nombre: 'Cartón 9', poker: '9', full2: '8', full3: '5', pokerFila: 3, fullFila: 4, cartas: ['1c', '8p', 'jd', '2p', 'jt', '3p', '6d', '10d', '3c', '3t', '9c', '9p', '9d', '6c', '9t', '5t', '5d', '8d', '5p', '8t', 'kd', '7p', '7c', '4p', '4t'] },
   { numero: 9, nombre: 'Cartón 10', poker: '10', full2: '4', full3: '9', pokerFila: 2, fullFila: 3, cartas: ['qp', '3d', 'qt', '3p', '8d', '10p', '2d', '10c', '10t', '10d', '9p', '4t', '9c', '4p', '9d', '7p', '5p', 'jt', '7t', '7d', '2p', 'Ac', 'kt', 'Ad', '6d'] },
-  { numero: 10, nombre: 'Cartón J', poker: 'J', full2: 'Q', full3: '6', pokerFila: 2, fullFila: 4, cartas: ['5p', '5d', '10p', '8c', 'Ac', 'jp', '3p', 'jd', 'jc', 'jt', '4p', '7t', 'kt', '7c', 'kc', 'qp', '6d', 'qt', '6c', '6t', '9p', '4t', '9d', '9c', '2c'] },
+  { numero: 10, nombre: 'Cartón J', poker: 'J', full2: 'Q', full3: '6', pokerFila: 2, fullFila: 4, cartas: ['5p', '5d', '10p', '8c', '1c', 'jp', '3p', 'jd', 'jc', 'jt', '4p', '7t', 'kt', '7c', 'kc', 'qp', '6d', 'qt', '6c', '6t', '9p', '4t', '9d', '9c', '2c'] },
   { numero: 11, nombre: 'Cartón Q', poker: 'Q', full2: '5', full3: 'J', pokerFila: 3, fullFila: 4, cartas: ['Ac', '8t', '4t', '7c', '7d', 'kt', '10t', '10c', '6d', '10d', 'qc', 'qt', 'qp', '9c', 'qd', 'jc', 'jt', '5p', '5t', 'jd', '10p', '9t', '9p', '8c', '5d'] },
-  { numero: 12, nombre: 'Cartón K', poker: 'K', full2: 'Q', full3: '9', pokerFila: 2, fullFila: 4, cartas: ['Ac', '8c', '8d', '9t', '4p', 'kt', 'kc', '5d', 'kd', 'kp', 'kd', '10c', '6d', '6c', '10p', 'qc', '7c', '9d', 'qt', '9c', 'jc', '2c', '7d', 'At', 'jt'] },
-  { numero: 13, nombre: 'Cartón Complemento', poker: '2', full2: 'Q', full3: 'K', pokerFila: 3, fullFila: 4, cartas: ['jp', '4p', '9t', 'At', '8d', '3c', '4d', '5t', '6p', '7c', '2p', '2d', '2c', '2t', '3t', 'qd', 'qc', 'kd', 'kp', 'kt', '5c', '6d', '7t', '8p', '9c'] }
+  { numero: 12, nombre: 'Cartón K', poker: 'K', full2: 'Q', full3: '9', pokerFila: 2, fullFila: 4, cartas: ['Ac', '8c', '8d', '9t', '4p', 'kt', 'kc', '5d', 'kd', 'kp', 'kd', '10c', '6d', '6c', '10p', 'qc', '9p', '9d', 'qt', '9c', 'jc', '2c', '7d', '1t', 'jt'] },
+  { numero: 13, nombre: 'Cartón Complemento', poker: 'J', full2: 'Q', full3: 'K', pokerFila: 3, fullFila: 4, cartas: ['jp', 'qc', 'kd', '1t', '2p', '3c', '4d', '5t', '6p', '7c', '8d', '9t', '10p', 'jc', 'qd', 'kp', 'Ac', '2d', '3t', '4p', '5c', '6d', '7t', '8p', '9c'] }
 ];
 
 const gameState = {
@@ -178,9 +180,11 @@ function barajarMazo(mazo) {
   }
   return mazoBarajado;
 }
+
 // ============================================================================
 // ✅ VALIDACIÓN COMPLETA DE APUESTAS - 3 NIVELES
 // ============================================================================
+
 function verificarJugadoresListos() {
   const jugadoresListos = [];
   const jugadoresNoListos = [];
@@ -191,14 +195,13 @@ function verificarJugadoresListos() {
   Object.keys(gameState.jugadores).forEach(function(email) {
     const jugador = gameState.jugadores[email];
     const cartonesJugador = jugador.cartones ? jugador.cartones.length : 0;
-    const fichasDeberianApostar = cartonesJugador * 6; // 6 fichas por cartón
+    const fichasDeberianApostar = cartonesJugador * 6;
     const fichasYaApostadas = jugador.fichasApostadas || 0;
     
     totalCartones += cartonesJugador;
     totalFichasDeberianApostar += fichasDeberianApostar;
     totalFichasApostadas += fichasYaApostadas;
     
-    // NIVEL 1: Verificar mínimo 40 fichas
     if (jugador.monedas < 40) {
       jugadoresNoListos.push({
         email: email,
@@ -213,7 +216,6 @@ function verificarJugadoresListos() {
       return;
     }
     
-    // NIVEL 2: Verificar al menos 1 cartón
     if (cartonesJugador === 0) {
       jugadoresNoListos.push({
         email: email,
@@ -228,7 +230,6 @@ function verificarJugadoresListos() {
       return;
     }
     
-    // NIVEL 3: Verificar apuesta según número de cartones
     if (fichasYaApostadas < fichasDeberianApostar) {
       jugadoresNoListos.push({
         email: email,
@@ -243,7 +244,6 @@ function verificarJugadoresListos() {
       return;
     }
     
-    // ✅ Jugador listo
     jugadoresListos.push({
       email: email,
       nombre: jugador.nombre,
@@ -265,87 +265,41 @@ function verificarJugadoresListos() {
     resumen: '📊 ' + totalCartones + ' cartones en juego → ' + totalFichasDeberianApostar + ' fichas en pozos ($' + (totalFichasDeberianApostar * 50) + ' COP)'
   };
 }
+
 // ============================================================================
-// ✅ VALIDACIÓN DE POZOS - CORREGIDA
+// ✅ VALIDACIÓN DE POZOS
 // ============================================================================
 
 function verificarPozo(carton, pozo, codigosCantados) {
-  console.log('🔍 Verificando pozo:', pozo, 'Cartón:', carton.numero);
-  
   function verificarCartas(indices) {
-    console.log('  Verificando índices:', indices);
     for (let i = 0; i < indices.length; i++) {
-      const index = indices[i];
-      
-      // Verificar si está tapada
-      if (!carton.tapadas[index]) {
-        console.log('  ❌ Carta', index, 'NO está tapada');
-        return false;
-      }
-      
-      // Verificar si fue cantada
-      const carta = carton.cartas[index];
-      if (!carta) {
-        console.log('  ❌ Carta', index, 'NO existe');
-        return false;
-      }
-      
-      const codigoEncontrado = codigosCantados.indexOf(carta.codigo);
-      if (codigoEncontrado === -1) {
-        console.log('  ❌ Carta', carta.codigo, 'NO está en cartas cantadas');
-        return false;
-      }
-      
-      console.log('  ✅ Carta', index, carta.codigo, 'OK (tapada y cantada)');
+      if (!carton.tapadas[indices[i]]) return false;
+      const carta = carton.cartas[indices[i]];
+      if (codigosCantados.indexOf(carta.codigo) === -1) return false;
     }
     return true;
   }
   
-  // ESPECIAL - 25 cartas
   if (pozo === 'especial') {
     var indicesEspecial = [];
     for (var i = 0; i < 25; i++) indicesEspecial.push(i);
-    const valido = verificarCartas(indicesEspecial);
-    console.log('  ESPECIAL:', valido ? '✅ VÁLIDO' : '❌ INVÁLIDO');
-    return valido;
+    return verificarCartas(indicesEspecial);
   }
+  if (pozo === 'centro') return verificarCartas([12]);
+  if (pozo === 'cuatroEsquinas') return verificarCartas([0, 4, 20, 24]);
   
-  // CENTRO - 1 carta (índice 12)
-  if (pozo === 'centro') {
-    const valido = verificarCartas([12]);
-    console.log('  CENTRO:', valido ? '✅ VÁLIDO' : '❌ INVÁLIDO');
-    return valido;
-  }
-  
-  // CUATRO ESQUINAS - índices 0, 4, 20, 24
-  if (pozo === 'cuatroEsquinas') {
-    const valido = verificarCartas([0, 4, 20, 24]);
-    console.log('  4 ESQUINAS:', valido ? '✅ VÁLIDO' : '❌ INVÁLIDO');
-    return valido;
-  }
-  
-  // POKINO - 5 cartas en línea (horizontal, vertical o diagonal)
   if (pozo === 'pokino') {
     const lineas = [
-      // Horizontales
       [0,1,2,3,4], [5,6,7,8,9], [10,11,12,13,14], [15,16,17,18,19], [20,21,22,23,24],
-      // Verticales
       [0,5,10,15,20], [1,6,11,16,21], [2,7,12,17,22], [3,8,13,18,23], [4,9,14,19,24],
-      // Diagonales
       [0,6,12,18,24], [4,8,12,16,20]
     ];
-    
     for (let l = 0; l < lineas.length; l++) {
-      if (verificarCartas(lineas[l])) {
-        console.log('  POKINO: ✅ VÁLIDO (línea', l, ')');
-        return true;
-      }
+      if (verificarCartas(lineas[l])) return true;
     }
-    console.log('  POKINO: ❌ INVÁLIDO (ninguna línea completa)');
     return false;
   }
   
-  // POKER - 4 cartas del mismo valor (índices configurados en carton.pokerFila)
   if (pozo === 'poker') {
     const fila = carton.pokerFila || 3;
     let indices = [];
@@ -354,13 +308,9 @@ function verificarPozo(carton, pozo, codigosCantados) {
     else if (fila === 3) indices = [10, 11, 12, 13];
     else if (fila === 4) indices = [15, 16, 17, 18];
     else indices = [10, 11, 12, 13];
-    
-    const valido = verificarCartas(indices);
-    console.log('  POKER:', valido ? '✅ VÁLIDO' : '❌ INVÁLIDO');
-    return valido;
+    return verificarCartas(indices);
   }
   
-  // FULL - 5 cartas (2 de un valor + 3 de otro) (índices configurados en carton.fullFila)
   if (pozo === 'full') {
     const fila = carton.fullFila || 4;
     let indices = [];
@@ -370,13 +320,41 @@ function verificarPozo(carton, pozo, codigosCantados) {
     else if (fila === 4) indices = [15, 16, 17, 18, 19];
     else if (fila === 5) indices = [20, 21, 22, 23, 24];
     else indices = [15, 16, 17, 18, 19];
-    
-    const valido = verificarCartas(indices);
-    console.log('  FULL:', valido ? '✅ VÁLIDO' : '❌ INVÁLIDO');
-    return valido;
+    return verificarCartas(indices);
   }
   
   return false;
+}
+
+function verificarPremiosCompletados() {
+  const premiosDetectados = [];
+  const codigosCantados = gameState.cartasCantadas.map(function(c) { return c.codigo; });
+  
+  gameState.cartones.forEach(function(carton) {
+    if (!carton.dueño) return;
+    
+    Object.keys(pozosConfig).forEach(function(pozo) {
+      if (carton.pozos[pozo]) return;
+      
+      if (verificarPozo(carton, pozo, codigosCantados)) {
+        premiosDetectados.push({
+          carton: carton.numero,
+          nombreCarton: carton.nombre,
+          pozo: pozo,
+          nombrePozo: pozosConfig[pozo].nombre,
+          jugador: gameState.jugadores[carton.dueño] ? gameState.jugadores[carton.dueño].nombre : carton.dueño,
+          email: carton.dueño,
+          premio: gameState.pozosDinamicos[pozo].total,
+          fichas: gameState.pozosDinamicos[pozo].fichas,
+          timestamp: Date.now()
+        });
+      }
+    });
+  });
+  
+  if (premiosDetectados.length > 0 && gameState.cantador) {
+    gameState.premiosPendientes.push.apply(gameState.premiosPendientes, premiosDetectados);
+  }
 }
 
 // ============================================================================
@@ -402,19 +380,16 @@ io.on('connection', function(socket) {
     let estadoRecuperado = '';
     
     if (gameState.jugadores[email]) {
-      // ✅ JUGADOR YA EXISTE - RECUPERAR ESTADO
       esReconexion = true;
       gameState.jugadores[email].socketId = socket.id;
       gameState.jugadores[email].timestamp = Date.now();
       gameState.jugadores[email].desconectado = false;
       
-      // Construir mensaje de recuperación
       const jugador = gameState.jugadores[email];
       estadoRecuperado = 'Fichas: ' + jugador.monedas + ' | Cartones: ' + (jugador.cartones ? jugador.cartones.length : 0) + ' | Apuesta: ' + (jugador.fichasApostadas || 0) + ' fichas';
       
       console.log('✅ Reconexión - Estado recuperado: ' + estadoRecuperado);
       
-      // Si era cantador, restaurar rol
       if (gameState.cantadorAnterior === email && !gameState.cantador) {
         gameState.cantador = email;
         io.emit('updateCantador', email);
@@ -439,7 +414,6 @@ io.on('connection', function(socket) {
         });
       }
     } else {
-      // ✅ JUGADOR NUEVO - CREAR REGISTRO
       gameState.jugadores[email] = { 
         nombre: nombre, 
         timestamp: Date.now(), 
@@ -468,7 +442,6 @@ io.on('connection', function(socket) {
       });
     }
     
-    // ✅ Emitir estado actualizado a TODOS (incluyendo al nuevo/reconectado)
     io.emit('updateJugadores', gameState.jugadores);
     io.emit('updateEstadisticas', gameState.estadisticas);
     io.emit('updateBanco', gameState.banco);
@@ -478,11 +451,11 @@ io.on('connection', function(socket) {
     io.emit('updateFaseJuego', gameState.faseJuego);
     io.emit('updateCantador', gameState.cantador);
     
-    // Enviar gameState completo al jugador que se conecta
     socket.emit('gameState', gameState);
     
     console.log('📊 Estado del juego enviado al jugador. Cantador actual: ' + (gameState.cantador || 'Ninguno'));
-  });  
+  });
+  
   // ✅ COMPRAR FICHAS
   socket.on('comprarFichas', function(email, cantidadFichas) {
     if (!gameState.jugadores[email]) {
@@ -522,9 +495,11 @@ io.on('connection', function(socket) {
       valor: costoTotal,
       total: gameState.jugadores[email].monedas
     });
+    
+    console.log('💰 Compra: ' + gameState.jugadores[email].nombre + ' compró ' + cantidadFichas + ' fichas');
   });
   
-    // ✅ APOSTAR EN POZOS - DINÁMICO SEGÚN CARTONES
+  // ✅ APOSTAR EN POZOS - DINÁMICO SEGÚN CARTONES
   socket.on('apostarEnPozos', function(email) {
     if (!gameState.jugadores[email]) {
       socket.emit('error', 'Jugador no encontrado.');
@@ -534,40 +509,33 @@ io.on('connection', function(socket) {
     const jugador = gameState.jugadores[email];
     const cartonesJugador = jugador.cartones ? jugador.cartones.length : 0;
     
-    // Validar que tenga cartones
     if (cartonesJugador === 0) {
       socket.emit('error', 'Debes seleccionar al menos 1 cartón antes de apostar.');
       return;
     }
     
-    // Calcular apuesta: 6 fichas × número de cartones
     const fichasRequeridas = cartonesJugador * 6;
     const costoTotal = fichasRequeridas * VALOR_FICHA;
     
-    // Validar si YA apostó en esta partida
     if (jugador.fichasApostadas >= fichasRequeridas) {
       socket.emit('error', 'Ya apostaste ' + jugador.fichasApostadas + ' fichas para ' + cartonesJugador + ' cartones en esta partida.');
       return;
     }
     
-    // Validar saldo mínimo después de apostar (debe quedar con al menos 18 fichas)
     const saldoDespuesDeApuesta = jugador.monedas - fichasRequeridas;
     if (saldoDespuesDeApuesta < 18) {
-      socket.emit('error', 'Saldo insuficiente. Después de apostar ' + fichasRequeridas + ' fichas, te quedarían ' + saldoDespuesDeApuesta + ' fichas. Necesitas mantener al menos 18 fichas para la siguiente partida. Compra más fichas.');
+      socket.emit('error', 'Saldo insuficiente. Después de apostar ' + fichasRequeridas + ' fichas, te quedarían ' + saldoDespuesDeApuesta + ' fichas. Necesitas mantener al menos 18 fichas para la siguiente partida.');
       return;
     }
     
-    // Validar saldo actual
     if (jugador.monedas < fichasRequeridas) {
-      socket.emit('error', 'No tienes suficientes fichas. Necesitas ' + fichasRequeridas + ' fichas ($' + costoTotal + ' COP) para ' + cartonesJugador + ' cartones. Compra más fichas.');
+      socket.emit('error', 'No tienes suficientes fichas. Necesitas ' + fichasRequeridas + ' fichas ($' + costoTotal + ' COP) para ' + cartonesJugador + ' cartones.');
       return;
     }
     
-    // ✅ Descontar fichas y registrar apuesta
     jugador.monedas -= fichasRequeridas;
     jugador.fichasApostadas = fichasRequeridas;
     
-    // ✅ Actualizar pozos dinámicos (1 ficha por pozo por cartón)
     Object.keys(gameState.pozosDinamicos).forEach(function(pozo) {
       gameState.pozosDinamicos[pozo].acumulado += fichasRequeridas;
       gameState.pozosDinamicos[pozo].total = gameState.pozosDinamicos[pozo].valorBase + gameState.pozosDinamicos[pozo].acumulado;
@@ -585,13 +553,11 @@ io.on('connection', function(socket) {
     
     gameState.banco.totalRecaudado += costoTotal;
     
-    // ✅ Emitir actualizaciones a TODOS
     io.emit('updateJugadores', gameState.jugadores);
     io.emit('updateEstadisticas', gameState.estadisticas);
     io.emit('updateBanco', gameState.banco);
     io.emit('updatePozosDinamicos', gameState.pozosDinamicos);
     
-    // ✅ Notificación especial al jugador
     socket.emit('apuestaRealizada', {
       fichas: fichasRequeridas,
       cartones: cartonesJugador,
@@ -600,7 +566,6 @@ io.on('connection', function(socket) {
       mensaje: '✅ Apostaste ' + fichasRequeridas + ' fichas (' + cartonesJugador + ' cartones × 6). Saldo restante: ' + jugador.monedas + ' fichas'
     });
     
-    // ✅ Notificación al cantador
     if (gameState.cantador && gameState.cantador !== email) {
       const cantadorSocket = io.sockets.sockets.get(gameState.jugadores[gameState.cantador] ? gameState.jugadores[gameState.cantador].socketId : null);
       if (cantadorSocket) {
@@ -801,7 +766,7 @@ io.on('connection', function(socket) {
     console.log('🎮 Juego iniciado - ' + validacion.listos.length + ' jugadores listos');
   });
   
-    // ✅ SOLICITAR ESTADO DE APUESTAS (VERIFICACIÓN COMPLETA)
+  // ✅ SOLICITAR ESTADO DE APUESTAS
   socket.on('solicitarEstadoApuestas', function(email) {
     if (gameState.cantador !== email) {
       socket.emit('error', 'Solo el cantador puede verificar.');
@@ -811,10 +776,8 @@ io.on('connection', function(socket) {
     const validacion = verificarJugadoresListos();
     console.log('📋 Validación completada:', validacion);
     
-    // Enviar validación detallada al cantador
     socket.emit('estadoApuestas', validacion);
     
-    // También enviar notificación a todos los jugadores
     if (!validacion.todosListos) {
       io.emit('notificacionCantador', {
         tipo: 'verificacion',
@@ -924,7 +887,7 @@ io.on('connection', function(socket) {
     io.emit('updateFaseJuego', gameState.faseJuego);
   });
   
-  // ✅ SIGUIENTE PARTIDA CORREGIDA
+  // ✅ SIGUIENTE PARTIDA
   socket.on('siguientePartida', function(email) {
     if (gameState.cantador !== email) {
       socket.emit('error', 'Solo el cantador.');
@@ -947,8 +910,7 @@ io.on('connection', function(socket) {
       carton.tapadas.fill(false);
       Object.keys(carton.pozos).forEach(function(k) { carton.pozos[k] = false; });
     });
-
-    // ✅ IMPORTANTE: Resetear fichasApostadas de TODOS los jugadores para la nueva partida
+    
     Object.keys(gameState.jugadores).forEach(function(email) {
       gameState.jugadores[email].fichasApostadas = 0;
     });
@@ -967,6 +929,8 @@ io.on('connection', function(socket) {
       esEspecial: gameState.partidaActual === 6,
       mensaje: '➡️ Partida ' + gameState.partidaActual + ' iniciada'
     });
+    
+    console.log('➡️ Siguiente partida: ' + gameState.partidaActual + '. Apuestas reseteadas.');
   });
   
   // ✅ REINICIAR JUEGO
@@ -1000,6 +964,10 @@ io.on('connection', function(socket) {
       c.dueño = null; 
       c.tapadas.fill(false); 
       Object.keys(c.pozos).forEach(function(k) { c.pozos[k] = false; }); 
+    });
+    
+    Object.keys(gameState.jugadores).forEach(function(email) {
+      gameState.jugadores[email].fichasApostadas = 0;
     });
     
     io.emit('gameState', gameState);
@@ -1092,11 +1060,21 @@ server.listen(PORT, '0.0.0.0', function() {
   console.log('║  🎪 BINGO POKER - SABADITO ALEGRE - SERVIDOR ACTIVO      ║');
   console.log('╠═══════════════════════════════════════════════════════════╣');
   console.log('║ 📡 Puerto: ' + PORT);
-  console.log('║ 🌐 URL: https://sabaditos-alegres2.onrender.com');
+  console.log('║ 🌐 URL: https://sabaditos-alegres2-1.onrender.com');
   console.log('║  🎴 13 cartones oficiales');
   console.log('║  🃏 52 cartas individuales en PNG');
   console.log('║  🏆 6 Pozos dinámicos (inician en $0)');
   console.log('║  💰 VALOR FICHA: $50 COP');
-  console.log('║  🎰 APUESTA POR PARTIDA: 6 fichas ($300 COP)');
+  console.log('║  🎰 APUESTA POR PARTIDA: 6 fichas × cartones ($300-$900 COP)');
+  console.log('║  💾 PERSISTENCIA: Datos se recuperan tras desconexión');
   console.log('╚═══════════════════════════════════════════════════════════╝');
+});
+
+// ✅ IMPORTANTE: Manejar errores no capturados
+process.on('uncaughtException', function(err) {
+  console.error('❌ Error no capturado:', err);
+});
+
+process.on('unhandledRejection', function(reason, promise) {
+  console.error('❌ Promesa rechazada:', reason);
 });
