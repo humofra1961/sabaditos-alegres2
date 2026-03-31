@@ -145,7 +145,15 @@ const socketClient = {
       console.log('🎰 Apuesta realizada:', data);
       if (window.ui) window.ui.mostrarNotificacion('✅ ' + data.mensaje, 'success');
     });
-    
+    socket.on('siguientePartida', function(data) {
+      console.log('➡️ Siguiente partida:', data);
+      if (window.ui) window.ui.mostrarNotificacion(data.mensaje, 'success');
+      
+      // ✅ CORRECCIÓN: Resetear estado de apuesta para la nueva partida
+      if (window.app && window.app.resetearParaNuevaPartida) {
+        window.app.resetearParaNuevaPartida();
+      }
+    });    
     socket.on('validacionFallida', function(data) {
       console.log('⚠️ Validación fallida:', data);
       if (window.ui) window.ui.mostrarValidacionFallida(data);
