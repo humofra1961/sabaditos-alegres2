@@ -1,3 +1,7 @@
+// ============================================================================
+// 🚀 APLICACIÓN PRINCIPAL - INICIALIZACIÓN
+// ============================================================================
+
 const app = {
   emailActual: '',
   nombreActual: '',
@@ -54,17 +58,27 @@ const app = {
     
     var cartonesJugador = 0;
     var saldoActual = 0;
+    var fichasApostadas = 0;
     
     if (this.gameState && this.gameState.jugadores && this.gameState.jugadores[this.emailActual]) {
       cartonesJugador = this.gameState.jugadores[this.emailActual].cartones.length;
       saldoActual = this.gameState.jugadores[this.emailActual].monedas;
+      fichasApostadas = this.gameState.jugadores[this.emailActual].fichasApostadas || 0;
     }
     
     console.log('  Cartones:', cartonesJugador);
     console.log('  Saldo:', saldoActual);
+    console.log('  Apostadas:', fichasApostadas);
     console.log('  Ya apostó:', this.yaAposto);
+    console.log('  Partida:', this.gameState ? this.gameState.partidaActual : 0);
     
-    if (cartonesJugador > 0 && !this.yaAposto) {
+    if (fichasApostadas > 0 && this.gameState && this.gameState.partidaActual > 1) {
+      panelApuestas.style.display = 'none';
+      console.log('🔒 Panel oculto - apuesta ya realizada en partida anterior');
+      return;
+    }
+    
+    if (cartonesJugador > 0 && !this.yaAposto && fichasApostadas === 0) {
       var fichasRequeridas = cartonesJugador * 6;
       var saldoDespues = saldoActual - fichasRequeridas;
       
@@ -77,23 +91,24 @@ const app = {
       console.log('✅ PANEL DE APUESTAS MOSTRADO');
     } else {
       panelApuestas.style.display = 'none';
-      console.log('🔒 PANEL DE APUESTAS OCULTO (cartones=' + cartonesJugador + ', yaApostó=' + this.yaAposto + ')');
+      console.log('🔒 PANEL DE APUESTAS OCULTO');
     }
   },
+  
+  marcarRegistroCompletado: function() {
+    this.registroCompletado = true;
+    console.log('✅ Registro completado');
+  },
+  
   resetearParaNuevaPartida: function() {
     console.log('🔄 Resetear para nueva partida');
     this.yaAposto = false;
     
-  // ✅ Mostrar panel de apuestas de nuevo
     setTimeout(function() {
       if (window.app && window.app.verificarPanelApuestas) {
         window.app.verificarPanelApuestas();
       }
     }, 1000);
-  }  
-  marcarRegistroCompletado: function() {
-    this.registroCompletado = true;
-    console.log('✅ Registro completado');
   }
 };
 
@@ -101,6 +116,9 @@ window.app = app;
 
 document.addEventListener('DOMContentLoaded', function() {
   console.log('📄 App cargada');
+  if (window.app) {
+    window.app.mostrarCargando();
+  }
   if (window.socketClient) {
     window.socketClient.conectar();
   }
