@@ -180,7 +180,7 @@ function barajarMazo(mazo) {
 }
 
 // ============================================================================
-// ✅ VALIDACIÓN COMPLETA DE APUESTAS - 3 NIVELES
+// ✅ VALIDACIÓN COMPLETA DE APUESTAS - 3 NIVELES - CORREGIDA
 // ============================================================================
 
 function verificarJugadoresListos() {
@@ -200,7 +200,21 @@ function verificarJugadoresListos() {
     totalFichasDeberianApostar += fichasDeberianApostar;
     totalFichasApostadas += fichasYaApostadas;
     
-    if (jugador.monedas < 40) {
+    // ✅ CORRECCIÓN: Si el jugador YA APOSTÓ, está listo (independiente del saldo actual)
+    if (fichasYaApostadas >= fichasDeberianApostar && fichasDeberianApostar > 0) {
+      jugadoresListos.push({
+        email: email,
+        nombre: jugador.nombre,
+        monedas: jugador.monedas,
+        cartones: cartonesJugador,
+        fichasApostadas: fichasYaApostadas,
+        fichasDeberianApostar: fichasDeberianApostar
+      });
+      return;
+    }
+    
+    // NIVEL 1: Verificar mínimo 40 fichas (solo si NO ha apostado aún)
+    if (jugador.monedas < 40 && fichasYaApostadas === 0) {
       jugadoresNoListos.push({
         email: email,
         nombre: jugador.nombre,
@@ -214,6 +228,7 @@ function verificarJugadoresListos() {
       return;
     }
     
+    // NIVEL 2: Verificar al menos 1 cartón
     if (cartonesJugador === 0) {
       jugadoresNoListos.push({
         email: email,
@@ -228,6 +243,7 @@ function verificarJugadoresListos() {
       return;
     }
     
+    // NIVEL 3: Verificar apuesta según número de cartones
     if (fichasYaApostadas < fichasDeberianApostar) {
       jugadoresNoListos.push({
         email: email,
@@ -242,6 +258,7 @@ function verificarJugadoresListos() {
       return;
     }
     
+    // ✅ Jugador listo
     jugadoresListos.push({
       email: email,
       nombre: jugador.nombre,
@@ -263,7 +280,6 @@ function verificarJugadoresListos() {
     resumen: '📊 ' + totalCartones + ' cartones en juego → ' + totalFichasDeberianApostar + ' fichas en pozos ($' + (totalFichasDeberianApostar * 50) + ' COP)'
   };
 }
-
 // ============================================================================
 // ✅ VALIDACIÓN DE POZOS
 // ============================================================================
