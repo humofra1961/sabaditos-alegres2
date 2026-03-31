@@ -101,7 +101,9 @@ const socketClient = {
       console.log('🏆 Actualizando pozos:', pozos);
       if (!window.app.gameState) window.app.gameState = {};
       window.app.gameState.pozosDinamicos = pozos || {};
-      if (window.pozos) window.pozos.renderizar();
+      if (window.pozos) {
+        window.pozos.renderizar();
+      }
     });
     
     socket.on('updateBanco', function(banco) {
