@@ -26,9 +26,12 @@ const pozos = {
         var fichasEl = pozoEl.querySelector('.pozo-fichas');
         var nombreEl = pozoEl.querySelector('.pozo-nombre');
         
+        // ✅ CORRECCIÓN: Mostrar valor en COP y fichas correctamente
         if (nombreEl) nombreEl.textContent = pozosNombres[pozo] || pozo;
         if (premioEl) premioEl.textContent = '$' + (pozoData.total || 0) + ' COP';
         if (fichasEl) fichasEl.textContent = (pozoData.fichas || 0) + ' fichas';
+        
+        console.log('  Pojo', pozo, ':', pozoData.fichas, 'fichas ($' + pozoData.total + ' COP)');
         
         if (pozoData.acumulado > 0) {
           pozoEl.classList.add('acumulado');
