@@ -957,47 +957,77 @@ io.on('connection', function(socket) {
     io.emit('updateFaseJuego', gameState.faseJuego);
   });
   
-  // ✅ SIGUIENTE PARTIDA
+    // ✅ SIGUIENTE PARTIDA - CORREGIDO
   socket.on('siguientePartida', function(email) {
     if (gameState.cantador !== email) {
       socket.emit('error', 'Solo el cantador.');
       return;
     }
-    if (gameState.partidaActual >= gameState.totalPartidas) {
+    
+    // ✅ CORRECCIÓN: Verificar ANTES de incrementar
+    if (gameState.partidaActual >= 6) {
       socket.emit('error', 'Partidas completadas. Reinicia el juego.');
       return;
     }
     
+    console.log('➡️ Iniciando siguiente partida:', gameState.partidaActual + 1);
+    
+    // ✅ Resetear cartas cantadas
     gameState.cartasCantadas = [];
     gameState.ultimaCarta = null;
+    
+    // ✅ Resetear estado del juego
     gameState.juegoIniciado = false;
     gameState.faseJuego = 'seleccion';
     gameState.indiceMazo = 0;
+    
+    // ✅ Barajar nuevo mazo
     gameState.mazo = barajarMazo(generarMazo());
+    
+    // ✅ Resetear premios pendientes
     gameState.premiosPendientes = [];
     
+    // ✅ CORRECCIÓN CLAVE: Resetear tapadas de cartones PERO MANTENER DUEÑOS
     gameState.cartones.forEach(function(carton) {
+      // ✅ Resetear tapadas (todas las cartas se destapan)
       carton.tapadas.fill(false);
-      Object.keys(carton.pozos).forEach(function(k) { carton.pozos[k] = false; });
+      
+      // ✅ Resetear pozos del cartón (para que puedan reclamar de nuevo)
+      Object.keys(carton.pozos).forEach(function(k) { 
+        carton.pozos[k] = false; 
+      });
+      
+      // ✅ NO resetear carton.dueño - los cartones se mantienen hasta el final
     });
     
+    // ✅ CORRECCIÓN CLAVE: Resetear fichasApostadas de TODOS los jugadores
+    // Para que puedan apostar de nuevo en la nueva partida
     Object.keys(gameState.jugadores).forEach(function(email) {
       gameState.jugadores[email].fichasApostadas = 0;
     });
     
+    // ✅ Resetear solo Pokino (los demás pozos acumulan)
     gameState.pozosDinamicos.pokino.acumulado = 0;
     gameState.pozosDinamicos.pokino.total = 0;
     gameState.pozosDinamicos.pokino.fichas = 0;
     
+    // ✅ Incrementar partida DESPUÉS de validar
     gameState.partidaActual++;
     
+    console.log('✅ Partida', gameState.partidaActual, 'iniciada');
+    
+    // ✅ Emitir actualizaciones a TODOS
     io.emit('gameState', gameState);
     io.emit('updateFaseJuego', 'seleccion');
     io.emit('updatePozosDinamicos', gameState.pozosDinamicos);
+    io.emit('updateCartones', gameState.cartones);
+    io.emit('updateCartasCantadas', gameState.cartasCantadas);
+    io.emit('updateUltimaCarta', null);
+    
     io.emit('siguientePartida', { 
       partida: gameState.partidaActual,
       esEspecial: gameState.partidaActual === 6,
-      mensaje: '➡️ Partida ' + gameState.partidaActual + ' iniciada'
+      mensaje: '➡️ Partida ' + gameState.partidaActual + ' iniciada. Realicen sus apuestas.'
     });
   });
   
