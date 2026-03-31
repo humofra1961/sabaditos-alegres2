@@ -116,9 +116,6 @@ window.app = app;
 
 document.addEventListener('DOMContentLoaded', function() {
   console.log('📄 App cargada');
-  if (window.app) {
-    window.app.mostrarCargando();
-  }
   if (window.socketClient) {
     window.socketClient.conectar();
   }
