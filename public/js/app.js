@@ -80,7 +80,17 @@ const app = {
       console.log('🔒 PANEL DE APUESTAS OCULTO (cartones=' + cartonesJugador + ', yaApostó=' + this.yaAposto + ')');
     }
   },
-  
+  resetearParaNuevaPartida: function() {
+    console.log('🔄 Resetear para nueva partida');
+    this.yaAposto = false;
+    
+  // ✅ Mostrar panel de apuestas de nuevo
+    setTimeout(function() {
+      if (window.app && window.app.verificarPanelApuestas) {
+        window.app.verificarPanelApuestas();
+      }
+    }, 1000);
+  }  
   marcarRegistroCompletado: function() {
     this.registroCompletado = true;
     console.log('✅ Registro completado');
