@@ -26,12 +26,16 @@ const pozos = {
         var fichasEl = pozoEl.querySelector('.pozo-fichas');
         var nombreEl = pozoEl.querySelector('.pozo-nombre');
         
-        // ✅ CORRECCIÓN: Mostrar valor en COP y fichas correctamente
+        // ✅ CORRECCIÓN: Mostrar valor correcto en COP y fichas
         if (nombreEl) nombreEl.textContent = pozosNombres[pozo] || pozo;
-        if (premioEl) premioEl.textContent = '$' + (pozoData.total || 0) + ' COP';
-        if (fichasEl) fichasEl.textContent = (pozoData.fichas || 0) + ' fichas';
         
-        console.log('  Pojo', pozo, ':', pozoData.fichas, 'fichas ($' + pozoData.total + ' COP)');
+        // ✅ El total YA viene calculado del servidor (fichas × VALOR_FICHA)
+        if (premioEl) premioEl.textContent = '$' + (pozoData.total || 0) + ' COP';
+        
+        // ✅ Las fichas son el acumulado
+        if (fichasEl) fichasEl.textContent = (pozoData.fichas || pozoData.acumulado || 0) + ' fichas';
+        
+        console.log('  Pojo', pozo, ':', (pozoData.fichas || pozoData.acumulado || 0), 'fichas ($' + pozoData.total + ' COP)');
         
         if (pozoData.acumulado > 0) {
           pozoEl.classList.add('acumulado');
