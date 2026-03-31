@@ -516,7 +516,10 @@ io.on('connection', function(socket) {
     
     jugador.monedas -= fichasRequeridas;
     jugador.fichasApostadas = fichasRequeridas;
-    
+    // ✅ CORRECCIÓN: Distribuir fichas por pozo
+    // Cada pozo recibe = cartonesJugador fichas (no fichasRequeridas)
+    // 6 pozos × cartonesJugador fichas = fichasRequeridas total
+    const fichasPorPozo = cartonesJugador; // ← CORRECCIÓN CLAVE    
     Object.keys(gameState.pozosDinamicos).forEach(function(pozo) {
       gameState.pozosDinamicos[pozo].acumulado += fichasRequeridas;
       gameState.pozosDinamicos[pozo].total = gameState.pozosDinamicos[pozo].valorBase + gameState.pozosDinamicos[pozo].acumulado;
@@ -528,19 +531,26 @@ io.on('connection', function(socket) {
       fichas: fichasRequeridas,
       valor: costoTotal,
       fecha: new Date().toISOString(),
-      partida: gameState.partidaActual
+      partida: gameState.partidaActual,
+      cartones: cartonesJugador,
+      fichasPorPozo: fichasPorPozo
     });
-    
     gameState.banco.totalRecaudado += costoTotal;
-    
     io.emit('updateJugadores', gameState.jugadores);
     io.emit('updateEstadisticas', gameState.estadisticas);
     io.emit('updateBanco', gameState.banco);
     io.emit('updatePozosDinamicos', gameState.pozosDinamicos);
     
-    console.log('🎰 Apuesta registrada: ' + email + ' apostó ' + fichasRequeridas + ' fichas. Ahora tiene ' + jugador.fichasApostadas + ' fichas apostadas');
-  });
-  
+    socket.emit('apuestaRealizada', {
+      fichas: fichasRequeridas,
+      cartones: cartonesJugador,
+      fichasPorPozo: fichasPorPozo,
+      valor: costoTotal,
+      saldoRestante: jugador.monedas,
+      mensaje: '✅ Apostaste ' + fichasRequeridas + ' fichas (' + cartonesJugador + ' cartones × 6). ' + fichasPorPozo + ' fichas por pozo. Saldo restante: ' + jugador.monedas + ' fichas'
+    });
+    console.log('🎰 Apuesta registrada:', email, 'apostó', fichasRequeridas, 'fichas para', cartonesJugador, 'cartones. Fichas por pozo:', fichasPorPozo, 'Saldo:', jugador.monedas);
+  });    
   // ✅ AGREGAR MONEDAS (Cantador)
   socket.on('agregarMonedas', function(emailJugador, cantidad, emailCantador) {
     if (gameState.cantador !== emailCantador) {
