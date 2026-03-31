@@ -3,6 +3,7 @@ const premio = {
     console.log('🏆 Reclamando premio:', pozo, 'Cartón:', numeroCarton);
     socket.emit('reclamarPremio', numeroCarton, pozo, window.app.emailActual);
   },
+  
   confirmar: function() {
     console.log('✅ Confirmando premio');
     if (window.app.premioPendiente) {
@@ -12,6 +13,7 @@ const premio = {
         window.app.premioPendiente.email, 
         window.app.emailActual
       );
+      
       // ✅ CERRAR POPUP DESPUÉS DE CONFIRMAR
       setTimeout(function() {
         var alerta = document.getElementById('alertaGanador');
