@@ -480,7 +480,7 @@ io.on('connection', function(socket) {
     });
   });
   
-  // ✅ APOSTAR EN POZOS
+  // ✅ APOSTAR EN POZOS - CORREGIDO
   socket.on('apostarEnPozos', function(email) {
     if (!gameState.jugadores[email]) {
       socket.emit('error', 'Jugador no encontrado.');
@@ -495,33 +495,40 @@ io.on('connection', function(socket) {
       return;
     }
     
+    // ✅ CÁLCULO CORRECTO: 6 fichas por cartón
     const fichasRequeridas = cartonesJugador * 6;
     const costoTotal = fichasRequeridas * VALOR_FICHA;
     
+    // Validar si YA apostó en esta partida
     if (jugador.fichasApostadas >= fichasRequeridas) {
       socket.emit('error', 'Ya apostaste ' + jugador.fichasApostadas + ' fichas para ' + cartonesJugador + ' cartones en esta partida.');
       return;
     }
     
+    // Validar saldo mínimo después de apostar (18 fichas)
     const saldoDespuesDeApuesta = jugador.monedas - fichasRequeridas;
     if (saldoDespuesDeApuesta < 18) {
       socket.emit('error', 'Saldo insuficiente. Después de apostar te quedarían ' + saldoDespuesDeApuesta + ' fichas. Necesitas mantener al menos 18 fichas para la siguiente partida.');
       return;
     }
     
+    // Validar saldo actual
     if (jugador.monedas < fichasRequeridas) {
       socket.emit('error', 'No tienes suficientes fichas. Necesitas ' + fichasRequeridas + ' fichas ($' + costoTotal + ' COP) para ' + cartonesJugador + ' cartones.');
       return;
     }
     
+    // ✅ Descontar fichas del jugador
     jugador.monedas -= fichasRequeridas;
     jugador.fichasApostadas = fichasRequeridas;
+    
     // ✅ CORRECCIÓN: Distribuir fichas por pozo
     // Cada pozo recibe = cartonesJugador fichas (no fichasRequeridas)
     // 6 pozos × cartonesJugador fichas = fichasRequeridas total
-    const fichasPorPozo = cartonesJugador; // ← CORRECCIÓN CLAVE    
+    const fichasPorPozo = cartonesJugador; // ← CORRECCIÓN CLAVE
+    
     Object.keys(gameState.pozosDinamicos).forEach(function(pozo) {
-      gameState.pozosDinamicos[pozo].acumulado += fichasRequeridas;
+      gameState.pozosDinamicos[pozo].acumulado += fichasPorPozo;
       gameState.pozosDinamicos[pozo].total = gameState.pozosDinamicos[pozo].valorBase + gameState.pozosDinamicos[pozo].acumulado;
       gameState.pozosDinamicos[pozo].fichas = Math.floor(gameState.pozosDinamicos[pozo].total / VALOR_FICHA);
     });
@@ -535,7 +542,10 @@ io.on('connection', function(socket) {
       cartones: cartonesJugador,
       fichasPorPozo: fichasPorPozo
     });
+    
     gameState.banco.totalRecaudado += costoTotal;
+    
+    // ✅ Emitir actualizaciones a TODOS
     io.emit('updateJugadores', gameState.jugadores);
     io.emit('updateEstadisticas', gameState.estadisticas);
     io.emit('updateBanco', gameState.banco);
@@ -549,6 +559,7 @@ io.on('connection', function(socket) {
       saldoRestante: jugador.monedas,
       mensaje: '✅ Apostaste ' + fichasRequeridas + ' fichas (' + cartonesJugador + ' cartones × 6). ' + fichasPorPozo + ' fichas por pozo. Saldo restante: ' + jugador.monedas + ' fichas'
     });
+    
     console.log('🎰 Apuesta registrada:', email, 'apostó', fichasRequeridas, 'fichas para', cartonesJugador, 'cartones. Fichas por pozo:', fichasPorPozo, 'Saldo:', jugador.monedas);
   });    
   // ✅ AGREGAR MONEDAS (Cantador)
