@@ -1,7 +1,3 @@
-// ============================================================================
-// 🏆 PREMIO - RECLAMAR Y CONFIRMAR
-// ============================================================================
-
 const premio = {
   reclamar: function(numeroCarton, pozo) {
     console.log('🏆 Reclamando premio:', pozo, 'Cartón:', numeroCarton);
@@ -11,21 +7,32 @@ const premio = {
   confirmar: function() {
     console.log('✅ Confirmando premio');
     if (window.app.premioPendiente) {
-      const pozoKey = Object.keys(window.pozosInfo).find(function(k) { 
-        return window.pozosInfo[k].nombre === window.app.premioPendiente.pozo; 
-      });
       socket.emit('confirmarPremio', 
         window.app.premioPendiente.carton, 
-        pozoKey, 
+        window.app.premioPendiente.pozo, 
         window.app.premioPendiente.email, 
         window.app.emailActual
       );
+      
+      // ✅ CERRAR POPUP DESPUÉS DE CONFIRMAR
+      setTimeout(function() {
+        var alerta = document.getElementById('alertaGanador');
+        if (alerta) {
+          alerta.classList.add('hidden');
+          alerta.style.display = 'none';
+        }
+        window.app.premioPendiente = null;
+      }, 1000);
     }
   },
   
   rechazar: function() {
     console.log('❌ Rechazando premio');
-    document.getElementById('alertaGanador').classList.add('hidden');
+    var alerta = document.getElementById('alertaGanador');
+    if (alerta) {
+      alerta.classList.add('hidden');
+      alerta.style.display = 'none';
+    }
     window.app.premioPendiente = null;
     if (window.ui) window.ui.mostrarNotificacion('❌ Premio rechazado', 'error');
   },
@@ -36,14 +43,15 @@ const premio = {
     if (window.app.gameState && window.app.gameState.cantador === window.app.emailActual) {
       window.app.premioPendiente = data;
       
-      const mensajeEl = document.getElementById('mensajeGanador');
+      var mensajeEl = document.getElementById('mensajeGanador');
       if (mensajeEl) {
         mensajeEl.textContent = data.mensaje;
       }
       
-      const alerta = document.getElementById('alertaGanador');
+      var alerta = document.getElementById('alertaGanador');
       if (alerta) {
         alerta.classList.remove('hidden');
+        alerta.style.display = 'block';
         if (data.esEspecial) {
           alerta.classList.add('especial');
         } else {
