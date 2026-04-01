@@ -129,12 +129,23 @@ const cartones = {
       
       html += '</div>';
       html += '<div class="botones-pozos">';
-      html += '<button class="boton-pozo" onclick="window.premio.reclamar(' + carton.numero + ', \'pokino\')">POKINO</button>';
+      html += '<button class="boton-pozo" onclick="window.premio.reclamarMultiple('pokino')">POKINO</button>';
+      html += '<button class="boton-pozo" onclick="window.premio.reclamarMultiple('pokino-poker')">POKINO+POKER</button>';
+      html += '<button class="boton-pozo" onclick="window.premio.reclamarMultiple('pokino-full')">POKINO+FULL</button>';
+      html += '<button class="boton-pozo" onclick="window.premio.reclamarMultiple('cuatroEsquinas')">4 ESQ</button>';
+      html += '<button class="boton-pozo" onclick="window.premio.reclamarMultiple('pokino-4esquinas')">POKINO+4 ESQ</button>';
+      html += '<button class="boton-pozo" onclick="window.premio.reclamarMultiple('full')">FULL</button>';
+      html += '<button class="boton-pozo" onclick="window.premio.reclamarMultiple('poker')">POKER</button>';
+      html += '<button class="boton-pozo" onclick="window.premio.reclamarMultiple('centro')">CENTRO</button>';
+      html += '<button class="boton-pozo" onclick="window.premio.reclamarMultiple('pokino-centro')">POKINO+CENTRO</button>';
+      html += '<button class="boton-pozo" onclick="window.premio.reclamarMultiple('especial')">ESPECIAL</button>';
+      
+      /*html += '<button class="boton-pozo" onclick="window.premio.reclamar(' + carton.numero + ', \'pokino\')">POKINO</button>';
       html += '<button class="boton-pozo" onclick="window.premio.reclamar(' + carton.numero + ', \'cuatroEsquinas\')">4 ESQ</button>';
       html += '<button class="boton-pozo" onclick="window.premio.reclamar(' + carton.numero + ', \'full\')">FULL</button>';
       html += '<button class="boton-pozo" onclick="window.premio.reclamar(' + carton.numero + ', \'poker\')">POKER</button>';
       html += '<button class="boton-pozo" onclick="window.premio.reclamar(' + carton.numero + ', \'centro\')">CENTRO</button>';
-      html += '<button class="boton-pozo" onclick="window.premio.reclamar(' + carton.numero + ', \'especial\')">ESPECIAL</button>';
+      html += '<button class="boton-pozo" onclick="window.premio.reclamar(' + carton.numero + ', \'especial\')">ESPECIAL</button>';**/
       html += '</div>';
       html += '</div>';
     }
