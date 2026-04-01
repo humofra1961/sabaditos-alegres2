@@ -280,25 +280,34 @@ function verificarJugadoresListos() {
     resumen: '📊 ' + totalCartones + ' cartones en juego → ' + totalFichasDeberianApostar + ' fichas en pozos ($' + (totalFichasDeberianApostar * 50) + ' COP)'
   };
 }
-// ============================================================================
-// ✅ VALIDACIÓN DE POZOS - CORREGIDA
-// ============================================================================
-
 function verificarPozo(carton, pozo, codigosCantados, ultimaCartaCodigo) {
-  console.log('🔍 Verificando pozo:', pozo, 'Cartón:', carton.numero, 'Última carta:', ultimaCartaCodigo);
+  console.log('🔍 Verificando pozo:', pozo, 'Cartón:', carton.numero, 'Última carta:', ultimaCartaCodigo, 'Partida:', gameState.partidaActual);
+  
+  // ✅ CORRECCIÓN: CENTRO solo válido antes de la 6ta carta (EXCEPTO en Partida 6/ESPECIAL)
+  if (pozo === 'centro') {
+    // En Partida 6 (ESPECIAL), el centro se puede reclamar en cualquier momento
+    if (gameState.partidaActual === 6) {
+      console.log('  ✅ ESPECIAL (Partida 6): CENTRO válido en cualquier momento');
+    } else {
+      // En Partidas 1-5, el centro solo es válido con máximo 5 cartas cantadas
+      if (codigosCantados.length > 5) {
+        console.log('  ❌ CENTRO: Ya se cantaron más de 5 cartas (' + codigosCantados.length + '). Solo válido hasta la 5ta carta en partidas 1-5.');
+        return false;
+      }
+      console.log('  ✅ CENTRO: ' + codigosCantados.length + ' cartas cantadas (válido hasta 5)');
+    }
+  }
   
   function verificarCartas(indices) {
     console.log('  Verificando índices:', indices);
     for (let i = 0; i < indices.length; i++) {
       const index = indices[i];
       
-      // Verificar si está tapada
       if (!carton.tapadas[index]) {
         console.log('  ❌ Carta', index, 'NO está tapada');
         return false;
       }
       
-      // Verificar si fue cantada
       const carta = carton.cartas[index];
       if (!carta) {
         console.log('  ❌ Carta', index, 'NO existe');
@@ -314,6 +323,32 @@ function verificarPozo(carton, pozo, codigosCantados, ultimaCartaCodigo) {
       console.log('  ✅ Carta', index, carta.codigo, 'OK (tapada y cantada)');
     }
     
+    if (ultimaCartaCodigo && pozo === 'pokino') {
+      const ultimaCartaEnLinea = indices.some(function(index) {
+        return carton.cartas[index] && carton.cartas[index].codigo === ultimaCartaCodigo;
+      });
+      
+      if (!ultimaCartaEnLinea) {
+        console.log('  ❌ La última carta cantada NO está en esta línea');
+        return false;
+      }
+      console.log('  ✅ La última carta cantada SÍ está en esta línea');
+    }
+    
+    if (ultimaCartaCodigo && pozo !== 'pokino' && pozo !== 'centro') {
+      const ultimaCartaEnPozo = indices.some(function(index) {
+        return carton.cartas[index] && carton.cartas[index].codigo === ultimaCartaCodigo;
+      });
+      
+      if (!ultimaCartaEnPozo) {
+        console.log('  ❌ La última carta cantada NO está en este pozo');
+        return false;
+      }
+      console.log('  ✅ La última carta cantada SÍ está en este pozo');
+    }
+    
+    return true;
+  }
     // ✅ CORRECCIÓN POKINO: Verificar que la última carta cantada esté en esta línea
     if (ultimaCartaCodigo) {
       const ultimaCartaEnLinea = indices.some(function(index) {
@@ -850,9 +885,9 @@ io.on('connection', function(socket) {
     }
   });
   
-  // ✅ RECLAMAR PREMIO - CORREGIDO
+  // ✅ RECLAMAR PREMIO - CON MENSAJE ESPECÍFICO PARA CENTRO
   socket.on('reclamarPremio', function(numeroCarton, pozo, email) {
-    console.log('🏆 Reclamando premio:', pozo, 'Cartón:', numeroCarton, 'Jugador:', email);
+    console.log('🏆 Reclamando premio:', pozo, 'Cartón:', numeroCarton, 'Jugador:', email, 'Partida:', gameState.partidaActual);
     
     const carton = gameState.cartones.find(function(c) { return c.numero === numeroCarton; });
     if (!carton || carton.dueño !== email) {
@@ -867,6 +902,30 @@ io.on('connection', function(socket) {
     const codigosCantados = gameState.cartasCantadas.map(function(c) { return c.codigo; });
     const ultimaCartaCodigo = gameState.ultimaCarta ? gameState.ultimaCarta.codigo : null;
     
+    // ✅ CORRECCIÓN: Validación específica para CENTRO
+    if (pozo === 'centro' && gameState.partidaActual !== 6 && codigosCantados.length > 5) {
+      socket.emit('error', '❌ El pozo CENTRO se reclama antes de la sexta carta cantada. Llevas ' + codigosCantados.length + ' cartas cantadas. En la Partida 6 (ESPECIAL) esta regla no aplica.');
+      return;
+    }
+    
+    const valido = verificarPozo(carton, pozo, codigosCantados, ultimaCartaCodigo);
+    
+    if (valido) {
+      io.emit('alertaGanador', {
+        carton: numeroCarton,
+        pozo: pozosConfig[pozo].nombre,
+        jugador: gameState.jugadores[email] ? gameState.jugadores[email].nombre : email,
+        email: email,
+        premio: gameState.pozosDinamicos[pozo].total,
+        fichas: gameState.pozosDinamicos[pozo].fichas,
+        mensaje: '🏆 ¡' + (gameState.jugadores[email] ? gameState.jugadores[email].nombre : email) + ' RECLAMA ' + pozosConfig[pozo].nombre + '!',
+        esEspecial: pozo === 'especial'
+      });
+    } else {
+      const mensajeError = pozo === 'pokino' ? 'POKINO no está completo. Verifica que las 5 cartas de una línea estén tapadas y que la última carta cantada esté en esa línea.' : pozosConfig[pozo].nombre + ' no está completo.';
+      socket.emit('error', mensajeError);
+    }
+  });  
     // ✅ CORRECCIÓN: Pasar última carta a verificarPozo
     const valido = verificarPozo(carton, pozo, codigosCantados, ultimaCartaCodigo);
     
@@ -1031,12 +1090,14 @@ io.on('connection', function(socket) {
     });
   });
   
-  // ✅ REINICIAR JUEGO
+  // ✅ REINICIAR JUEGO - CORREGIDO
   socket.on('reiniciarJuego', function(email) {
     if (gameState.cantador !== email) {
       socket.emit('error', 'Solo el cantador.');
       return;
     }
+    
+    console.log('🔄 Reiniciando juego completamente');
     
     gameState.cartasCantadas = [];
     gameState.ultimaCarta = null;
@@ -1044,7 +1105,7 @@ io.on('connection', function(socket) {
     gameState.pozosGanados = [];
     gameState.premiosPendientes = [];
     gameState.faseJuego = 'seleccion';
-    gameState.partidaActual = 1;
+    gameState.partidaActual = 1;  // ✅ Reinicia a Partida 1
     gameState.indiceMazo = 0;
     gameState.mazo = barajarMazo(generarMazo());
     gameState.cantador = null;
@@ -1064,6 +1125,10 @@ io.on('connection', function(socket) {
       Object.keys(c.pozos).forEach(function(k) { c.pozos[k] = false; }); 
     });
     
+    Object.keys(gameState.jugadores).forEach(function(email) {
+      gameState.jugadores[email].fichasApostadas = 0;
+    });
+    
     io.emit('gameState', gameState);
     io.emit('updateFaseJuego', 'seleccion');
     io.emit('updateCantador', null);
@@ -1071,8 +1136,8 @@ io.on('connection', function(socket) {
     io.emit('updateBanco', gameState.banco);
     io.emit('updatePozosDinamicos', gameState.pozosDinamicos);
     
-    console.log('🔄 Juego reiniciado completamente');
-  });
+    console.log('✅ Juego reiniciado - Partida 1 de 6. Regla del CENTRO restablecida.');
+  });  
   
   // ✅ SOLICITUD DE CAMBIO
   socket.on('solicitarCambio', function(email, mensaje) {
