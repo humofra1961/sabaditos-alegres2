@@ -21,8 +21,7 @@ const cartones = {
       var seleccionado = carton.dueño === window.app.emailActual;
       var bloqueado = carton.dueño && carton.dueño !== window.app.emailActual;
       
-      // ✅ IMAGEN DEL CARTÓN
-      var imagenCarton = '<img src="/img/cartones/carton_' + carton.numero + '.png" alt="' + carton.nombre + '" style="width: 100%; border-radius: 6px; margin-bottom: 8px;">';
+      var imagenCarton = '<img src="/img/cartones/carton_' + carton.numero + '.png" alt="' + carton.nombre + '" style="width: 100%; border-radius: 6px; margin-bottom: 8px;" onerror="this.style.display=\'none\';">';
       
       html += '<div class="carton-item ' + (seleccionado ? 'seleccionado' : '') + ' ' + (bloqueado ? 'bloqueado' : '') + '" onclick="window.cartones.seleccionarCarton(' + carton.numero + ')">';
       html += imagenCarton;
@@ -106,7 +105,6 @@ const cartones = {
         var carta = carton.cartas[k];
         var estaTapada = carton.tapadas && carton.tapadas[k];
         
-        // ✅ MAPEO CORRECTO DE CARTAS A IMÁGENES
         var nombreImagen = carta.valor;
         if (carta.valor === 'A' || carta.valor === '1') {
           nombreImagen = '1';
@@ -128,25 +126,21 @@ const cartones = {
       }
       
       html += '</div>';
-      html += '<div class="botones-pozos">';
-      html += '<button class="boton-pozo" onclick="window.premio.reclamarMultiple('pokino')">POKINO</button>';
-      html += '<button class="boton-pozo" onclick="window.premio.reclamarMultiple('pokino-poker')">POKINO+POKER</button>';
-      html += '<button class="boton-pozo" onclick="window.premio.reclamarMultiple('pokino-full')">POKINO+FULL</button>';
-      html += '<button class="boton-pozo" onclick="window.premio.reclamarMultiple('cuatroEsquinas')">4 ESQ</button>';
-      html += '<button class="boton-pozo" onclick="window.premio.reclamarMultiple('pokino-4esquinas')">POKINO+4 ESQ</button>';
-      html += '<button class="boton-pozo" onclick="window.premio.reclamarMultiple('full')">FULL</button>';
-      html += '<button class="boton-pozo" onclick="window.premio.reclamarMultiple('poker')">POKER</button>';
-      html += '<button class="boton-pozo" onclick="window.premio.reclamarMultiple('centro')">CENTRO</button>';
-      html += '<button class="boton-pozo" onclick="window.premio.reclamarMultiple('pokino-centro')">POKINO+CENTRO</button>';
-      html += '<button class="boton-pozo" onclick="window.premio.reclamarMultiple('especial')">ESPECIAL</button>';
       
-      /*html += '<button class="boton-pozo" onclick="window.premio.reclamar(' + carton.numero + ', \'pokino\')">POKINO</button>';
+      // ✅ BOTONES DE PREMIOS COMBINADOS
+      html += '<div class="botones-pozos">';
+      html += '<button class="boton-pozo" onclick="window.premio.reclamar(' + carton.numero + ', \'pokino\')">POKINO</button>';
+      html += '<button class="boton-pozo" onclick="window.premio.reclamarMultiple(\'pokino-poker\', ' + carton.numero + ')">POKINO+POKER</button>';
+      html += '<button class="boton-pozo" onclick="window.premio.reclamarMultiple(\'pokino-full\', ' + carton.numero + ')">POKINO+FULL</button>';
       html += '<button class="boton-pozo" onclick="window.premio.reclamar(' + carton.numero + ', \'cuatroEsquinas\')">4 ESQ</button>';
+      html += '<button class="boton-pozo" onclick="window.premio.reclamarMultiple(\'pokino-4esquinas\', ' + carton.numero + ')">POKINO+4 ESQ</button>';
       html += '<button class="boton-pozo" onclick="window.premio.reclamar(' + carton.numero + ', \'full\')">FULL</button>';
       html += '<button class="boton-pozo" onclick="window.premio.reclamar(' + carton.numero + ', \'poker\')">POKER</button>';
       html += '<button class="boton-pozo" onclick="window.premio.reclamar(' + carton.numero + ', \'centro\')">CENTRO</button>';
-      html += '<button class="boton-pozo" onclick="window.premio.reclamar(' + carton.numero + ', \'especial\')">ESPECIAL</button>';**/
+      html += '<button class="boton-pozo" onclick="window.premio.reclamarMultiple(\'pokino-centro\', ' + carton.numero + ')">POKINO+CENTRO</button>';
+      html += '<button class="boton-pozo" onclick="window.premio.reclamar(' + carton.numero + ', \'especial\')">ESPECIAL</button>';
       html += '</div>';
+      
       html += '</div>';
     }
     
