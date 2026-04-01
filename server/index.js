@@ -301,6 +301,58 @@ function verificarPozo(carton, pozo, codigosCantados, ultimaCartaCodigo) {
     }
   }
   
+// ============================================================================
+// ✅ VALIDACIÓN DE POZOS SIN REQUERIR ÚLTIMA CARTA (para POKER)
+// ============================================================================
+
+function verificarPozoSinUltimaCarta(carton, pozo, codigosCantados) {
+  console.log('🔍 Verificando pozo (sin última carta):', pozo, 'Cartón:', carton.numero);
+  
+  function verificarCartas(indices) {
+    console.log('  Verificando índices:', indices);
+    for (let i = 0; i < indices.length; i++) {
+      const index = indices[i];
+      
+      if (!carton.tapadas[index]) {
+        console.log('  ❌ Carta', index, 'NO está tapada');
+        return false;
+      }
+      
+      const carta = carton.cartas[index];
+      if (!carta) {
+        console.log('  ❌ Carta', index, 'NO existe');
+        return false;
+      }
+      
+      const codigoEncontrado = codigosCantados.indexOf(carta.codigo);
+      if (codigoEncontrado === -1) {
+        console.log('  ❌ Carta', carta.codigo, 'NO está en cartas cantadas');
+        return false;
+      }
+      
+      console.log('  ✅ Carta', index, carta.codigo, 'OK (tapada y cantada)');
+    }
+    return true;
+  }
+  
+  // POKER - 4 cartas del mismo valor (índices configurados en carton.pokerFila)
+  if (pozo === 'poker') {
+    const fila = carton.pokerFila || 3;
+    let indices = [];
+    if (fila === 1) indices = [0, 1, 2, 3];
+    else if (fila === 2) indices = [5, 6, 7, 8];
+    else if (fila === 3) indices = [10, 11, 12, 13];
+    else if (fila === 4) indices = [15, 16, 17, 18];
+    else indices = [10, 11, 12, 13];
+    
+    const valido = verificarCartas(indices);
+    console.log('  POKER (sin última carta):', valido ? '✅ VÁLIDO' : '❌ INVÁLIDO');
+    return valido;
+  }
+  
+  return false;
+}
+  
   function verificarCartas(indices) {
     console.log('  Verificando índices:', indices);
     for (let i = 0; i < indices.length; i++) {
@@ -914,7 +966,7 @@ io.on('connection', function(socket) {
     }
   });
   
-  // ✅ CONFIRMAR PREMIO - CON DIVISIÓN MÚLTIPLE GANADORES
+  // ✅ CONFIRMAR PREMIO - CON DIVISIÓN MÚLTIPLE GANADORES Y ACTUALIZACIÓN CORRECTA
   socket.on('confirmarPremio', function(numeroCarton, pozo, emailGanador, emailCantador) {
     if (gameState.cantador !== emailCantador) {
       socket.emit('error', 'Solo el cantador puede confirmar.');
@@ -946,8 +998,9 @@ io.on('connection', function(socket) {
       const premioPorGanador = Math.floor(premioTotal / ganadores.length);
       const fichasPorGanador = Math.floor(fichasTotales / ganadores.length);
       
-      console.log('🏆 Ganadores:', ganadores.length, 'Premio por ganador:', premioPorGanador);
+      console.log('🏆 Ganadores:', ganadores.length, 'Premio por ganador:', fichasPorGanador, 'fichas');
       
+      // ✅ ACTUALIZAR BILLETERA DE CADA GANADOR
       ganadores.forEach(function(ganador) {
         if (gameState.jugadores[ganador.email]) {
           gameState.jugadores[ganador.email].monedas += fichasPorGanador;
@@ -978,19 +1031,24 @@ io.on('connection', function(socket) {
         });
       });
       
+      // ✅ CORRECCIÓN: Resetear POKINO después de pagar (los demás pozos acumulan)
       if (pozo === 'pokino') {
         gameState.pozosDinamicos[pozo].acumulado = 0;
         gameState.pozosDinamicos[pozo].total = gameState.pozosDinamicos[pozo].valorBase;
         gameState.pozosDinamicos[pozo].fichas = Math.floor(gameState.pozosDinamicos[pozo].total / VALOR_FICHA);
+        console.log('🎰 POKINO reseteado a', gameState.pozosDinamicos[pozo].fichas, 'fichas');
       }
       
       gameState.banco.totalPagado += premioTotal;
       
+      // ✅ CORRECCIÓN CRÍTICA: Emitir actualizaciones DESPUÉS de actualizar billetera y pozos
       io.emit('updateCartones', gameState.cartones);
-      io.emit('updateJugadores', gameState.jugadores);
-      io.emit('updatePozosDinamicos', gameState.pozosDinamicos);
+      io.emit('updateJugadores', gameState.jugadores);  // ← Esto actualiza las billeteras
+      io.emit('updatePozosDinamicos', gameState.pozosDinamicos);  // ← Esto actualiza los pozos
       io.emit('updateBanco', gameState.banco);
       io.emit('updateEstadisticas', gameState.estadisticas);
+      
+      console.log('✅ Emisiones enviadas: updateJugadores, updatePozosDinamicos');
       
       io.emit('premioConfirmado', {
         jugador: ganadores.map(function(g) { return g.nombre; }).join(', '),
@@ -1000,8 +1058,61 @@ io.on('connection', function(socket) {
         ganadores: ganadores.length,
         esEspecial: pozo === 'especial'
       });
+    } else {
+      socket.emit('error', pozosConfig[pozo].nombre + ' no está completo.');
     }
   });
+
+  // ✅ RECLAMAR PREMIO - CON VALIDACIÓN ESPECIAL PARA POKER
+  socket.on('reclamarPremio', function(numeroCarton, pozo, email) {
+    console.log('🏆 Reclamando premio:', pozo, 'Cartón:', numeroCarton, 'Jugador:', email, 'Partida:', gameState.partidaActual);
+    
+    const carton = gameState.cartones.find(function(c) { return c.numero === numeroCarton; });
+    if (!carton || carton.dueño !== email) {
+      socket.emit('error', 'No tienes este cartón.');
+      return;
+    }
+    if (carton.pozos[pozo]) {
+      socket.emit('error', 'Este pozo ya fue reclamado.');
+      return;
+    }
+    
+    const codigosCantados = gameState.cartasCantadas.map(function(c) { return c.codigo; });
+    const ultimaCartaCodigo = gameState.ultimaCarta ? gameState.ultimaCarta.codigo : null;
+    
+    // ✅ CORRECCIÓN: Validación específica para CENTRO
+    if (pozo === 'centro' && gameState.partidaActual !== 6 && codigosCantados.length > 5) {
+      socket.emit('error', '❌ El pozo CENTRO se reclama antes de la sexta carta cantada. Llevas ' + codigosCantados.length + ' cartas cantadas. En la Partida 6 (ESPECIAL) esta regla no aplica.');
+      return;
+    }
+    
+    // ✅ CORRECCIÓN: POKER no requiere que la última carta esté en las 4 cartas del POKER
+    // Si el jugador ya tiene POKINO válido, POKER también debería ser válido
+    let valido = false;
+    if (pozo === 'poker') {
+      // Para POKER, solo verificar que las 4 cartas estén tapadas y cantadas
+      // NO requerir que la última carta esté en el POKER
+      valido = verificarPozoSinUltimaCarta(carton, pozo, codigosCantados);
+    } else {
+      valido = verificarPozo(carton, pozo, codigosCantados, ultimaCartaCodigo);
+    }
+    
+    if (valido) {
+      io.emit('alertaGanador', {
+        carton: numeroCarton,
+        pozo: pozosConfig[pozo].nombre,
+        jugador: gameState.jugadores[email] ? gameState.jugadores[email].nombre : email,
+        email: email,
+        premio: gameState.pozosDinamicos[pozo].total,
+        fichas: gameState.pozosDinamicos[pozo].fichas,
+        mensaje: '🏆 ¡' + (gameState.jugadores[email] ? gameState.jugadores[email].nombre : email) + ' RECLAMA ' + pozosConfig[pozo].nombre + '!',
+        esEspecial: pozo === 'especial'
+      });
+    } else {
+      const mensajeError = pozo === 'pokino' ? 'POKINO no está completo. Verifica que las 5 cartas de una línea estén tapadas y que la última carta cantada esté en esa línea.' : pozosConfig[pozo].nombre + ' no está completo.';
+      socket.emit('error', mensajeError);
+    }
+  });    
   
   // ✅ TOGGLE FASE SELECCIÓN
   socket.on('toggleFaseSeleccion', function(email) {
