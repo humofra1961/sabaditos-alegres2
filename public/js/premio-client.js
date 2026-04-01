@@ -4,6 +4,27 @@ const premio = {
     socket.emit('reclamarPremio', numeroCarton, pozo, window.app.emailActual);
   },
   
+  // ✅ NUEVA FUNCIÓN: Reclamar múltiples premios simultáneamente
+  reclamarMultiple: function(combinacion, numeroCarton) {
+    console.log('🏆 Reclamando combinación:', combinacion, 'Cartón:', numeroCarton);
+    
+    if (!numeroCarton) {
+      if (window.ui) window.ui.mostrarNotificacion('⚠️ No se encontró el cartón', 'error');
+      return;
+    }
+    
+    // Dividir la combinación (ej: "pokino-poker" → ["pokino", "poker"])
+    var pozos = combinacion.split('-');
+    
+    // Reclamar cada pozo de la combinación
+    for (var k = 0; k < pozos.length; k++) {
+      setTimeout(function(pozo) {
+        console.log('🏆 Reclamando pozo:', pozo);
+        socket.emit('reclamarPremio', numeroCarton, pozo, window.app.emailActual);
+      }.bind(this, pozos[k]), k * 300); // 300ms de delay entre cada reclamo
+    }
+  },
+  
   confirmar: function() {
     console.log('✅ Confirmando premio');
     if (window.app.premioPendiente) {
