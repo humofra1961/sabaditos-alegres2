@@ -5,11 +5,28 @@ const premio = {
   },
   
   // ✅ NUEVA FUNCIÓN: Reclamar múltiples premios simultáneamente
-  reclamarMultiple: function(combinacion, numeroCarton) {
-    console.log('🏆 Reclamando combinación:', combinacion, 'Cartón:', numeroCarton);
+  reclamarMultiple: function(combinacion) {
+    console.log('🏆 Reclamando combinación:', combinacion);
     
-    if (!numeroCarton) {
-      if (window.ui) window.ui.mostrarNotificacion('⚠️ No se encontró el cartón', 'error');
+    // Obtener el cartón seleccionado
+    var cartones = window.app.gameState ? window.app.gameState.cartones : [];
+    var cartonSeleccionado = null;
+    
+    for (var i = 0; i < cartones.length; i++) {
+      if (cartones[i].dueño === window.app.emailActual && cartones[i].tapadas) {
+        var tapadasCount = 0;
+        for (var j = 0; j < cartones[i].tapadas.length; j++) {
+          if (cartones[i].tapadas[j]) tapadasCount++;
+        }
+        if (tapadasCount >= 5) {
+          cartonSeleccionado = cartones[i];
+          break;
+        }
+      }
+    }
+    
+    if (!cartonSeleccionado) {
+      if (window.ui) window.ui.mostrarNotificacion('⚠️ Selecciona un cartón con al menos 5 cartas tapadas', 'error');
       return;
     }
     
@@ -19,9 +36,8 @@ const premio = {
     // Reclamar cada pozo de la combinación
     for (var k = 0; k < pozos.length; k++) {
       setTimeout(function(pozo) {
-        console.log('🏆 Reclamando pozo:', pozo);
-        socket.emit('reclamarPremio', numeroCarton, pozo, window.app.emailActual);
-      }.bind(this, pozos[k]), k * 300); // 300ms de delay entre cada reclamo
+        socket.emit('reclamarPremio', cartonSeleccionado.numero, pozo, window.app.emailActual);
+      }.bind(this, pozos[k]), k * 500); // 500ms de delay entre cada reclamo
     }
   },
   
