@@ -67,7 +67,7 @@ const distribucionesCartones = [
   { numero: 9, nombre: 'Cartón 10', poker: '10', full2: '4', full3: '9', pokerFila: 2, fullFila: 3, cartas: ['qp', '3d', 'qt', '3p', '8d', '10p', '2d', '10c', '10t', '10d', '9p', '4t', '9c', '4p', '9d', '7p', '5p', 'jt', '7t', '7d', '2p', 'Ac', 'kt', 'Ad', '6d'] },
   { numero: 10, nombre: 'Cartón J', poker: 'J', full2: 'Q', full3: '6', pokerFila: 2, fullFila: 4, cartas: ['5p', '5d', '10p', '8c', 'Ac', 'jp', '3p', 'jd', 'jc', 'jt', '4p', '7t', 'kt', '7c', 'kc', 'qp', '6d', 'qt', '6c', '6t', '9p', '4t', '9d', '9c', '2c'] },
   { numero: 11, nombre: 'Cartón Q', poker: 'Q', full2: '5', full3: 'J', pokerFila: 3, fullFila: 4, cartas: ['Ac', '8t', '4t', '7c', '7d', 'kt', '10t', '10c', '6d', '10d', 'qc', 'qt', 'qp', '9c', 'qd', 'jc', 'jt', '5p', '5t', 'jd', '10p', '9t', '9p', '8c', '5d'] },
-  { numero: 12, nombre: 'Cartón K', poker: 'K', full2: 'Q', full3: '9', pokerFila: 2, fullFila: 4, cartas: ['Ac', '8c', '8d', '9t', '4p', 'kt', 'kc', '5d', 'kd', 'kp', 'kd', '10c', '6d', '6c', '10p', 'qc', '7c', '9d', 'qt', '9c', 'jc', '2c', '7d', 'At', 'jt'] },
+  { numero: 12, nombre: 'Cartón K', poker: 'K', full2: 'Q', full3: '9', pokerFila: 2, fullFila: 4, cartas: ['Ac', '8c', '8d', '9t', '4p', 'kt', 'kc', '5d', 'kd', 'kp', '2p', '10c', '6d', '6c', '10p', 'qc', '9p', '9d', 'qt', '9c', 'jc', '2c', '7d', 'At', 'jt'] },
   { numero: 13, nombre: 'Cartón Complemento', poker: '2', full2: 'Q', full3: 'K', pokerFila: 3, fullFila: 4, cartas: ['jp', '4p', '9t', 'At', '8d', '3c', '4d', '5t', '6p', '7c', '2p', '2d', '2c', '2t', '3t', 'qd', 'qc', 'kd', 'kp', 'kt', '5c', '6d', '7t', '8p', '9c'] }
 ];
 
