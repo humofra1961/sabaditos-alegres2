@@ -850,7 +850,6 @@ io.on('connection', function(socket) {
       });
     }
   });
-  
   // ✅ RECLAMAR PREMIO - ÚNICO HANDLER CON VALIDACIÓN DE ÚLTIMA CARTA
   socket.on('reclamarPremio', function(numeroCarton, pozo, email) {
     console.log('🏆 Reclamando premio:', pozo, 'Cartón:', numeroCarton, 'Jugador:', email, 'Partida:', gameState.partidaActual);
@@ -901,7 +900,7 @@ io.on('connection', function(socket) {
     }
   });
   
-  // ✅ CONFIRMAR PREMIO - CON DIVISIÓN MÚLTIPLE GANADORES
+  // ✅ CONFIRMAR PREMIO - CON DIVISIÓN MÚLTIPLE GANADORES Y ACTUALIZACIÓN CORRECTA
   socket.on('confirmarPremio', function(numeroCarton, pozo, emailGanador, emailCantador) {
     if (gameState.cantador !== emailCantador) {
       socket.emit('error', 'Solo el cantador puede confirmar.');
@@ -935,6 +934,7 @@ io.on('connection', function(socket) {
       
       console.log('🏆 Ganadores:', ganadores.length, 'Premio por ganador:', fichasPorGanador, 'fichas');
       
+      // ✅ ACTUALIZAR BILLETERA DE CADA GANADOR
       ganadores.forEach(function(ganador) {
         if (gameState.jugadores[ganador.email]) {
           gameState.jugadores[ganador.email].monedas += fichasPorGanador;
@@ -965,7 +965,7 @@ io.on('connection', function(socket) {
         });
       });
       
-      // Resetear POKINO después de pagar (los demás pozos acumulan)
+      // ✅ CORRECCIÓN: Resetear POKINO después de pagar (los demás pozos acumulan)
       if (pozo === 'pokino') {
         gameState.pozosDinamicos[pozo].acumulado = 0;
         gameState.pozosDinamicos[pozo].total = gameState.pozosDinamicos[pozo].valorBase;
@@ -973,12 +973,15 @@ io.on('connection', function(socket) {
         console.log('🎰 POKINO reseteado a', gameState.pozosDinamicos[pozo].fichas, 'fichas');
       }
       
+      // ✅ CORRECCIÓN: Para 4 ESQUINAS, FULL, POKER, CENTRO - NO resetear (acumulan)
+      // Solo POKINO se resetea, los demás acumulan hasta el ESPECIAL
+      
       gameState.banco.totalPagado += premioTotal;
       
-      // Emitir actualizaciones DESPUÉS de actualizar billetera y pozos
+      // ✅ CORRECCIÓN CRÍTICA: Emitir actualizaciones DESPUÉS de actualizar billetera y pozos
       io.emit('updateCartones', gameState.cartones);
-      io.emit('updateJugadores', gameState.jugadores);
-      io.emit('updatePozosDinamicos', gameState.pozosDinamicos);
+      io.emit('updateJugadores', gameState.jugadores);  // ← Esto actualiza las billeteras
+      io.emit('updatePozosDinamicos', gameState.pozosDinamicos);  // ← Esto actualiza los pozos
       io.emit('updateBanco', gameState.banco);
       io.emit('updateEstadisticas', gameState.estadisticas);
       
