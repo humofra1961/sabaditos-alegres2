@@ -274,7 +274,6 @@ function verificarJugadoresListos() {
     resumen: '📊 ' + totalCartones + ' cartones en juego → ' + totalFichasDeberianApostar + ' fichas en pozos ($' + (totalFichasDeberianApostar * 50) + ' COP)'
   };
 }
-
 // ============================================================================
 // ✅ VALIDACIÓN DE POZOS - TODOS CON ÚLTIMA CARTA
 // ============================================================================
@@ -320,64 +319,106 @@ function verificarPozo(carton, pozo, codigosCantados, ultimaCartaCodigo) {
       console.log('  ✅ Carta', index, carta.codigo, 'OK (tapada y cantada)');
     }
     
-    // ✅ TODOS LOS PREMIOS: Verificar que la última carta esté en este pozo
-    if (ultimaCartaCodigo) {
-      const ultimaCartaEnPozo = indices.some(function(index) {
-        return carton.cartas[index] && carton.cartas[index].codigo === ultimaCartaCodigo;
-      });
-      
-      if (!ultimaCartaEnPozo) {
-        console.log('  ❌ La última carta cantada NO está en este pozo');
-        return false;
-      }
-      console.log('  ✅ La última carta cantada SÍ está en este pozo');
-    }
-    
     return true;
   }
   
-  // ESPECIAL - 25 cartas (cartón lleno)
+  // ✅ ESPECIAL - 25 cartas (cartón lleno)
   if (pozo === 'especial') {
     var indicesEspecial = [];
     for (var i = 0; i < 25; i++) indicesEspecial.push(i);
     const valido = verificarCartas(indicesEspecial);
+    
+    // Verificar que la última carta esté en el cartón
+    if (valido && ultimaCartaCodigo) {
+      const ultimaCartaEnCarton = indicesEspecial.some(function(index) {
+        return carton.cartas[index] && carton.cartas[index].codigo === ultimaCartaCodigo;
+      });
+      
+      if (!ultimaCartaEnCarton) {
+        console.log('  ❌ ESPECIAL: La última carta cantada NO está en el cartón');
+        return false;
+      }
+      console.log('  ✅ ESPECIAL: La última carta cantada SÍ está en el cartón');
+    }
+    
     console.log('  ESPECIAL:', valido ? '✅ VÁLIDO' : '❌ INVÁLIDO');
     return valido;
   }
   
-  // CENTRO - 1 carta (índice 12)
+  // ✅ CENTRO - 1 carta (índice 12)
   if (pozo === 'centro') {
     const valido = verificarCartas([12]);
+    
+    // Verificar que el CENTRO sea la última carta cantada
+    if (valido && ultimaCartaCodigo) {
+      const cartaCentro = carton.cartas[12];
+      if (!cartaCentro || cartaCentro.codigo !== ultimaCartaCodigo) {
+        console.log('  ❌ CENTRO: La última carta cantada NO es el centro');
+        return false;
+      }
+      console.log('  ✅ CENTRO: La última carta cantada SÍ es el centro');
+    }
+    
     console.log('  CENTRO:', valido ? '✅ VÁLIDO' : '❌ INVÁLIDO');
     return valido;
   }
   
-  // CUATRO ESQUINAS - índices 0, 4, 20, 24
+  // ✅ CUATRO ESQUINAS - índices 0, 4, 20, 24
   if (pozo === 'cuatroEsquinas') {
     const valido = verificarCartas([0, 4, 20, 24]);
+    
+    // Verificar que AL MENOS UNA esquina sea la última carta cantada
+    if (valido && ultimaCartaCodigo) {
+      const ultimaCartaEnEsquinas = [0, 4, 20, 24].some(function(index) {
+        return carton.cartas[index] && carton.cartas[index].codigo === ultimaCartaCodigo;
+      });
+      
+      if (!ultimaCartaEnEsquinas) {
+        console.log('  ❌ 4 ESQUINAS: La última carta cantada NO está en las esquinas');
+        return false;
+      }
+      console.log('  ✅ 4 ESQUINAS: La última carta cantada SÍ está en las esquinas');
+    }
+    
     console.log('  4 ESQUINAS:', valido ? '✅ VÁLIDO' : '❌ INVÁLIDO');
     return valido;
   }
   
-  // POKINO - 5 cartas en línea (horizontal, vertical o diagonal)
+  // ✅ POKINO - 5 cartas en línea (horizontal, vertical o diagonal)
   if (pozo === 'pokino') {
     const lineas = [
+      // Horizontales
       [0,1,2,3,4], [5,6,7,8,9], [10,11,12,13,14], [15,16,17,18,19], [20,21,22,23,24],
+      // Verticales
       [0,5,10,15,20], [1,6,11,16,21], [2,7,12,17,22], [3,8,13,18,23], [4,9,14,19,24],
+      // Diagonales
       [0,6,12,18,24], [4,8,12,16,20]
     ];
     
     for (let l = 0; l < lineas.length; l++) {
-      if (verificarCartas(lineas[l])) {
+      const lineaValida = verificarCartas(lineas[l]);
+      
+      if (lineaValida && ultimaCartaCodigo) {
+        // Verificar que la última carta esté en esta línea
+        const ultimaCartaEnLinea = lineas[l].some(function(index) {
+          return carton.cartas[index] && carton.cartas[index].codigo === ultimaCartaCodigo;
+        });
+        
+        if (ultimaCartaEnLinea) {
+          console.log('  POKINO: ✅ VÁLIDO (línea', l, ')');
+          return true;
+        }
+      } else if (lineaValida) {
         console.log('  POKINO: ✅ VÁLIDO (línea', l, ')');
         return true;
       }
     }
-    console.log('  POKINO: ❌ INVÁLIDO (ninguna línea completa)');
+    
+    console.log('  POKINO: ❌ INVÁLIDO (ninguna línea completa con última carta)');
     return false;
   }
   
-  // POKER - 4 cartas del mismo valor
+  // ✅ POKER - 4 cartas del mismo valor
   if (pozo === 'poker') {
     const fila = carton.pokerFila || 3;
     let indices = [];
@@ -388,11 +429,25 @@ function verificarPozo(carton, pozo, codigosCantados, ultimaCartaCodigo) {
     else indices = [10, 11, 12, 13];
     
     const valido = verificarCartas(indices);
+    
+    // Verificar que AL MENOS UNA carta del POKER sea la última carta cantada
+    if (valido && ultimaCartaCodigo) {
+      const ultimaCartaEnPoker = indices.some(function(index) {
+        return carton.cartas[index] && carton.cartas[index].codigo === ultimaCartaCodigo;
+      });
+      
+      if (!ultimaCartaEnPoker) {
+        console.log('  ❌ POKER: La última carta cantada NO está en el POKER');
+        return false;
+      }
+      console.log('  ✅ POKER: La última carta cantada SÍ está en el POKER');
+    }
+    
     console.log('  POKER:', valido ? '✅ VÁLIDO' : '❌ INVÁLIDO');
     return valido;
   }
   
-  // FULL - 5 cartas
+  // ✅ FULL - 5 cartas
   if (pozo === 'full') {
     const fila = carton.fullFila || 4;
     let indices = [];
@@ -404,13 +459,26 @@ function verificarPozo(carton, pozo, codigosCantados, ultimaCartaCodigo) {
     else indices = [15, 16, 17, 18, 19];
     
     const valido = verificarCartas(indices);
+    
+    // Verificar que AL MENOS UNA carta del FULL sea la última carta cantada
+    if (valido && ultimaCartaCodigo) {
+      const ultimaCartaEnFull = indices.some(function(index) {
+        return carton.cartas[index] && carton.cartas[index].codigo === ultimaCartaCodigo;
+      });
+      
+      if (!ultimaCartaEnFull) {
+        console.log('  ❌ FULL: La última carta cantada NO está en el FULL');
+        return false;
+      }
+      console.log('  ✅ FULL: La última carta cantada SÍ está en el FULL');
+    }
+    
     console.log('  FULL:', valido ? '✅ VÁLIDO' : '❌ INVÁLIDO');
     return valido;
   }
   
   return false;
 }
-
 // ============================================================================
 // ✅ VERIFICAR PREMIOS COMPLETADOS
 // ============================================================================
