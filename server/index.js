@@ -798,15 +798,21 @@ io.on('connection', function(socket) {
     }
   });
   
-  // ✅ TAPAR CARTA
+  // ✅ TAPAR CARTA - CON LOGS DE DEBUG
   socket.on('taparCarta', function(numeroCarton, index, email) {
+    console.log('👆 TAPAR CARTA - Cartón:', numeroCarton, 'Índice:', index, 'Jugador:', email);
+    
     const carton = gameState.cartones.find(function(c) { return c.numero === numeroCarton; });
     if (carton && carton.dueño === email) {
       carton.tapadas[index] = !carton.tapadas[index];
+      console.log('  ✅ Carta', index, 'ahora está:', carton.tapadas[index] ? 'TAPADA ✓' : 'DESTAPADA');
+      
+      // ✅ IMPORTANTE: Emitir actualización a TODOS los clientes
       io.emit('updateCartones', gameState.cartones);
+    } else {
+      console.log('  ❌ Error: Cartón no encontrado o no es el dueño');
     }
-  });
-  
+  });  
   // ✅ ESTABLECER CANTADOR
   socket.on('establecerCantador', function(email) {
     if (gameState.cantador && gameState.cantador !== email) {
