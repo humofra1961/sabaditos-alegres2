@@ -5,6 +5,9 @@ const cartones = {
     var grid = document.getElementById('gridCartones');
     var cartones = window.app.gameState ? window.app.gameState.cartones : [];
     
+    console.log('  Grid element:', grid);
+    console.log('  Cartones recibidos:', cartones.length);
+    
     if (!grid) {
       console.error('❌ No se encontró #gridCartones');
       return;
@@ -127,7 +130,7 @@ const cartones = {
       
       html += '</div>';
       
-      // ✅ BOTONES DE PREMIOS COMBINADOS
+      // BOTONES DE PREMIOS COMBINADOS
       html += '<div class="botones-pozos">';
       html += '<button class="boton-pozo" onclick="window.premio.reclamar(' + carton.numero + ', \'pokino\')">POKINO</button>';
       html += '<button class="boton-pozo" onclick="window.premio.reclamarMultiple(\'pokino-poker\', ' + carton.numero + ')">POKINO+POKER</button>';
@@ -148,7 +151,7 @@ const cartones = {
     console.log('✅ Mis cartones renderizados:', misCartones.length);
   },
   
-   taparCarta: function(numeroCarton, index) {
+  taparCarta: function(numeroCarton, index) {
     console.log('👆 Tapando carta:', index, 'Cartón:', numeroCarton);
     
     // ✅ IMPORTANTE: Emitir al servidor PARA QUE ACTUALICE EL ESTADO
@@ -164,4 +167,23 @@ const cartones = {
       }
     }
   },
+  
+  verificarEspecial: function() {
+    var cartones = window.app.gameState ? window.app.gameState.cartones : [];
+    for (var i = 0; i < cartones.length; i++) {
+      if (cartones[i].dueño === window.app.emailActual) {
+        var tapadasCount = 0;
+        if (cartones[i].tapadas) {
+          for (var j = 0; j < cartones[i].tapadas.length; j++) {
+            if (cartones[i].tapadas[j]) tapadasCount++;
+          }
+        }
+        if (tapadasCount === 25) {
+          if (window.ui) window.ui.mostrarNotificacion('¡CARTÓN ' + cartones[i].nombre + ' LLENO! (' + tapadasCount + '/25)', 'success', true);
+        }
+      }
+    }
+  }
+};
+
 window.cartones = cartones;
