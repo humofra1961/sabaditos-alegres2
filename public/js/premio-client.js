@@ -4,40 +4,28 @@ const premio = {
     socket.emit('reclamarPremio', numeroCarton, pozo, window.app.emailActual);
   },
   
-  // ✅ NUEVA FUNCIÓN: Reclamar múltiples premios simultáneamente
-  reclamarMultiple: function(combinacion) {
-    console.log('🏆 Reclamando combinación:', combinacion);
+  // ✅ CORREGIDO: Reclamar múltiples premios con confirmación individual
+  reclamarMultiple: function(combinacion, numeroCarton) {
+    console.log('🏆 Reclamando combinación:', combinacion, 'Cartón:', numeroCarton);
     
-    // Obtener el cartón seleccionado
-    var cartones = window.app.gameState ? window.app.gameState.cartones : [];
-    var cartonSeleccionado = null;
-    
-    for (var i = 0; i < cartones.length; i++) {
-      if (cartones[i].dueño === window.app.emailActual && cartones[i].tapadas) {
-        var tapadasCount = 0;
-        for (var j = 0; j < cartones[i].tapadas.length; j++) {
-          if (cartones[i].tapadas[j]) tapadasCount++;
-        }
-        if (tapadasCount >= 5) {
-          cartonSeleccionado = cartones[i];
-          break;
-        }
-      }
-    }
-    
-    if (!cartonSeleccionado) {
-      if (window.ui) window.ui.mostrarNotificacion('⚠️ Selecciona un cartón con al menos 5 cartas tapadas', 'error');
+    if (!numeroCarton) {
+      if (window.ui) window.ui.mostrarNotificacion('⚠️ No se encontró el cartón', 'error');
       return;
     }
     
-    // Dividir la combinación (ej: "pokino-poker" → ["pokino", "poker"])
+    // Dividir la combinación (ej: "pokino-4esquinas" → ["pokino", "4esquinas"])
     var pozos = combinacion.split('-');
     
-    // Reclamar cada pozo de la combinación
+    // ✅ CORRECCIÓN: Reclamar cada pozo con 1 segundo de delay para que el cantador pueda confirmar cada uno
     for (var k = 0; k < pozos.length; k++) {
       setTimeout(function(pozo) {
-        socket.emit('reclamarPremio', cartonSeleccionado.numero, pozo, window.app.emailActual);
-      }.bind(this, pozos[k]), k * 500); // 500ms de delay entre cada reclamo
+        console.log('🏆 Reclamando pozo:', pozo);
+        socket.emit('reclamarPremio', numeroCarton, pozo, window.app.emailActual);
+      }.bind(this, pozos[k]), k * 1500); // 1.5 segundos entre cada reclamo
+    }
+    
+    if (window.ui) {
+      window.ui.mostrarNotificacion('🏆 Reclamando ' + pozos.length + ' premios. El cantador debe confirmar cada uno.', 'success');
     }
   },
   
