@@ -148,26 +148,20 @@ const cartones = {
     console.log('✅ Mis cartones renderizados:', misCartones.length);
   },
   
-  taparCarta: function(numeroCarton, index) {
+   taparCarta: function(numeroCarton, index) {
+    console.log('👆 Tapando carta:', index, 'Cartón:', numeroCarton);
+    
+    // ✅ IMPORTANTE: Emitir al servidor PARA QUE ACTUALICE EL ESTADO
     socket.emit('taparCarta', numeroCarton, index, window.app.emailActual);
-  },
-  
-  verificarEspecial: function() {
+    
+    // ✅ Opcional: Actualizar localmente también
     var cartones = window.app.gameState ? window.app.gameState.cartones : [];
     for (var i = 0; i < cartones.length; i++) {
-      if (cartones[i].dueño === window.app.emailActual) {
-        var tapadasCount = 0;
-        if (cartones[i].tapadas) {
-          for (var j = 0; j < cartones[i].tapadas.length; j++) {
-            if (cartones[i].tapadas[j]) tapadasCount++;
-          }
-        }
-        if (tapadasCount === 25) {
-          if (window.ui) window.ui.mostrarNotificacion('¡CARTÓN ' + cartones[i].nombre + ' LLENO! (' + tapadasCount + '/25)', 'success', true);
-        }
+      if (cartones[i].numero === numeroCarton) {
+        cartones[i].tapadas[index] = !cartones[i].tapadas[index];
+        console.log('  Carta', index, 'ahora está:', cartones[i].tapadas[index] ? 'TAPADA ✓' : 'DESTAPADA');
+        break;
       }
     }
-  }
-};
-
+  },
 window.cartones = cartones;
