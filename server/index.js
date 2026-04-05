@@ -357,7 +357,7 @@ function verificarPozo(carton, pozo, codigosCantados, ultimaCartaCodigo) {
     return valido;
   }
   
-  // CUATRO ESQUINAS - índices 0, 4, 20, 24
+  // ✅ 4 ESQUINAS - índices 0, 4, 20, 24 (SOLO 4 CARTAS)
   if (pozo === 'cuatroEsquinas') {
     const valido = verificarCartas([0, 4, 20, 24]);
     console.log('  4 ESQUINAS:', valido ? '✅ VÁLIDO' : '❌ INVÁLIDO');
@@ -384,18 +384,44 @@ function verificarPozo(carton, pozo, codigosCantados, ultimaCartaCodigo) {
     console.log('  POKINO: ❌ INVÁLIDO (ninguna línea completa)');
     return false;
   }
-  
-  // POKER - 4 cartas
+    // ✅ POKER - 4 cartas del mismo valor (BUSCAR DINÁMICAMENTE)
   if (pozo === 'poker') {
-    const fila = carton.pokerFila || 3;
-    let indices = [];
-    if (fila === 1) indices = [0, 1, 2, 3];
-    else if (fila === 2) indices = [5, 6, 7, 8];
-    else if (fila === 3) indices = [10, 11, 12, 13];
-    else if (fila === 4) indices = [15, 16, 17, 18];
-    else indices = [10, 11, 12, 13];
+    const valorPoker = carton.valorPoker; // Ej: 'K', 'A', 'Q', etc.
+    console.log('  Buscando POKER de:', valorPoker);
     
-    const valido = verificarCartas(indices);
+    // Buscar los índices de las 4 cartas del poker
+    const indicesPoker = [];
+    for (let i = 0; i < carton.cartas.length; i++) {
+      if (carton.cartas[i].valor === valorPoker) {
+        indicesPoker.push(i);
+      }
+    }
+    
+    console.log('  Índices encontrados:', indicesPoker);
+    
+    if (indicesPoker.length !== 4) {
+      console.log('  ❌ POKER: No se encontraron 4 cartas de', valorPoker, '(encontradas:', indicesPoker.length, ')');
+      return false;
+    }
+    
+    // Verificar que las 4 cartas estén tapadas y cantadas
+    const valido = verificarCartas(indicesPoker);
+    
+    // Verificar que la última carta esté en el POKER
+    if (valido && ultimaCartaCodigo) {
+      const ultimaCartaEnPoker = indicesPoker.some(function(index) {
+        return carton.cartas[index] && carton.cartas[index].codigo.toLowerCase() === ultimaCartaCodigo.toLowerCase();
+      });
+      
+      if (!ultimaCartaEnPoker) {
+        console.log('  ❌ POKER: La última carta cantada NO está en el POKER');
+        console.log('  Última carta:', ultimaCartaCodigo);
+        console.log('  Cartas en POKER:', indicesPoker.map(function(i) { return carton.cartas[i].codigo; }));
+        return false;
+      }
+      console.log('  ✅ POKER: La última carta cantada SÍ está en el POKER');
+    }
+    
     console.log('  POKER:', valido ? '✅ VÁLIDO' : '❌ INVÁLIDO');
     return valido;
   }
