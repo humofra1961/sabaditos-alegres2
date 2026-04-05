@@ -51,16 +51,19 @@ const socketClient = {
       }, 500);
     });
     
+    // ✅ CORRECCIÓN CRÍTICA: Actualizar billetera INMEDIATAMENTE
     socket.on('updateJugadores', function(jugadores) {
       console.log('👥 Actualizando jugadores:', jugadores);
       if (!window.app.gameState) window.app.gameState = {};
       window.app.gameState.jugadores = jugadores || {};
+      
       if (window.ui) {
         window.ui.renderizarJugadores();
-        // ✅ CORRECCIÓN CRÍTICA: Actualizar billetera inmediatamente
+        
+        // ✅ ACTUALIZAR BILLETERA DEL JUGADOR ACTUAL
         if (window.app.emailActual && jugadores[window.app.emailActual]) {
           const monedas = jugadores[window.app.emailActual].monedas;
-          console.log('💰 Actualizando billetera:', monedas, 'fichas');
+          console.log('💰 ACTUALIZANDO BILLETERA:', monedas, 'fichas ($' + (monedas * 50) + ' COP)');
           window.ui.actualizarMonedas(monedas);
         }
       }
@@ -102,11 +105,14 @@ const socketClient = {
       if (window.ui) window.ui.actualizarPanelCantador(email);
     });
     
+    // ✅ CORRECCIÓN CRÍTICA: Actualizar pozos INMEDIATAMENTE
     socket.on('updatePozosDinamicos', function(pozos) {
       console.log('🏆 Actualizando pozos:', pozos);
       if (!window.app.gameState) window.app.gameState = {};
       window.app.gameState.pozosDinamicos = pozos || {};
+      
       if (window.pozos) {
+        console.log('🎰 Llamando pozo.renderizar()');
         window.pozos.renderizar();
       }
     });
@@ -182,9 +188,15 @@ const socketClient = {
       if (window.premio) window.premio.mostrarAlerta(data);
     });
     
+    // ✅ CORRECCIÓN: Mostrar mensaje de premio confirmado
     socket.on('premioConfirmado', function(data) {
       console.log('✅ Premio confirmado:', data);
-      if (window.ui) window.ui.mostrarNotificacion('✅ ' + data.jugador + ' ganó ' + data.pozo + ': ' + data.fichas + ' fichas ($' + data.premio + ' COP)', 'success');
+      if (window.ui) {
+        window.ui.mostrarNotificacion(
+          '✅ ' + data.jugador + ' ganó ' + data.pozo + ': ' + data.fichas + ' fichas ($' + data.premio + ' COP)',
+          'success'
+        );
+      }
     });
     
     socket.on('error', function(mensaje) {
