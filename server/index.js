@@ -912,12 +912,12 @@ io.on('connection', function(socket) {
       socket.emit('error', mensajeError);
     }
   });
-  
-  // ✅ CONFIRMAR PREMIO
+    // ✅ CONFIRMAR PREMIO - CON ACTUALIZACIÓN INMEDIATA
   socket.on('confirmarPremio', function(numeroCarton, pozo, emailGanador, emailCantador) {
     console.log('✅ CONFIRMAR PREMIO - Cartón:', numeroCarton, 'Pozo:', pozo, 'Ganador:', emailGanador);
     
     if (gameState.cantador !== emailCantador) {
+      console.log('  ❌ Error: No es el cantador');
       socket.emit('error', 'Solo el cantador puede confirmar.');
       return;
     }
@@ -926,7 +926,11 @@ io.on('connection', function(socket) {
     const codigosCantados = gameState.cartasCantadas.map(function(c) { return c.codigo; });
     const ultimaCartaCodigo = gameState.ultimaCarta ? gameState.ultimaCarta.codigo : null;
     
+    console.log('  Cartón:', carton ? 'ENCONTRADO' : 'NO ENCONTRADO');
+    console.log('  Verificando pozo...');
+    
     if (verificarPozo(carton, pozo, codigosCantados, ultimaCartaCodigo)) {
+      console.log('  ✅ Premio válido');
       carton.pozos[pozo] = true;
       
       const ganadores = [];
@@ -949,6 +953,7 @@ io.on('connection', function(socket) {
       
       console.log('🏆 Ganadores:', ganadores.length, 'Premio por ganador:', fichasPorGanador, 'fichas ($' + premioPorGanador + ' COP)');
       
+      // ✅ ACTUALIZAR BILLETERA DE CADA GANADOR
       ganadores.forEach(function(ganador) {
         if (gameState.jugadores[ganador.email]) {
           const monedasAntes = gameState.jugadores[ganador.email].monedas;
@@ -984,7 +989,7 @@ io.on('connection', function(socket) {
         });
       });
       
-      // Resetear POKINO después de pagar
+      // ✅ CORRECCIÓN: Resetear POKINO inmediatamente después de pagar
       if (pozo === 'pokino') {
         const fichasAntes = gameState.pozosDinamicos[pozo].fichas;
         gameState.pozosDinamicos[pozo].acumulado = 0;
@@ -995,7 +1000,7 @@ io.on('connection', function(socket) {
       
       gameState.banco.totalPagado += premioTotal;
       
-      // Emitir actualizaciones
+      // ✅ CORRECCIÓN CRÍTICA: Emitir actualizaciones INMEDIATAMENTE
       console.log('  📡 Emitiendo actualizaciones...');
       io.emit('updateCartones', gameState.cartones);
       io.emit('updateJugadores', gameState.jugadores);
@@ -1018,7 +1023,6 @@ io.on('connection', function(socket) {
       socket.emit('error', pozosConfig[pozo].nombre + ' no está completo.');
     }
   });
-  
   // ✅ TOGGLE FASE SELECCIÓN
   socket.on('toggleFaseSeleccion', function(email) {
     if (gameState.cantador !== email) {
@@ -1028,8 +1032,7 @@ io.on('connection', function(socket) {
     gameState.faseJuego = gameState.faseJuego === 'seleccion' ? 'jugando' : 'seleccion';
     io.emit('updateFaseJuego', gameState.faseJuego);
   });
-  
-  // ✅ SIGUIENTE PARTIDA
+  // ✅ SIGUIENTE PARTIDA - CON ACTIVACIÓN DE PANEL DE APUESTAS
   socket.on('siguientePartida', function(email) {
     if (gameState.cantador !== email) {
       socket.emit('error', 'Solo el cantador.');
@@ -1058,12 +1061,15 @@ io.on('connection', function(socket) {
       });
     });
     
+    // ✅ CORRECCIÓN: NO resetear fichasApostadas en partidas 2-5
+    // Solo resetear en partida 6 (ESPECIAL)
     if (gameState.partidaActual === 5) {
       Object.keys(gameState.jugadores).forEach(function(email) {
         gameState.jugadores[email].fichasApostadas = 0;
       });
     }
     
+    // ✅ CORRECCIÓN: Resetear solo POKINO (los demás acumulan)
     gameState.pozosDinamicos.pokino.acumulado = 0;
     gameState.pozosDinamicos.pokino.total = 0;
     gameState.pozosDinamicos.pokino.fichas = 0;
@@ -1071,7 +1077,10 @@ io.on('connection', function(socket) {
     gameState.partidaActual++;
     
     console.log('✅ Partida', gameState.partidaActual, 'iniciada');
+    console.log('  Fase:', gameState.faseJuego);
+    console.log('  ¿Juego iniciado?', gameState.juegoIniciado);
     
+    // ✅ Emitir actualizaciones
     io.emit('gameState', gameState);
     io.emit('updateFaseJuego', 'seleccion');
     io.emit('updatePozosDinamicos', gameState.pozosDinamicos);
@@ -1079,13 +1088,13 @@ io.on('connection', function(socket) {
     io.emit('updateCartasCantadas', gameState.cartasCantadas);
     io.emit('updateUltimaCarta', null);
     
+    // ✅ CORRECCIÓN: Enviar mensaje para activar panel de apuestas
     io.emit('siguientePartida', { 
       partida: gameState.partidaActual,
       esEspecial: gameState.partidaActual === 6,
-      mensaje: '➡️ Partida ' + gameState.partidaActual + ' iniciada. Realicen sus apuestas.'
+      mensaje: '➡️ Partida ' + gameState.partidaActual + ' iniciada. ' + (gameState.partidaActual === 6 ? 'ESPECIAL - ¡Cartón Lleno!' : 'Misma apuesta - mismos cartones. Panel de apuestas activado.')
     });
   });
-  
   // ✅ REINICIAR JUEGO
   socket.on('reiniciarJuego', function(email) {
     if (gameState.cantador !== email) {
