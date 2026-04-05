@@ -150,7 +150,9 @@ const socketClient = {
       console.log('➡️ Siguiente partida:', data);
       if (window.ui) window.ui.mostrarNotificacion(data.mensaje, 'success');
       
+      // ✅ CORRECCIÓN: Resetear estado de apuesta para la nueva partida
       if (window.app && window.app.resetearParaNuevaPartida) {
+        console.log('🔄 Llamando resetearParaNuevaPartida');
         window.app.resetearParaNuevaPartida();
       }
     });
