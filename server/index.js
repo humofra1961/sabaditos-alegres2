@@ -1214,7 +1214,14 @@ io.on('connection', function(socket) {
     }
   });
 });
+// ============================================================================
+// ⏰ KEEP-ALIVE PARA EVITAR TIMEOUT DE RENDER
+// ============================================================================
 
+// Enviar ping cada 5 minutos para mantener el servidor activo
+setInterval(function() {
+  console.log('⏰ Keep-alive ping - Servidor activo - Partida:', gameState.partidaActual);
+}, 300000);  // 5 minutos
 // ============================================================================
 // 🚀 INICIAR SERVIDOR
 // ============================================================================
