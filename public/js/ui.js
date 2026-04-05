@@ -162,7 +162,12 @@ const ui = {
       if (seleccion) seleccion.classList.add('hidden');
     }
   },
-
+  // En public/js/ui.js, agrega esta función:
+  mostrarJuegoIniciado: function(data) {
+    console.log('🎮 Juego iniciado:', data);
+    // Opcional: mostrar notificación
+    if (window.ui) window.ui.mostrarNotificacion(data.mensaje, 'success');
+  }
   // ============================================================================
   // PANEL DEL CANTADOR
   // ============================================================================
