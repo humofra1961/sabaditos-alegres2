@@ -103,9 +103,10 @@ const app = {
   resetearParaNuevaPartida: function() {
     console.log('🔄 Resetear para nueva partida');
     this.yaAposto = false;
-    
+    // ✅ Mostrar panel de apuestas después de 1 segundo
     setTimeout(function() {
       if (window.app && window.app.verificarPanelApuestas) {
+        console.log('🎰 Llamando verificarPanelApuestas desde resetearParaNuevaPartida');
         window.app.verificarPanelApuestas();
       }
     }, 1000);
