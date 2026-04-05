@@ -9,7 +9,7 @@ const socketClient = {
       reconnection: true,
       reconnectionDelay: 1000,
       reconnectionAttempts: 100,
-      timeout: 60000
+      timeout: 120000
     });
     
     socket.on('connect', function() {
@@ -57,7 +57,12 @@ const socketClient = {
       window.app.gameState.jugadores = jugadores || {};
       if (window.ui) {
         window.ui.renderizarJugadores();
-        window.ui.actualizarMonedas(jugadores[window.app.emailActual] ? jugadores[window.app.emailActual].monedas : 0);
+        // ✅ CORRECCIÓN CRÍTICA: Actualizar billetera inmediatamente
+        if (window.app.emailActual && jugadores[window.app.emailActual]) {
+          const monedas = jugadores[window.app.emailActual].monedas;
+          console.log('💰 Actualizando billetera:', monedas, 'fichas');
+          window.ui.actualizarMonedas(monedas);
+        }
       }
     });
     
@@ -150,7 +155,7 @@ const socketClient = {
       console.log('➡️ Siguiente partida:', data);
       if (window.ui) window.ui.mostrarNotificacion(data.mensaje, 'success');
       
-      // ✅ CORRECCIÓN: Resetear estado de apuesta para la nueva partida
+      // ✅ Resetear estado de apuesta para la nueva partida
       if (window.app && window.app.resetearParaNuevaPartida) {
         console.log('🔄 Llamando resetearParaNuevaPartida');
         window.app.resetearParaNuevaPartida();
@@ -169,7 +174,7 @@ const socketClient = {
     
     socket.on('juegoIniciado', function(data) {
       console.log('🎮 Juego iniciado:', data);
-      if (window.ui) window.ui.mostrarJuegoIniciado(data);
+      if (window.ui) window.ui.mostrarNotificacion(data.mensaje, 'success');
     });
     
     socket.on('alertaGanador', function(data) {
@@ -179,7 +184,7 @@ const socketClient = {
     
     socket.on('premioConfirmado', function(data) {
       console.log('✅ Premio confirmado:', data);
-      if (window.ui) window.ui.mostrarNotificacion('✅ ' + data.jugador + ' ganó ' + data.pozo, 'success');
+      if (window.ui) window.ui.mostrarNotificacion('✅ ' + data.jugador + ' ganó ' + data.pozo + ': ' + data.fichas + ' fichas ($' + data.premio + ' COP)', 'success');
     });
     
     socket.on('error', function(mensaje) {
