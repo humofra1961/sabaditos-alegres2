@@ -1022,7 +1022,7 @@ io.on('connection', function(socket) {
       console.log('  ❌ Premio no válido');
       socket.emit('error', pozosConfig[pozo].nombre + ' no está completo.');
     }
-  });
+  }); 
   // ✅ TOGGLE FASE SELECCIÓN
   socket.on('toggleFaseSeleccion', function(email) {
     if (gameState.cantador !== email) {
@@ -1032,7 +1032,7 @@ io.on('connection', function(socket) {
     gameState.faseJuego = gameState.faseJuego === 'seleccion' ? 'jugando' : 'seleccion';
     io.emit('updateFaseJuego', gameState.faseJuego);
   });
-  // ✅ SIGUIENTE PARTIDA - CON ACTIVACIÓN DE PANEL DE APUESTAS
+    // ✅ SIGUIENTE PARTIDA - CON ACTIVACIÓN DE PANEL DE APUESTAS
   socket.on('siguientePartida', function(email) {
     if (gameState.cantador !== email) {
       socket.emit('error', 'Solo el cantador.');
