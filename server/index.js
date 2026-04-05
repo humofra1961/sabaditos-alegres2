@@ -938,7 +938,7 @@ io.on('connection', function(socket) {
       socket.emit('error', mensajeError);
     }
   });
-  // ✅ CONFIRMAR PREMIO - CON ACTUALIZACIÓN INMEDIATA Y LOGS
+    // ✅ CONFIRMAR PREMIO - CON ACTUALIZACIÓN INMEDIATA Y LOGS DETALLADOS
   socket.on('confirmarPremio', function(numeroCarton, pozo, emailGanador, emailCantador) {
     console.log('✅ CONFIRMAR PREMIO - Cartón:', numeroCarton, 'Pozo:', pozo, 'Ganador:', emailGanador);
     console.log('  Cantador:', emailCantador, '¿Es cantador?', gameState.cantador === emailCantador);
@@ -1027,16 +1027,32 @@ io.on('connection', function(socket) {
       
       gameState.banco.totalPagado += premioTotal;
       
-      // ✅ EMITIR ACTUALIZACIONES INMEDIATAS
+      // ✅ EMITIR ACTUALIZACIONES INMEDIATAS (ORDEN IMPORTANTE)
       console.log('  📡 Emitiendo actualizaciones...');
+      
+      // 1. Actualizar cartones primero
       io.emit('updateCartones', gameState.cartones);
+      console.log('  ✅ updateCartones emitido');
+      
+      // 2. Actualizar jugadores (billetera)
       io.emit('updateJugadores', gameState.jugadores);
+      console.log('  ✅ updateJugadores emitido');
+      
+      // 3. Actualizar pozos
       io.emit('updatePozosDinamicos', gameState.pozosDinamicos);
+      console.log('  ✅ updatePozosDinamicos emitido');
+      
+      // 4. Actualizar banco
       io.emit('updateBanco', gameState.banco);
+      console.log('  ✅ updateBanco emitido');
+      
+      // 5. Actualizar estadísticas
       io.emit('updateEstadisticas', gameState.estadisticas);
+      console.log('  ✅ updateEstadisticas emitido');
       
-      console.log('  ✅ Actualizaciones enviadas');
+      console.log('  ✅ TODAS las actualizaciones enviadas');
       
+      // 6. Notificar premio confirmado
       io.emit('premioConfirmado', {
         jugador: ganadores.map(function(g) { return g.nombre; }).join(', '),
         pozo: pozosConfig[pozo].nombre,
@@ -1045,6 +1061,8 @@ io.on('connection', function(socket) {
         ganadores: ganadores.length,
         esEspecial: pozo === 'especial'
       });
+      console.log('  ✅ premioConfirmado emitido');
+      
     } else {
       console.log('  ❌ Premio no válido');
       socket.emit('error', pozosConfig[pozo].nombre + ' no está completo.');
