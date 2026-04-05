@@ -321,17 +321,16 @@ function verificarPozo(carton, pozo, codigosCantados, ultimaCartaCodigo) {
     
     return true;
   }
-  
   // ✅ ESPECIAL - 25 cartas (cartón lleno)
   if (pozo === 'especial') {
     var indicesEspecial = [];
     for (var i = 0; i < 25; i++) indicesEspecial.push(i);
     const valido = verificarCartas(indicesEspecial);
     
-    // Verificar que la última carta esté en el cartón
+    // Verificar que la última carta esté en el cartón (case-insensitive)
     if (valido && ultimaCartaCodigo) {
       const ultimaCartaEnCarton = indicesEspecial.some(function(index) {
-        return carton.cartas[index] && carton.cartas[index].codigo === ultimaCartaCodigo;
+        return carton.cartas[index] && carton.cartas[index].codigo.toLowerCase() === ultimaCartaCodigo.toLowerCase();
       });
       
       if (!ultimaCartaEnCarton) {
@@ -343,16 +342,16 @@ function verificarPozo(carton, pozo, codigosCantados, ultimaCartaCodigo) {
     
     console.log('  ESPECIAL:', valido ? '✅ VÁLIDO' : '❌ INVÁLIDO');
     return valido;
-  }
+  }  
   
   // ✅ CENTRO - 1 carta (índice 12)
   if (pozo === 'centro') {
     const valido = verificarCartas([12]);
     
-    // Verificar que el CENTRO sea la última carta cantada
+    // Verificar que el CENTRO sea la última carta cantada (case-insensitive)
     if (valido && ultimaCartaCodigo) {
       const cartaCentro = carton.cartas[12];
-      if (!cartaCentro || cartaCentro.codigo !== ultimaCartaCodigo) {
+      if (!cartaCentro || cartaCentro.codigo.toLowerCase() !== ultimaCartaCodigo.toLowerCase()) {
         console.log('  ❌ CENTRO: La última carta cantada NO es el centro');
         return false;
       }
@@ -362,19 +361,20 @@ function verificarPozo(carton, pozo, codigosCantados, ultimaCartaCodigo) {
     console.log('  CENTRO:', valido ? '✅ VÁLIDO' : '❌ INVÁLIDO');
     return valido;
   }
-  
   // ✅ CUATRO ESQUINAS - índices 0, 4, 20, 24
   if (pozo === 'cuatroEsquinas') {
     const valido = verificarCartas([0, 4, 20, 24]);
     
-    // Verificar que AL MENOS UNA esquina sea la última carta cantada
+    // Verificar que AL MENOS UNA esquina sea la última carta cantada (case-insensitive)
     if (valido && ultimaCartaCodigo) {
       const ultimaCartaEnEsquinas = [0, 4, 20, 24].some(function(index) {
-        return carton.cartas[index] && carton.cartas[index].codigo === ultimaCartaCodigo;
+        return carton.cartas[index] && carton.cartas[index].codigo.toLowerCase() === ultimaCartaCodigo.toLowerCase();
       });
       
       if (!ultimaCartaEnEsquinas) {
         console.log('  ❌ 4 ESQUINAS: La última carta cantada NO está en las esquinas');
+        console.log('  Última carta:', ultimaCartaCodigo);
+        console.log('  Esquinas:', [0, 4, 20, 24].map(function(i) { return carton.cartas[i].codigo; }));
         return false;
       }
       console.log('  ✅ 4 ESQUINAS: La última carta cantada SÍ está en las esquinas');
@@ -382,9 +382,11 @@ function verificarPozo(carton, pozo, codigosCantados, ultimaCartaCodigo) {
     
     console.log('  4 ESQUINAS:', valido ? '✅ VÁLIDO' : '❌ INVÁLIDO');
     return valido;
-  }
+  }  
   
-  // ✅ POKINO - 5 cartas en línea (horizontal, vertical o diagonal)
+  
+  
+// ✅ POKINO - 5 cartas en línea (horizontal, vertical o diagonal)
   if (pozo === 'pokino') {
     const lineas = [
       // Horizontales
@@ -399,9 +401,9 @@ function verificarPozo(carton, pozo, codigosCantados, ultimaCartaCodigo) {
       const lineaValida = verificarCartas(lineas[l]);
       
       if (lineaValida && ultimaCartaCodigo) {
-        // Verificar que la última carta esté en esta línea
+        // Verificar que la última carta esté en esta línea (case-insensitive)
         const ultimaCartaEnLinea = lineas[l].some(function(index) {
-          return carton.cartas[index] && carton.cartas[index].codigo === ultimaCartaCodigo;
+          return carton.cartas[index] && carton.cartas[index].codigo.toLowerCase() === ultimaCartaCodigo.toLowerCase();
         });
         
         if (ultimaCartaEnLinea) {
@@ -416,7 +418,7 @@ function verificarPozo(carton, pozo, codigosCantados, ultimaCartaCodigo) {
     
     console.log('  POKINO: ❌ INVÁLIDO (ninguna línea completa con última carta)');
     return false;
-  }
+  }  
   
   // ✅ POKER - 4 cartas del mismo valor
   if (pozo === 'poker') {
@@ -430,10 +432,10 @@ function verificarPozo(carton, pozo, codigosCantados, ultimaCartaCodigo) {
     
     const valido = verificarCartas(indices);
     
-    // Verificar que AL MENOS UNA carta del POKER sea la última carta cantada
+    // Verificar que AL MENOS UNA carta del POKER sea la última carta cantada (case-insensitive)
     if (valido && ultimaCartaCodigo) {
       const ultimaCartaEnPoker = indices.some(function(index) {
-        return carton.cartas[index] && carton.cartas[index].codigo === ultimaCartaCodigo;
+        return carton.cartas[index] && carton.cartas[index].codigo.toLowerCase() === ultimaCartaCodigo.toLowerCase();
       });
       
       if (!ultimaCartaEnPoker) {
@@ -460,10 +462,10 @@ function verificarPozo(carton, pozo, codigosCantados, ultimaCartaCodigo) {
     
     const valido = verificarCartas(indices);
     
-    // Verificar que AL MENOS UNA carta del FULL sea la última carta cantada
+    // Verificar que AL MENOS UNA carta del FULL sea la última carta cantada (case-insensitive)
     if (valido && ultimaCartaCodigo) {
       const ultimaCartaEnFull = indices.some(function(index) {
-        return carton.cartas[index] && carton.cartas[index].codigo === ultimaCartaCodigo;
+        return carton.cartas[index] && carton.cartas[index].codigo.toLowerCase() === ultimaCartaCodigo.toLowerCase();
       });
       
       if (!ultimaCartaEnFull) {
@@ -475,10 +477,7 @@ function verificarPozo(carton, pozo, codigosCantados, ultimaCartaCodigo) {
     
     console.log('  FULL:', valido ? '✅ VÁLIDO' : '❌ INVÁLIDO');
     return valido;
-  }
-  
-  return false;
-}
+  }  
 // ============================================================================
 // ✅ VERIFICAR PREMIOS COMPLETADOS
 // ============================================================================
