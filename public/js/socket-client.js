@@ -68,6 +68,17 @@ const socketClient = {
         }
       }
     });
+    // ✅ CORRECCIÓN CRÍTICA: Actualizar pozos INMEDIATAMENTE
+    socket.on('updatePozosDinamicos', function(pozos) {
+      console.log('🏆 Actualizando pozos:', pozos);
+      if (!window.app.gameState) window.app.gameState = {};
+      window.app.gameState.pozosDinamicos = pozos || {};
+      
+      if (window.pozos) {
+        console.log('🎰 Llamando pozo.renderizar()');
+        window.pozos.renderizar();
+      }
+    });  
     
     socket.on('updateCartones', function(cartones) {
       console.log('🎴 Actualizando cartones:', cartones);
@@ -104,19 +115,7 @@ const socketClient = {
       window.app.gameState.cantador = email;
       if (window.ui) window.ui.actualizarPanelCantador(email);
     });
-    
-    // ✅ CORRECCIÓN CRÍTICA: Actualizar pozos INMEDIATAMENTE
-    socket.on('updatePozosDinamicos', function(pozos) {
-      console.log('🏆 Actualizando pozos:', pozos);
-      if (!window.app.gameState) window.app.gameState = {};
-      window.app.gameState.pozosDinamicos = pozos || {};
-      
-      if (window.pozos) {
-        console.log('🎰 Llamando pozo.renderizar()');
-        window.pozos.renderizar();
-      }
-    });
-    
+            
     socket.on('updateBanco', function(banco) {
       console.log('🏦 Actualizando banco:', banco);
       if (!window.app.gameState) window.app.gameState = {};
