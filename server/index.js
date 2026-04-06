@@ -891,7 +891,7 @@ io.on('connection', function(socket) {
     }
   });
   
-  // ✅ RECLAMAR PREMIO
+  // ✅ RECLAMAR PREMIO - CON VALIDACIÓN CORRECTA
   socket.on('reclamarPremio', function(numeroCarton, pozo, email) {
     console.log('🏆 Reclamando premio:', pozo, 'Cartón:', numeroCarton, 'Jugador:', email, 'Partida:', gameState.partidaActual);
     
@@ -908,22 +908,33 @@ io.on('connection', function(socket) {
     const codigosCantados = gameState.cartasCantadas.map(function(c) { return c.codigo; });
     const ultimaCartaCodigo = gameState.ultimaCarta ? gameState.ultimaCarta.codigo : null;
     
+    // Validación especial para CENTRO
     if (pozo === 'centro' && gameState.partidaActual !== 6 && codigosCantados.length > 5) {
       socket.emit('error', '❌ El pozo CENTRO se reclama antes de la sexta carta cantada. Llevas ' + codigosCantados.length + ' cartas cantadas. En la Partida 6 (ESPECIAL) esta regla no aplica.');
       return;
     }
     
+    // Validar el pozo
     const valido = verificarPozo(carton, pozo, codigosCantados, ultimaCartaCodigo);
     
     if (valido) {
+      // Marcar como reclamado (pero no confirmado aún)
+      carton.pozos[pozo] = true;
+      
+      const pozoConfig = pozosConfig[pozo];
+      const premio = gameState.pozosDinamicos[pozo].total;
+      const fichas = gameState.pozosDinamicos[pozo].fichas;
+      
+      console.log('  ✅ Premio válido:', pozoConfig.nombre, '- Premio:', premio, 'COP | Fichas:', fichas);
+      
       io.emit('alertaGanador', {
         carton: numeroCarton,
-        pozo: pozosConfig[pozo].nombre,
+        pozo: pozoConfig.nombre,
         jugador: gameState.jugadores[email] ? gameState.jugadores[email].nombre : email,
         email: email,
-        premio: gameState.pozosDinamicos[pozo].total,
-        fichas: gameState.pozosDinamicos[pozo].fichas,
-        mensaje: '🏆 ¡' + (gameState.jugadores[email] ? gameState.jugadores[email].nombre : email) + ' RECLAMA ' + pozosConfig[pozo].nombre + '!',
+        premio: premio,
+        fichas: fichas,
+        mensaje: '🏆 ¡' + (gameState.jugadores[email] ? gameState.jugadores[email].nombre : email) + ' RECLAMA ' + pozoConfig.nombre + '!',
         esEspecial: pozo === 'especial'
       });
     } else {
@@ -937,8 +948,8 @@ io.on('connection', function(socket) {
       }
       socket.emit('error', mensajeError);
     }
-  });
-    // ✅ CONFIRMAR PREMIO - CON NORMALIZACIÓN DE NOMBRE
+  });  
+  // ✅ CONFIRMAR PREMIO - PROCESAR PAGO Y ACTUALIZAR POZOS
   socket.on('confirmarPremio', function(numeroCarton, pozo, emailGanador, emailCantador) {
     console.log('✅ CONFIRMAR PREMIO - Cartón:', numeroCarton, 'Pozo:', pozo, 'Ganador:', emailGanador);
     console.log('  Cantador:', emailCantador, '¿Es cantador?', gameState.cantador === emailCantador);
@@ -956,30 +967,8 @@ io.on('connection', function(socket) {
       return;
     }
     
-    // ✅ CORRECCIÓN: Normalizar nombre del pozo a minúsculas
-    const pozoNormalizado = pozo.toLowerCase()
-      .replace(/ /g, '')  // Eliminar espacios
-      .replace(/á/g, 'a')
-      .replace(/é/g, 'e')
-      .replace(/í/g, 'i')
-      .replace(/ó/g, 'o')
-      .replace(/ú/g, 'u');
-    
-    console.log('  Pozo recibido:', pozo, '→ Normalizado:', pozoNormalizado);
-    
-    // Buscar en pozosConfig
-    let pozoConfig = null;
-    let pozoKey = null;
-    
-    // Buscar por clave exacta o por nombre
-    for (var key in pozosConfig) {
-      if (key === pozoNormalizado || pozosConfig[key].nombre.toLowerCase().replace(/ /g, '') === pozoNormalizado) {
-        pozoConfig = pozosConfig[key];
-        pozoKey = key;
-        break;
-      }
-    }
-    
+    // Buscar el pozo en pozosConfig
+    const pozoConfig = pozosConfig[pozo];
     if (!pozoConfig) {
       console.log('  ❌ Error: Pozo no configurado:', pozo);
       console.log('  Pozos disponibles:', Object.keys(pozosConfig));
@@ -987,14 +976,14 @@ io.on('connection', function(socket) {
       return;
     }
     
-    console.log('  ✅ Pozo encontrado:', pozoKey, '-', pozoConfig.nombre);
+    console.log('  ✅ Pozo encontrado:', pozo, '-', pozoConfig.nombre);
     
-    // Marcar el pozo como ganado
-    carton.pozos[pozoKey] = true;
+    // El pozo ya fue marcado como ganado en reclamarPremio
+    // Solo procesamos el pago
     
     // Obtener valores del pozo
-    const premioTotal = gameState.pozosDinamicos[pozoKey].total;
-    const fichasTotales = gameState.pozosDinamicos[pozoKey].fichas;
+    const premioTotal = gameState.pozosDinamicos[pozo].total;
+    const fichasTotales = gameState.pozosDinamicos[pozo].fichas;
     
     console.log('  💰 Premio total:', premioTotal, 'COP | Fichas totales:', fichasTotales);
     
@@ -1039,7 +1028,7 @@ io.on('connection', function(socket) {
       
       gameState.pozosGanados.push({ 
         carton: ganador.carton, 
-        pozo: pozoKey, 
+        pozo: pozo, 
         jugador: ganador.email, 
         premio: premioPorGanador, 
         fichas: fichasPorGanador,
@@ -1048,13 +1037,16 @@ io.on('connection', function(socket) {
       });
     });
     
-    // ✅ Resetear POKINO (los demás acumulan)
-    if (pozoKey === 'pokino') {
-      const fichasAntes = gameState.pozosDinamicos[pozoKey].fichas;
-      gameState.pozosDinamicos[pozoKey].acumulado = 0;
-      gameState.pozosDinamicos[pozoKey].total = gameState.pozosDinamicos[pozoKey].valorBase;
-      gameState.pozosDinamicos[pozoKey].fichas = Math.floor(gameState.pozosDinamicos[pozoKey].total / VALOR_FICHA);
-      console.log('  🎰 POKINO reseteado:', fichasAntes, '→', gameState.pozosDinamicos[pozoKey].fichas, 'fichas');
+    // ✅ ACTUALIZAR POZOS - Resetear SOLO POKINO, los demás acumulan
+    if (pozo === 'pokino') {
+      const fichasAntes = gameState.pozosDinamicos[pozo].fichas;
+      gameState.pozosDinamicos[pozo].acumulado = 0;
+      gameState.pozosDinamicos[pozo].total = gameState.pozosDinamicos[pozo].valorBase;
+      gameState.pozosDinamicos[pozo].fichas = Math.floor(gameState.pozosDinamicos[pozo].total / VALOR_FICHA);
+      console.log('  🎰 POKINO reseteado:', fichasAntes, '→', gameState.pozosDinamicos[pozo].fichas, 'fichas');
+    } else {
+      // Los demás pozos (4 ESQUINAS, FULL, POKER, CENTRO, ESPECIAL) MANTIENEN sus fichas
+      console.log('  🎰', pozoConfig.nombre, 'MANTIENE', gameState.pozosDinamicos[pozo].fichas, 'fichas (ACUMULA)');
     }
     
     gameState.banco.totalPagado += premioTotal;
@@ -1076,7 +1068,7 @@ io.on('connection', function(socket) {
       premio: premioPorGanador,
       fichas: fichasPorGanador,
       ganadores: ganadores.length,
-      esEspecial: pozoKey === 'especial'
+      esEspecial: pozo === 'especial'
     });
   });
   // ✅ TOGGLE FASE SELECCIÓN
