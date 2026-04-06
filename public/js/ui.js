@@ -1,6 +1,6 @@
-// ============================================================================
+// ===================================================================
 // 🎨 UI - RENDERIZADO DE INTERFAZ
-// ============================================================================
+// ===================================================================
 
 const ui = {
   
@@ -108,18 +108,20 @@ const ui = {
     const cartas = window.app.gameState ? window.app.gameState.cartasCantadas : [];
     const porPintas = { '♠': [], '♥': [], '♦': [], '♣': [] };
     const colores = { '♠': 'black', '♥': 'red', '♦': 'red', '♣': 'black' };
+    
     // ✅ ACTUALIZAR CONTADOR DE CARTAS
     const contadorEl = document.getElementById('contadorCartas');
     if (contadorEl) {
       contadorEl.textContent = cartas.length;
     }
+    
     cartas.forEach(function(carta) {
       if (carta && carta.palo) {
         if (!porPintas[carta.palo]) porPintas[carta.palo] = [];
         porPintas[carta.palo].push(carta);
       }
     });
-  },
+    
     container.innerHTML = Object.entries(porPintas).map(function(entry) {
       const palo = entry[0];
       const cartasPalo = entry[1];
@@ -165,17 +167,20 @@ const ui = {
       indicator.textContent = 'Fase: Jugando';
       if (seleccion) seleccion.classList.add('hidden');
     }
+    
     // ✅ ACTUALIZAR CONTADOR DE PARTIDAS
     const partidaEl = document.getElementById('partidaActual');
     if (partidaEl && window.app.gameState) {
       partidaEl.textContent = window.app.gameState.partidaActual || 1;
     }
-    // En public/js/ui.js, agrega esta función:
-    mostrarJuegoIniciado: function(data) {
+  },
+  
+  // ✅ FUNCIÓN PARA MOSTRAR JUEGO INICIADO
+  mostrarJuegoIniciado: function(data) {
     console.log('🎮 Juego iniciado:', data);
-    // Opcional: mostrar notificación
     if (window.ui) window.ui.mostrarNotificacion(data.mensaje, 'success');
   },
+  
   // ============================================================================
   // PANEL DEL CANTADOR
   // ============================================================================
