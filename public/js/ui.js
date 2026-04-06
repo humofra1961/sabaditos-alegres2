@@ -96,19 +96,23 @@ const ui = {
     
     console.log('💰 Billetera actualizada:', monedas, 'fichas ($' + ((monedas || 0) * 50) + ' COP)');
   },
-
+  
   // ============================================================================
   // CARTAS CANTADAS
   // ============================================================================
-
+  
   renderizarCartasPorPintas: function() {
     const container = document.getElementById('cartasPorPintas');
     if (!container) return;
-
+  
     const cartas = window.app.gameState ? window.app.gameState.cartasCantadas : [];
     const porPintas = { '♠': [], '♥': [], '♦': [], '♣': [] };
     const colores = { '♠': 'black', '♥': 'red', '♦': 'red', '♣': 'black' };
-
+    // ✅ ACTUALIZAR CONTADOR DE CARTAS
+    const contadorEl = document.getElementById('contadorCartas');
+    if (contadorEl) {
+      contadorEl.textContent = cartas.length;
+    }
     cartas.forEach(function(carta) {
       if (carta && carta.palo) {
         if (!porPintas[carta.palo]) porPintas[carta.palo] = [];
@@ -131,7 +135,7 @@ const ui = {
              '</div></div>';
     }).join('');
   },
-
+  
   renderizarUltimaCarta: function(carta) {
     const display = document.getElementById('ultimaCartaDisplay');
     if (!display) return;
@@ -142,11 +146,11 @@ const ui = {
       display.textContent = '-';
     }
   },
-
+  
   // ============================================================================
   // FASE DEL JUEGO
   // ============================================================================
-
+  
   actualizarFaseJuego: function(fase) {
     const indicator = document.getElementById('faseJuego');
     const seleccion = document.getElementById('seleccionCartones');
@@ -161,9 +165,13 @@ const ui = {
       indicator.textContent = 'Fase: Jugando';
       if (seleccion) seleccion.classList.add('hidden');
     }
-  },
-  // En public/js/ui.js, agrega esta función:
-  mostrarJuegoIniciado: function(data) {
+    // ✅ ACTUALIZAR CONTADOR DE PARTIDAS
+    const partidaEl = document.getElementById('partidaActual');
+    if (partidaEl && window.app.gameState) {
+      partidaEl.textContent = window.app.gameState.partidaActual || 1;
+    }
+    // En public/js/ui.js, agrega esta función:
+    mostrarJuegoIniciado: function(data) {
     console.log('🎮 Juego iniciado:', data);
     // Opcional: mostrar notificación
     if (window.ui) window.ui.mostrarNotificacion(data.mensaje, 'success');
