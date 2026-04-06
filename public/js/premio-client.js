@@ -1,10 +1,11 @@
 const premio = {
   reclamar: function(numeroCarton, pozo) {
     console.log('🏆 Reclamando premio:', pozo, 'Cartón:', numeroCarton);
-    socket.emit('reclamarPremio', numeroCarton, pozo, window.app.emailActual);
+    // ✅ CORRECCIÓN: Enviar nombre del pozo en minúsculas
+    const pozoNormalizado = pozo.toLowerCase();
+    socket.emit('reclamarPremio', numeroCarton, pozoNormalizado, window.app.emailActual);
   },
   
-  // ✅ CORREGIDO: Reclamar múltiples premios con confirmación individual
   reclamarMultiple: function(combinacion, numeroCarton) {
     console.log('🏆 Reclamando combinación:', combinacion, 'Cartón:', numeroCarton);
     
@@ -13,19 +14,21 @@ const premio = {
       return;
     }
     
-    // Dividir la combinación (ej: "pokino-4esquinas" → ["pokino", "4esquinas"])
+    // Dividir la combinación (ej: "pokino-full" → ["pokino", "full"])
     var pozos = combinacion.split('-');
     
-    // ✅ CORRECCIÓN: Reclamar cada pozo con 1 segundo de delay para que el cantador pueda confirmar cada uno
+    // Reclamar cada pozo con delay
     for (var k = 0; k < pozos.length; k++) {
       setTimeout(function(pozo) {
         console.log('🏆 Reclamando pozo:', pozo);
-        socket.emit('reclamarPremio', numeroCarton, pozo, window.app.emailActual);
-      }.bind(this, pozos[k]), k * 3000); // 1.5 segundos entre cada reclamo
+        // ✅ CORRECCIÓN: Enviar nombre del pozo en minúsculas
+        const pozoNormalizado = pozo.toLowerCase();
+        socket.emit('reclamarPremio', numeroCarton, pozoNormalizado, window.app.emailActual);
+      }.bind(this, pozos[k]), k * 1500); // 1.5 segundos entre cada reclamo
     }
     
     if (window.ui) {
-      window.ui.mostrarNotificacion('🏆 Reclamando ' + pozos.length + ' premios. El cantador debe confirmar cada uno.', 'success');
+      window.ui.mostrarNotificacion('🏆 Reclamando ' + pozos.length + ' premios. Espera entre cada uno.', 'success');
     }
   },
   
@@ -39,15 +42,19 @@ const premio = {
         window.app.emailActual
       );
       
-      // ✅ CERRAR POPUP DESPUÉS DE CONFIRMAR
-      setTimeout(function() {
-        var alerta = document.getElementById('alertaGanador');
-        if (alerta) {
-          alerta.classList.add('hidden');
-          alerta.style.display = 'none';
-        }
-        window.app.premioPendiente = null;
-      }, 1000);
+      // ✅ CERRAR POPUP INMEDIATAMENTE
+      var alerta = document.getElementById('alertaGanador');
+      if (alerta) {
+        alerta.classList.add('hidden');
+        alerta.style.display = 'none';
+      }
+      
+      // ✅ MOSTRAR MENSAJE DE ÉXITO
+      if (window.ui) {
+        window.ui.mostrarNotificacion('✅ Premio confirmado. Revisa tu billetera.', 'success');
+      }
+      
+      window.app.premioPendiente = null;
     }
   },
   
