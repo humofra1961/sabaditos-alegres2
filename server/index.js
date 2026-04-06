@@ -1037,16 +1037,27 @@ io.on('connection', function(socket) {
       });
     });
     
-    // ✅ ACTUALIZAR POZOS - Resetear SOLO POKINO, los demás acumulan
-    if (pozo === 'pokino') {
+    // ✅ CORRECCIÓN CRÍTICA: Resetear el pozo DESPUÉS de pagar
+    if (pozo === 'especial') {
+      // ESPECIAL: Resetear TODO al final del juego
+      gameState.pozosDinamicos[pozo].acumulado = 0;
+      gameState.pozosDinamicos[pozo].total = 0;
+      gameState.pozosDinamicos[pozo].fichas = 0;
+      console.log('  🎰 ESPECIAL pagado y reseteado a 0');
+    } else if (pozo === 'pokino') {
+      // POKINO: Resetear después de cada partida
       const fichasAntes = gameState.pozosDinamicos[pozo].fichas;
       gameState.pozosDinamicos[pozo].acumulado = 0;
       gameState.pozosDinamicos[pozo].total = gameState.pozosDinamicos[pozo].valorBase;
       gameState.pozosDinamicos[pozo].fichas = Math.floor(gameState.pozosDinamicos[pozo].total / VALOR_FICHA);
       console.log('  🎰 POKINO reseteado:', fichasAntes, '→', gameState.pozosDinamicos[pozo].fichas, 'fichas');
     } else {
-      // Los demás pozos (4 ESQUINAS, FULL, POKER, CENTRO, ESPECIAL) MANTIENEN sus fichas
-      console.log('  🎰', pozoConfig.nombre, 'MANTIENE', gameState.pozosDinamicos[pozo].fichas, 'fichas (ACUMULA)');
+      // 4 ESQUINAS, FULL, POKER, CENTRO: Resetear después de ser ganados
+      const fichasAntes = gameState.pozosDinamicos[pozo].fichas;
+      gameState.pozosDinamicos[pozo].acumulado = 0;
+      gameState.pozosDinamicos[pozo].total = gameState.pozosDinamicos[pozo].valorBase;
+      gameState.pozosDinamicos[pozo].fichas = Math.floor(gameState.pozosDinamicos[pozo].total / VALOR_FICHA);
+      console.log('  🎰', pozoConfig.nombre, 'reseteado:', fichasAntes, '→', gameState.pozosDinamicos[pozo].fichas, 'fichas');
     }
     
     gameState.banco.totalPagado += premioTotal;
@@ -1070,7 +1081,7 @@ io.on('connection', function(socket) {
       ganadores: ganadores.length,
       esEspecial: pozo === 'especial'
     });
-  });
+  });  
   // ✅ TOGGLE FASE SELECCIÓN
   socket.on('toggleFaseSeleccion', function(email) {
     if (gameState.cantador !== email) {
