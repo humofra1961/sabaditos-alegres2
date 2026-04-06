@@ -31,13 +31,15 @@ const premio = {
       window.ui.mostrarNotificacion('🏆 Reclamando ' + pozos.length + ' premios. Espera entre cada uno.', 'success');
     }
   },
-  
   confirmar: function() {
     console.log('✅ Confirmando premio');
     if (window.app.premioPendiente) {
+      // ✅ CORRECCIÓN: Usar pozo (clave en minúsculas) en lugar de pozoNombre
+      const pozoAConfirmar = window.app.premioPendiente.pozo || window.app.premioPendiente.pozoNombre.toLowerCase();
+      
       socket.emit('confirmarPremio', 
         window.app.premioPendiente.carton, 
-        window.app.premioPendiente.pozo, 
+        pozoAConfirmar,  // ✅ Enviar clave en minúsculas
         window.app.premioPendiente.email, 
         window.app.emailActual
       );
@@ -56,8 +58,7 @@ const premio = {
       
       window.app.premioPendiente = null;
     }
-  },
-  
+  },  
   rechazar: function() {
     console.log('❌ Rechazando premio');
     var alerta = document.getElementById('alertaGanador');
