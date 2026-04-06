@@ -929,7 +929,8 @@ io.on('connection', function(socket) {
       
       io.emit('alertaGanador', {
         carton: numeroCarton,
-        pozo: pozoConfig.nombre,
+        pozo: pozo,  // ✅ CORRECCIÓN: Enviar CLAVE (minúsculas) en lugar de nombre
+        pozoNombre: pozoConfig.nombre,  // Nombre para mostrar
         jugador: gameState.jugadores[email] ? gameState.jugadores[email].nombre : email,
         email: email,
         premio: premio,
@@ -948,7 +949,7 @@ io.on('connection', function(socket) {
       }
       socket.emit('error', mensajeError);
     }
-  });  
+  });
   // ✅ CONFIRMAR PREMIO - PROCESAR PAGO Y ACTUALIZAR POZOS
   socket.on('confirmarPremio', function(numeroCarton, pozo, emailGanador, emailCantador) {
     console.log('✅ CONFIRMAR PREMIO - Cartón:', numeroCarton, 'Pozo:', pozo, 'Ganador:', emailGanador);
