@@ -119,7 +119,7 @@ const ui = {
         porPintas[carta.palo].push(carta);
       }
     });
-
+  },
     container.innerHTML = Object.entries(porPintas).map(function(entry) {
       const palo = entry[0];
       const cartasPalo = entry[1];
