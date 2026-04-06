@@ -21,7 +21,7 @@ const premio = {
       setTimeout(function(pozo) {
         console.log('🏆 Reclamando pozo:', pozo);
         socket.emit('reclamarPremio', numeroCarton, pozo, window.app.emailActual);
-      }.bind(this, pozos[k]), k * 1500); // 1.5 segundos entre cada reclamo
+      }.bind(this, pozos[k]), k * 3000); // 1.5 segundos entre cada reclamo
     }
     
     if (window.ui) {
