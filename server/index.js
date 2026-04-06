@@ -938,7 +938,7 @@ io.on('connection', function(socket) {
       socket.emit('error', mensajeError);
     }
   });
-    // ✅ CONFIRMAR PREMIO - CON ACTUALIZACIÓN INMEDIATA Y LOGS DETALLADOS
+    // ✅ CONFIRMAR PREMIO - SOLO PROCESAR PAGO (NO RE-VALIDAR)
   socket.on('confirmarPremio', function(numeroCarton, pozo, emailGanador, emailCantador) {
     console.log('✅ CONFIRMAR PREMIO - Cartón:', numeroCarton, 'Pozo:', pozo, 'Ganador:', emailGanador);
     console.log('  Cantador:', emailCantador, '¿Es cantador?', gameState.cantador === emailCantador);
@@ -950,123 +950,127 @@ io.on('connection', function(socket) {
     }
     
     const carton = gameState.cartones.find(function(c) { return c.numero === numeroCarton; });
-    const codigosCantados = gameState.cartasCantadas.map(function(c) { return c.codigo; });
-    const ultimaCartaCodigo = gameState.ultimaCarta ? gameState.ultimaCarta.codigo : null;
+    if (!carton) {
+      console.log('  ❌ Error: Cartón no encontrado');
+      socket.emit('error', 'Cartón no encontrado.');
+      return;
+    }
     
-    console.log('  Cartón encontrado:', carton ? 'SÍ' : 'NO');
-    console.log('  Verificando pozo...');
+    // ✅ CORRECCIÓN CRÍTICA: NO re-validar, solo procesar el pago
+    console.log('  ✅ Procesando pago (premio ya validado en reclamarPremio)');
     
-    if (verificarPozo(carton, pozo, codigosCantados, ultimaCartaCodigo)) {
-      console.log('  ✅ Premio válido');
-      carton.pozos[pozo] = true;
-      
-      const ganadores = [];
-      gameState.cartones.forEach(function(c) {
-        if (c.pozos[pozo] && c.dueño) {
-          if (verificarPozo(c, pozo, codigosCantados, ultimaCartaCodigo)) {
-            ganadores.push({
-              email: c.dueño,
-              carton: c.numero,
-              nombre: gameState.jugadores[c.dueño] ? gameState.jugadores[c.dueño].nombre : c.dueño
-            });
-          }
-        }
-      });
-      
-      const premioTotal = gameState.pozosDinamicos[pozo].total;
-      const fichasTotales = gameState.pozosDinamicos[pozo].fichas;
-      const premioPorGanador = Math.floor(premioTotal / ganadores.length);
-      const fichasPorGanador = Math.floor(fichasTotales / ganadores.length);
-      
-      console.log('🏆 Ganadores:', ganadores.length, 'Premio por ganador:', fichasPorGanador, 'fichas ($' + premioPorGanador + ' COP)');
-      
-      // ✅ ACTUALIZAR BILLETERA DE CADA GANADOR
-      ganadores.forEach(function(ganador) {
-        if (gameState.jugadores[ganador.email]) {
-          const monedasAntes = gameState.jugadores[ganador.email].monedas;
-          gameState.jugadores[ganador.email].monedas += fichasPorGanador;
-          const monedasDespues = gameState.jugadores[ganador.email].monedas;
-          
-          console.log('  💰 Billetera de', ganador.nombre, ':', monedasAntes, '→', monedasDespues, 'fichas (+', fichasPorGanador, ')');
-          
-          gameState.jugadores[ganador.email].fichasGanadas += fichasPorGanador;
-          gameState.jugadores[ganador.email].pozosGanados.push({
-            pozo: pozosConfig[pozo].nombre,
-            premio: premioPorGanador,
-            fichas: fichasPorGanador,
-            partida: gameState.partidaActual,
-            fecha: new Date().toISOString()
-          });
-          
+    // Marcar el pozo como ganado
+    carton.pozos[pozo] = true;
+    
+    // Obtener configuración del pozo
+    const pozoConfig = pozosConfig[pozo];
+    if (!pozoConfig) {
+      console.log('  ❌ Error: Pozo no configurado:', pozo);
+      socket.emit('error', 'Pozo no configurado.');
+      return;
+    }
+    
+    // Obtener valores del pozo
+    const premioTotal = gameState.pozosDinamicos[pozo].total;
+    const fichasTotales = gameState.pozosDinamicos[pozo].fichas;
+    
+    console.log('  💰 Premio total:', premioTotal, 'COP | Fichas totales:', fichasTotales);
+    
+    // Crear lista de ganadores (soporte para múltiples ganadores)
+    const ganadores = [{
+      email: emailGanador,
+      carton: numeroCarton,
+      nombre: gameState.jugadores[emailGanador] ? gameState.jugadores[emailGanador].nombre : emailGanador
+    }];
+    
+    const premioPorGanador = Math.floor(premioTotal / ganadores.length);
+    const fichasPorGanador = Math.floor(fichasTotales / ganadores.length);
+    
+    console.log('🏆 Ganadores:', ganadores.length, '| Premio por ganador:', fichasPorGanador, 'fichas ($' + premioPorGanador + ' COP)');
+    
+    // ✅ ACTUALIZAR BILLETERA DE CADA GANADOR
+    ganadores.forEach(function(ganador) {
+      if (gameState.jugadores[ganador.email]) {
+        const monedasAntes = gameState.jugadores[ganador.email].monedas;
+        gameState.jugadores[ganador.email].monedas += fichasPorGanador;
+        const monedasDespues = gameState.jugadores[ganador.email].monedas;
+        
+        console.log('  💰 Billetera de', ganador.nombre, ':', monedasAntes, '→', monedasDespues, 'fichas (+', fichasPorGanador, ')');
+        
+        // Registrar ganancia
+        gameState.jugadores[ganador.email].fichasGanadas += fichasPorGanador;
+        gameState.jugadores[ganador.email].pozosGanados.push({
+          pozo: pozoConfig.nombre,
+          premio: premioPorGanador,
+          fichas: fichasPorGanador,
+          partida: gameState.partidaActual,
+          fecha: new Date().toISOString()
+        });
+        
+        // Actualizar estadísticas
+        if (gameState.estadisticas[ganador.email]) {
           gameState.estadisticas[ganador.email].ganadas += 1;
           gameState.estadisticas[ganador.email].pozosGanados.push({
-            pozo: pozosConfig[pozo].nombre,
+            pozo: pozoConfig.nombre,
             partida: gameState.partidaActual
           });
         }
-        
-        gameState.pozosGanados.push({ 
-          carton: ganador.carton, 
-          pozo: pozo, 
-          jugador: ganador.email, 
-          premio: premioPorGanador, 
-          fichas: fichasPorGanador,
-          partida: gameState.partidaActual, 
-          timestamp: Date.now() 
-        });
-      });
-      
-      // ✅ CORRECCIÓN: Resetear POKINO inmediatamente
-      if (pozo === 'pokino') {
-        const fichasAntes = gameState.pozosDinamicos[pozo].fichas;
-        gameState.pozosDinamicos[pozo].acumulado = 0;
-        gameState.pozosDinamicos[pozo].total = gameState.pozosDinamicos[pozo].valorBase;
-        gameState.pozosDinamicos[pozo].fichas = Math.floor(gameState.pozosDinamicos[pozo].total / VALOR_FICHA);
-        console.log('  🎰 POKINO reseteado:', fichasAntes, '→', gameState.pozosDinamicos[pozo].fichas, 'fichas');
       }
       
-      gameState.banco.totalPagado += premioTotal;
-      
-      // ✅ EMITIR ACTUALIZACIONES INMEDIATAS (ORDEN IMPORTANTE)
-      console.log('  📡 Emitiendo actualizaciones...');
-      
-      // 1. Actualizar cartones primero
-      io.emit('updateCartones', gameState.cartones);
-      console.log('  ✅ updateCartones emitido');
-      
-      // 2. Actualizar jugadores (billetera)
-      io.emit('updateJugadores', gameState.jugadores);
-      console.log('  ✅ updateJugadores emitido');
-      
-      // 3. Actualizar pozos
-      io.emit('updatePozosDinamicos', gameState.pozosDinamicos);
-      console.log('  ✅ updatePozosDinamicos emitido');
-      
-      // 4. Actualizar banco
-      io.emit('updateBanco', gameState.banco);
-      console.log('  ✅ updateBanco emitido');
-      
-      // 5. Actualizar estadísticas
-      io.emit('updateEstadisticas', gameState.estadisticas);
-      console.log('  ✅ updateEstadisticas emitido');
-      
-      console.log('  ✅ TODAS las actualizaciones enviadas');
-      
-      // 6. Notificar premio confirmado
-      io.emit('premioConfirmado', {
-        jugador: ganadores.map(function(g) { return g.nombre; }).join(', '),
-        pozo: pozosConfig[pozo].nombre,
-        premio: premioPorGanador,
+      // Registrar en historial de pozos ganados
+      gameState.pozosGanados.push({ 
+        carton: ganador.carton, 
+        pozo: pozo, 
+        jugador: ganador.email, 
+        premio: premioPorGanador, 
         fichas: fichasPorGanador,
-        ganadores: ganadores.length,
-        esEspecial: pozo === 'especial'
+        partida: gameState.partidaActual, 
+        timestamp: Date.now() 
       });
-      console.log('  ✅ premioConfirmado emitido');
-      
-    } else {
-      console.log('  ❌ Premio no válido');
-      socket.emit('error', pozosConfig[pozo].nombre + ' no está completo.');
+    });
+    
+    // ✅ CORRECCIÓN: Resetear POKINO inmediatamente (los demás acumulan)
+    if (pozo === 'pokino') {
+      const fichasAntes = gameState.pozosDinamicos[pozo].fichas;
+      gameState.pozosDinamicos[pozo].acumulado = 0;
+      gameState.pozosDinamicos[pozo].total = gameState.pozosDinamicos[pozo].valorBase;
+      gameState.pozosDinamicos[pozo].fichas = Math.floor(gameState.pozosDinamicos[pozo].total / VALOR_FICHA);
+      console.log('  🎰 POKINO reseteado:', fichasAntes, '→', gameState.pozosDinamicos[pozo].fichas, 'fichas');
     }
+    // Los demás pozos (4 ESQUINAS, FULL, POKER, CENTRO, ESPECIAL) ACUMULAN
+    
+    gameState.banco.totalPagado += premioTotal;
+    
+    // ✅ EMITIR ACTUALIZACIONES INMEDIATAS (ESTO ACTUALIZA LA UI)
+    console.log('  📡 Emitiendo actualizaciones...');
+    
+    io.emit('updateCartones', gameState.cartones);
+    console.log('  ✅ updateCartones emitido');
+    
+    io.emit('updateJugadores', gameState.jugadores);
+    console.log('  ✅ updateJugadores emitido');
+    
+    io.emit('updatePozosDinamicos', gameState.pozosDinamicos);
+    console.log('  ✅ updatePozosDinamicos emitido');
+    
+    io.emit('updateBanco', gameState.banco);
+    console.log('  ✅ updateBanco emitido');
+    
+    io.emit('updateEstadisticas', gameState.estadisticas);
+    console.log('  ✅ updateEstadisticas emitido');
+    
+    console.log('  ✅ TODAS las actualizaciones enviadas - Billetera y pozos actualizados');
+    
+    // Notificar premio confirmado
+    io.emit('premioConfirmado', {
+      jugador: ganadores.map(function(g) { return g.nombre; }).join(', '),
+      pozo: pozoConfig.nombre,
+      premio: premioPorGanador,
+      fichas: fichasPorGanador,
+      ganadores: ganadores.length,
+      esEspecial: pozo === 'especial'
+    });
+    console.log('  ✅ premioConfirmado emitido');
   });
   // ✅ TOGGLE FASE SELECCIÓN
   socket.on('toggleFaseSeleccion', function(email) {
