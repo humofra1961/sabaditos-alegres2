@@ -72,20 +72,20 @@ const app = {
     console.log('  Ya apostó:', this.yaAposto);
     console.log('  Partida:', this.gameState ? this.gameState.partidaActual : 0);
     
-    if (fichasApostadas > 0 && this.gameState && this.gameState.partidaActual > 1) {
+    // ✅ CORRECCIÓN: Solo ocultar si YA apostó en la partida ACTUAL
+    if (fichasApostadas > 0 && this.gameState && fichasApostadas >= (cartonesJugador * 6)) {
       panelApuestas.style.display = 'none';
-      console.log('🔒 Panel oculto - apuesta ya realizada en partida anterior');
+      console.log('🔒 Panel oculto - apuesta ya realizada en esta partida');
       return;
     }
-    
-    if (cartonesJugador > 0 && !this.yaAposto && fichasApostadas === 0) {
+    if (cartonesJugador > 0 && fichasApostadas === 0) {
       var fichasRequeridas = cartonesJugador * 6;
       var saldoDespues = saldoActual - fichasRequeridas;
-      
+
       document.getElementById('detalleCartones').textContent = '🎴 Cartones: ' + cartonesJugador;
       document.getElementById('detalleApuesta').textContent = '🎰 Apuesta: ' + fichasRequeridas + ' fichas ($' + (fichasRequeridas * 50) + ' COP)';
       document.getElementById('detalleSaldo').textContent = '💰 Saldo actual: ' + saldoActual + ' fichas';
-      document.getElementById('detalleSaldoRestante').textContent = saldoDespues >= 18 ? '✅ Saldo después: ' + saldoDespues + ' fichas' : '⚠️ Saldo insuficiente: ' + saldoDespues + ' fichas';
+      document.getElementById('detalleSaldoRestante').textContent = saldoDespues >= 10 ? '✅ Saldo después: ' + saldoDespues + ' fichas' : '⚠️ Saldo insuficiente: ' + saldoDespues + ' fichas';
       
       panelApuestas.style.display = 'block';
       console.log('✅ PANEL DE APUESTAS MOSTRADO');
