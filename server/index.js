@@ -491,7 +491,27 @@ function verificarPremiosCompletados() {
 // ============================================================================
 // 🔌 CONEXIONES SOCKET.IO
 // ============================================================================
+// ============================================================================
+// 🎯 NORMALIZACIÓN DE NOMBRES DE POZOS
+// ============================================================================
 
+function normalizarNombrePozo(pozo) {
+  // Convertir a minúsculas y quitar espacios
+  const p = pozo.toLowerCase().replace(/ /g, '');
+  
+  // Mapear diferentes formatos al nombre correcto
+  const mapeo = {
+    '4esquinas': 'cuatroEsquinas',
+    'cuatroesquinas': 'cuatroEsquinas',
+    'pokino': 'pokino',
+    'full': 'full',
+    'poker': 'poker',
+    'centro': 'centro',
+    'especial': 'especial'
+  };
+  
+  return mapeo[p] || pozo;
+}
 io.on('connection', function(socket) {
   console.log('✅ Jugador conectado:', socket.id);
   
@@ -890,17 +910,18 @@ io.on('connection', function(socket) {
       });
     }
   });
-  
-    // ✅ RECLAMAR PREMIO - CON VALIDACIÓN CORRECTA
+  // ✅ RECLAMAR PREMIO - CON NORMALIZACIÓN DE NOMBRES
   socket.on('reclamarPremio', function(numeroCarton, pozo, email) {
-    console.log('🏆 Reclamando premio:', pozo, 'Cartón:', numeroCarton, 'Jugador:', email, 'Partida:', gameState.partidaActual);
+    // ✅ CORRECCIÓN: Normalizar nombre del pozo
+    const pozoNormalizado = normalizarNombrePozo(pozo);
+    console.log('🏆 Reclamando premio:', pozo, '→', pozoNormalizado, 'Cartón:', numeroCarton, 'Jugador:', email);
     
     const carton = gameState.cartones.find(function(c) { return c.numero === numeroCarton; });
     if (!carton || carton.dueño !== email) {
       socket.emit('error', 'No tienes este cartón.');
       return;
     }
-    if (carton.pozos[pozo]) {
+    if (carton.pozos[pozoNormalizado]) {
       socket.emit('error', 'Este pozo ya fue reclamado.');
       return;
     }
@@ -909,51 +930,54 @@ io.on('connection', function(socket) {
     const ultimaCartaCodigo = gameState.ultimaCarta ? gameState.ultimaCarta.codigo : null;
     
     // Validación especial para CENTRO
-    if (pozo === 'centro' && gameState.partidaActual !== 6 && codigosCantados.length > 5) {
+    if (pozoNormalizado === 'centro' && gameState.partidaActual !== 6 && codigosCantados.length > 5) {
       socket.emit('error', '❌ El pozo CENTRO se reclama antes de la sexta carta cantada. Llevas ' + codigosCantados.length + ' cartas cantadas. En la Partida 6 (ESPECIAL) esta regla no aplica.');
       return;
     }
     
     // Validar el pozo
-    const valido = verificarPozo(carton, pozo, codigosCantados, ultimaCartaCodigo);
+    const valido = verificarPozo(carton, pozoNormalizado, codigosCantados, ultimaCartaCodigo);
     
     if (valido) {
       // Marcar como reclamado (pero no confirmado aún)
-      carton.pozos[pozo] = true;
+      carton.pozos[pozoNormalizado] = true;
       
-      const pozoConfig = pozosConfig[pozo];
-      const premio = gameState.pozosDinamicos[pozo].total;
-      const fichas = gameState.pozosDinamicos[pozo].fichas;
+      const pozoConfig = pozosConfig[pozoNormalizado];
+      const premio = gameState.pozosDinamicos[pozoNormalizado].total;
+      const fichas = gameState.pozosDinamicos[pozoNormalizado].fichas;
       
       console.log('  ✅ Premio válido:', pozoConfig.nombre, '- Premio:', premio, 'COP | Fichas:', fichas);
       
       io.emit('alertaGanador', {
         carton: numeroCarton,
-        pozo: pozo,  // ✅ CLAVE en minúsculas (pokino, full, poker, etc.)
-        pozoNombre: pozoConfig.nombre,  // Nombre para mostrar (POKINO, FULL, POKER)
+        pozo: pozoNormalizado,  // ✅ CLAVE en minúsculas
+        pozoNombre: pozoConfig.nombre,  // Nombre para mostrar
         jugador: gameState.jugadores[email] ? gameState.jugadores[email].nombre : email,
         email: email,
         premio: premio,
         fichas: fichas,
         mensaje: '🏆 ¡' + (gameState.jugadores[email] ? gameState.jugadores[email].nombre : email) + ' RECLAMA ' + pozoConfig.nombre + '!',
-        esEspecial: pozo === 'especial'
+        esEspecial: pozoNormalizado === 'especial'
       });
     } else {
       let mensajeError = '';
-      if (pozo === 'pokino') {
+      const pozoConfig = pozosConfig[pozoNormalizado];
+      if (pozoNormalizado === 'pokino') {
         mensajeError = 'POKINO no está completo. Verifica que las 5 cartas de una línea estén tapadas y que la última carta cantada esté en esa línea.';
-      } else if (pozo === 'especial') {
+      } else if (pozoNormalizado === 'especial') {
         mensajeError = 'ESPECIAL no está completo. Verifica que las 25 cartas estén tapadas y que la última carta cantada esté en el cartón.';
       } else {
-        mensajeError = pozosConfig[pozo].nombre + ' no está completo. La última carta cantada debe estar en este premio.';
+        mensajeError = (pozoConfig ? pozoConfig.nombre : pozo) + ' no está completo. La última carta cantada debe estar en este premio.';
       }
       socket.emit('error', mensajeError);
     }
   });
-  // ✅ CONFIRMAR PREMIO - PROCESAR PAGO Y ACTUALIZAR POZOS
+  
+  // ✅ CONFIRMAR PREMIO - CON NORMALIZACIÓN
   socket.on('confirmarPremio', function(numeroCarton, pozo, emailGanador, emailCantador) {
-    console.log('✅ CONFIRMAR PREMIO - Cartón:', numeroCarton, 'Pozo:', pozo, 'Ganador:', emailGanador);
-    console.log('  Cantador:', emailCantador, '¿Es cantador?', gameState.cantador === emailCantador);
+    // ✅ CORRECCIÓN: Normalizar nombre del pozo
+    const pozoNormalizado = normalizarNombrePozo(pozo);
+    console.log('✅ CONFIRMAR PREMIO - Cartón:', numeroCarton, 'Pozo:', pozo, '→', pozoNormalizado, 'Ganador:', emailGanador);
     
     if (gameState.cantador !== emailCantador) {
       console.log('  ❌ Error: No es el cantador');
@@ -969,16 +993,17 @@ io.on('connection', function(socket) {
     }
     
     // Buscar el pozo en pozosConfig
-    const pozoConfig = pozosConfig[pozo];
+    const pozoConfig = pozosConfig[pozoNormalizado];
     if (!pozoConfig) {
-      console.log('  ❌ Error: Pozo no configurado:', pozo);
+      console.log('  ❌ Error: Pozo no configurado:', pozoNormalizado);
       console.log('  Pozos disponibles:', Object.keys(pozosConfig));
-      socket.emit('error', 'Pozo no configurado: ' + pozo);
+      socket.emit('error', 'Pozo no configurado: ' + pozoNormalizado);
       return;
     }
     
-    console.log('  ✅ Pozo encontrado:', pozo, '-', pozoConfig.nombre);
+    console.log('  ✅ Pozo encontrado:', pozoNormalizado, '-', pozoConfig.nombre);
     
+    // ... resto del código igual, usando pozoNormalizado
     // El pozo ya fue marcado como ganado en reclamarPremio
     // Solo procesamos el pago
     
