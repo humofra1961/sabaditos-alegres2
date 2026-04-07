@@ -40,6 +40,23 @@ const socketClient = {
   registrarEventos: function() {
     socket.on('gameState', function(state) {
       console.log('📊 Recibiendo gameState:', state);
+      
+      // ✅ CORRECCIÓN CRÍTICA: Resetear yaAposto cuando se recibe gameState
+      if (window.app) {
+        // Si la partida es 1, resetear yaAposto (nuevo juego o reinicio)
+        if (state.partidaActual === 1) {
+          window.app.yaAposto = false;
+          console.log('🔄 Resetear yaAposto a false (partida 1)');
+        }
+        // También resetear si fichasApostadas del jugador actual es 0
+        if (window.app.emailActual && state.jugadores && state.jugadores[window.app.emailActual]) {
+          if (state.jugadores[window.app.emailActual].fichasApostadas === 0) {
+            window.app.yaAposto = false;
+            console.log('🔄 Resetear yaAposto a false (fichasApostadas = 0)');
+          }
+        }
+      }
+      
       if (!window.app.gameState) window.app.gameState = {};
       window.app.gameState = state;
       
@@ -49,7 +66,7 @@ const socketClient = {
           window.cartones.renderizarGrid();
         }
       }, 500);
-    });
+    });  
     
     // ✅ CORRECCIÓN CRÍTICA: Actualizar billetera INMEDIATAMENTE
     socket.on('updateJugadores', function(jugadores) {
