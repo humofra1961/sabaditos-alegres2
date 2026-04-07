@@ -891,7 +891,7 @@ io.on('connection', function(socket) {
     }
   });
   
-  // ✅ RECLAMAR PREMIO - CON VALIDACIÓN CORRECTA
+    // ✅ RECLAMAR PREMIO - CON VALIDACIÓN CORRECTA
   socket.on('reclamarPremio', function(numeroCarton, pozo, email) {
     console.log('🏆 Reclamando premio:', pozo, 'Cartón:', numeroCarton, 'Jugador:', email, 'Partida:', gameState.partidaActual);
     
@@ -929,8 +929,8 @@ io.on('connection', function(socket) {
       
       io.emit('alertaGanador', {
         carton: numeroCarton,
-        pozo: pozo,  // ✅ CORRECCIÓN: Enviar CLAVE (minúsculas) en lugar de nombre
-        pozoNombre: pozoConfig.nombre,  // Nombre para mostrar
+        pozo: pozo,  // ✅ CLAVE en minúsculas (pokino, full, poker, etc.)
+        pozoNombre: pozoConfig.nombre,  // Nombre para mostrar (POKINO, FULL, POKER)
         jugador: gameState.jugadores[email] ? gameState.jugadores[email].nombre : email,
         email: email,
         premio: premio,
@@ -1156,7 +1156,7 @@ io.on('connection', function(socket) {
       mensaje: '➡️ Partida ' + gameState.partidaActual + ' iniciada. ' + (gameState.partidaActual === 6 ? 'ESPECIAL - ¡Cartón Lleno!' : 'Realicen sus apuestas.')
     });
   });
-  // ✅ REINICIAR JUEGO
+  // ✅ REINICIAR JUEGO - CON RESET COMPLETO
   socket.on('reiniciarJuego', function(email) {
     if (gameState.cantador !== email) {
       socket.emit('error', 'Solo el cantador.');
@@ -1191,6 +1191,7 @@ io.on('connection', function(socket) {
       Object.keys(c.pozos).forEach(function(k) { c.pozos[k] = false; }); 
     });
     
+    // ✅ CORRECCIÓN CRÍTICA: Resetear fichasApostadas para que aparezca el panel
     Object.keys(gameState.jugadores).forEach(function(email) {
       gameState.jugadores[email].fichasApostadas = 0;
     });
@@ -1202,7 +1203,8 @@ io.on('connection', function(socket) {
     io.emit('updateBanco', gameState.banco);
     io.emit('updatePozosDinamicos', gameState.pozosDinamicos);
     
-    console.log('✅ Juego reiniciado - Partida 1 de 6. Regla del CENTRO restablecida.');
+    console.log('✅ Juego reiniciado - Partida 1 de 6. Panel de apuestas habilitado y Regla del CENTRO restablecida.');
+    
   });
   
   // ✅ SOLICITUD DE CAMBIO
