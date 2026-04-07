@@ -38,6 +38,7 @@ const socketClient = {
   },
   
   registrarEventos: function() {
+    // ✅ GAME STATE - CON RESET DE yaAposto
     socket.on('gameState', function(state) {
       console.log('📊 Recibiendo gameState:', state);
       
@@ -66,9 +67,9 @@ const socketClient = {
           window.cartones.renderizarGrid();
         }
       }, 500);
-    });  
+    });
     
-    // ✅ CORRECCIÓN CRÍTICA: Actualizar billetera INMEDIATAMENTE
+    // ✅ ACTUALIZAR JUGADORES - CON BILLETERA INMEDIATA
     socket.on('updateJugadores', function(jugadores) {
       console.log('👥 Actualizando jugadores:', jugadores);
       if (!window.app.gameState) window.app.gameState = {};
@@ -85,7 +86,8 @@ const socketClient = {
         }
       }
     });
-    // ✅ CORRECCIÓN CRÍTICA: Actualizar pozos INMEDIATAMENTE
+    
+    // ✅ ACTUALIZAR POZOS - CON RENDERIZADO INMEDIATO
     socket.on('updatePozosDinamicos', function(pozos) {
       console.log('🏆 Actualizando pozos:', pozos);
       if (!window.app.gameState) window.app.gameState = {};
@@ -95,8 +97,9 @@ const socketClient = {
         console.log('🎰 Llamando pozo.renderizar()');
         window.pozos.renderizar();
       }
-    });  
+    });
     
+    // ✅ ACTUALIZAR CARTONES
     socket.on('updateCartones', function(cartones) {
       console.log('🎴 Actualizando cartones:', cartones);
       if (!window.app.gameState) window.app.gameState = {};
@@ -107,6 +110,7 @@ const socketClient = {
       }
     });
     
+    // ✅ ACTUALIZAR CARTAS CANTADAS
     socket.on('updateCartasCantadas', function(cartas) {
       console.log('🃏 Actualizando cartas cantadas:', cartas);
       if (!window.app.gameState) window.app.gameState = {};
@@ -114,11 +118,13 @@ const socketClient = {
       if (window.ui) window.ui.renderizarCartasPorPintas();
     });
     
+    // ✅ ACTUALIZAR ÚLTIMA CARTA
     socket.on('updateUltimaCarta', function(carta) {
       console.log('🎴 Última carta:', carta);
       if (window.ui) window.ui.renderizarUltimaCarta(carta);
     });
     
+    // ✅ ACTUALIZAR FASE DEL JUEGO
     socket.on('updateFaseJuego', function(fase) {
       console.log('🔄 Fase del juego:', fase);
       if (!window.app.gameState) window.app.gameState = {};
@@ -126,13 +132,15 @@ const socketClient = {
       if (window.ui) window.ui.actualizarFaseJuego(fase);
     });
     
+    // ✅ ACTUALIZAR CANTADOR
     socket.on('updateCantador', function(email) {
       console.log('🎤 Cantador:', email);
       if (!window.app.gameState) window.app.gameState = {};
       window.app.gameState.cantador = email;
       if (window.ui) window.ui.actualizarPanelCantador(email);
     });
-            
+    
+    // ✅ ACTUALIZAR BANCO
     socket.on('updateBanco', function(banco) {
       console.log('🏦 Actualizando banco:', banco);
       if (!window.app.gameState) window.app.gameState = {};
@@ -140,6 +148,7 @@ const socketClient = {
       if (window.ui) window.ui.actualizarBanco(banco);
     });
     
+    // ✅ ACTUALIZAR ESTADÍSTICAS
     socket.on('updateEstadisticas', function(estadisticas) {
       console.log('📊 Actualizando estadísticas:', estadisticas);
       if (!window.app.gameState) window.app.gameState = {};
@@ -147,32 +156,38 @@ const socketClient = {
       if (window.ui) window.ui.renderizarEstadisticas();
     });
     
+    // ✅ REGISTRO NUEVO
     socket.on('registroNuevo', function(data) {
       console.log('✅ Registro nuevo:', data);
       if (window.app) window.app.marcarRegistroCompletado();
     });
     
+    // ✅ RECONEXIÓN EXITOSA
     socket.on('reconexionExitosa', function(data) {
       console.log('✅ Reconexión exitosa:', data);
       if (window.ui) window.ui.mostrarNotificacion('✅ ' + data.mensaje, 'success');
       if (window.app) window.app.marcarRegistroCompletado();
     });
     
+    // ✅ FICHAS COMPRADAS
     socket.on('fichasCompradas', function(data) {
       console.log('✅ Fichas compradas:', data);
       if (window.ui) window.ui.mostrarNotificacion('✅ ' + data.jugador + ' compró ' + data.fichas + ' fichas', 'success');
     });
     
+    // ✅ MONEDAS AGREGADAS
     socket.on('monedasAgregadas', function(data) {
       console.log('💰 Monedas agregadas:', data);
       if (window.ui) window.ui.mostrarNotificacion('💰 ' + data.cantidad + ' fichas agregadas a ' + data.jugador, 'success');
     });
     
+    // ✅ APUESTA REALIZADA
     socket.on('apuestaRealizada', function(data) {
       console.log('🎰 Apuesta realizada:', data);
       if (window.ui) window.ui.mostrarNotificacion('✅ ' + data.mensaje, 'success');
     });
     
+    // ✅ SIGUIENTE PARTIDA
     socket.on('siguientePartida', function(data) {
       console.log('➡️ Siguiente partida:', data);
       if (window.ui) window.ui.mostrarNotificacion(data.mensaje, 'success');
@@ -184,27 +199,31 @@ const socketClient = {
       }
     });
     
+    // ✅ VALIDACIÓN FALLIDA
     socket.on('validacionFallida', function(data) {
       console.log('⚠️ Validación fallida:', data);
       if (window.ui) window.ui.mostrarValidacionFallida(data);
     });
     
+    // ✅ ESTADO DE APUESTAS
     socket.on('estadoApuestas', function(data) {
       console.log('📋 Estado de apuestas:', data);
       if (window.ui) window.ui.mostrarEstadoApuestas(data);
     });
     
+    // ✅ JUEGO INICIADO
     socket.on('juegoIniciado', function(data) {
       console.log('🎮 Juego iniciado:', data);
       if (window.ui) window.ui.mostrarNotificacion(data.mensaje, 'success');
     });
     
+    // ✅ ALERTA DE GANADOR
     socket.on('alertaGanador', function(data) {
       console.log('🏆 Alerta de ganador:', data);
       if (window.premio) window.premio.mostrarAlerta(data);
     });
     
-    // ✅ CORRECCIÓN: Mostrar mensaje de premio confirmado
+    // ✅ PREMIO CONFIRMADO
     socket.on('premioConfirmado', function(data) {
       console.log('✅ Premio confirmado:', data);
       if (window.ui) {
@@ -215,6 +234,7 @@ const socketClient = {
       }
     });
     
+    // ✅ ERROR DEL SERVIDOR
     socket.on('error', function(mensaje) {
       console.error('❌ Error del servidor:', mensaje);
       if (window.ui) window.ui.mostrarNotificacion('❌ ' + mensaje, 'error');
