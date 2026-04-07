@@ -103,7 +103,7 @@ const premio = {
 
 window.pozosInfo = {
   pokino: { nombre: 'POKINO', premio: 50 },
-  cuatroEsquinas: { nombre: '4 ESQUINAS', premio: 150 },
+  cuatroEsquinas: { nombre: '4ESQUINAS', premio: 150 },
   full: { nombre: 'FULL', premio: 200 },
   poker: { nombre: 'POKER', premio: 300 },
   centro: { nombre: 'CENTRO', premio: 250 },
