@@ -31,7 +31,7 @@ const premio = {
       window.ui.mostrarNotificacion('🏆 Reclamando ' + pozos.length + ' premios. Espera entre cada uno.', 'success');
     }
   },
-  confirmar: function() {
+    confirmar: function() {
     console.log('✅ Confirmando premio');
     if (window.app.premioPendiente) {
       // ✅ CORRECCIÓN: Usar pozo (clave en minúsculas) en lugar de pozoNombre
@@ -58,7 +58,7 @@ const premio = {
       
       window.app.premioPendiente = null;
     }
-  },  
+  },
   rechazar: function() {
     console.log('❌ Rechazando premio');
     var alerta = document.getElementById('alertaGanador');
