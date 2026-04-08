@@ -780,7 +780,7 @@ const ui = {
       panel.classList.remove('hidden');
       panel.style.display = 'block';
     }
-  }
+  },
   // ✅ NUEVA FUNCIÓN: Mostrar panel de apuestas en modal
   mostrarPanelApuestasModal: function() {
     console.log('🎰 Mostrando panel de apuestas en modal');
