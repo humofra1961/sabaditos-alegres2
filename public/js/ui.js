@@ -589,7 +589,7 @@ const ui = {
       panel.classList.toggle('minimizado');
       console.log('🎤 Panel minimizado/maximizado');
     }
-  }
+  },
   
 };
 
