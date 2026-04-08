@@ -1107,6 +1107,15 @@ io.on('connection', function(socket) {
       ganadores: ganadores.length,
       esEspecial: pozo === 'especial'
     });
+
+    // ✅ CORRECCIÓN: Bloquear botón Cantar si se confirmó POKINO en partidas 1-5
+    if (pozoNormalizado === 'pokino' && gameState.partidaActual < 6) {
+      console.log('  🔒 Bloqueando botón Cantar (POKINO confirmado en partida', gameState.partidaActual, ')');
+      io.emit('bloquearCantar', { 
+        mensaje: '🔒 POKINO confirmado. Espera "Siguiente" para continuar.',
+        partida: gameState.partidaActual
+      });
+    }
   });  
   // ✅ TOGGLE FASE SELECCIÓN
   socket.on('toggleFaseSeleccion', function(email) {
@@ -1180,6 +1189,14 @@ io.on('connection', function(socket) {
       esEspecial: gameState.partidaActual === 6,
       mensaje: '➡️ Partida ' + gameState.partidaActual + ' iniciada. ' + (gameState.partidaActual === 6 ? 'ESPECIAL - ¡Cartón Lleno!' : 'Realicen sus apuestas.')
     });
+
+    // ✅ CORRECCIÓN: Desbloquear botón Cantar para la nueva partida
+    console.log('  🔓 Desbloqueando botón Cantar para partida', gameState.partidaActual);
+    io.emit('desbloquearCantar', {
+      mensaje: '🔓 Nueva partida iniciada. Botón Cantar habilitado.',
+      partida: gameState.partidaActual
+    });
+    
   });
   // ✅ REINICIAR JUEGO - CON RESET COMPLETO
   socket.on('reiniciarJuego', function(email) {
