@@ -3,13 +3,16 @@ let socket;
 const socketClient = {
   conectar: function() {
     console.log('🔌 Conectando a Socket.io...');
-    
+
     socket = io({
       transports: ['websocket', 'polling'],
       reconnection: true,
       reconnectionDelay: 1000,
-      reconnectionAttempts: 100,
-      timeout: 120000
+      reconnectionDelayMax: 5000,
+      reconnectionAttempts: 999,  // Intentos ilimitados
+      timeout: 600000,  // ✅ 10 minutos (300000 ms) en lugar de 2
+      pingTimeout: 60000,  // ✅ 1 minuto para ping
+      pingInterval: 25000  // ✅ Ping cada 25 segundos
     });
     
     socket.on('connect', function() {
