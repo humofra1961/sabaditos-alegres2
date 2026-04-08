@@ -619,25 +619,117 @@ const ui = {
     }
   },
 
+    // ✅ OBTENER CONTENIDO MIS CARTONES - CON CARTÓN VISUAL
   obtenerContenidoMisCartones: function() {
+    console.log('🎴 Obteniendo contenido de Mis Cartones');
+    
+    let html = '';
+    
+    // ✅ ÚLTIMA CARTA CANTADA (siempre visible)
+    if (window.app.gameState && window.app.gameState.ultimaCarta) {
+      const ultimaCarta = window.app.gameState.ultimaCarta;
+      html += `
+        <div style="background: linear-gradient(135deg, #f39c12, #e67e22); padding: 15px; margin: 10px 0; border-radius: 10px; text-align: center; border: 3px solid #fff;">
+          <h4 style="margin: 0 0 8px 0; font-size: 1em;">🃏 Última Carta</h4>
+          <div style="font-size: 3em; font-weight: bold; margin: 5px 0; color: ${ultimaCarta.color === 'red' ? '#e74c3c' : '#2c3e50'};">
+            ${ultimaCarta.valor}${ultimaCarta.palo}
+          </div>
+          <p style="margin: 5px 0; font-size: 0.85em;">Total: ${window.app.gameState.cartasCantadas ? window.app.gameState.cartasCantadas.length : 0}</p>
+        </div>
+      `;
+    }
+    
+    // ✅ CARTONES DEL JUGADOR
     if (!window.app.gameState || !window.app.gameState.cartones) {
-      return '<p>No hay cartones disponibles</p>';
+      html += '<p style="text-align: center; padding: 15px;">⏳ Cargando...</p>';
+      return html;
     }
     
     const misCartones = window.app.gameState.cartones.filter(c => c.dueño === window.app.emailActual);
     
     if (misCartones.length === 0) {
-      return '<p>No has seleccionado ningún cartón</p>';
+      html += `
+        <div style="background: rgba(255,255,255,0.1); padding: 20px; margin: 10px 0; border-radius: 10px; text-align: center;">
+          <p style="font-size: 1.1em; margin: 10px 0;">🎴 Sin cartones</p>
+          <p style="font-size: 0.85em; color: #95a5a6;">Selecciona un cartón abajo</p>
+        </div>
+      `;
+      return html;
     }
     
-    return misCartones.map(carton => `
-      <div style="background: rgba(255,255,255,0.1); padding: 15px; margin: 10px 0; border-radius: 10px;">
-        <h4 style="margin: 0 0 10px 0;">${carton.nombre}</h4>
-        <p style="margin: 5px 0;">Número: ${carton.numero}</p>
-        <p style="margin: 5px 0;">Poker: ${carton.valorPoker || 'N/A'}</p>
-        <p style="margin: 5px 0;">Full: ${carton.valorFull2 || 'N/A'} + ${carton.valorFull3 || 'N/A'}</p>
-      </div>
-    `).join('');
+    // Mostrar cada cartón con su grid visual
+    misCartones.forEach(carton => {
+      html += `
+        <div style="background: linear-gradient(135deg, #3498db, #2980b9); padding: 15px; margin: 10px 0; border-radius: 10px;">
+          <h4 style="margin: 0 0 15px 0; text-align: center; color: #fff; font-size: 1.2em;">
+            ${carton.nombre}
+            <div style="font-size: 0.7em; font-weight: normal; margin-top: 5px;">
+              Poker: ${carton.valorPoker} | Full: ${carton.valorFull2}+${carton.valorFull3}
+            </div>
+          </h4>
+          
+          <!-- Grid del cartón 5x5 -->
+          <div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 5px; margin: 10px 0;">
+            ${carton.cartas.map((carta, index) => {
+              const estaTapada = carton.tapadas && carton.tapadas[index];
+              const color = carta.color === 'red' ? '#e74c3c' : '#2c3e50';
+              const fondo = estaTapada ? 'rgba(243, 156, 18, 0.8)' : 'rgba(255,255,255,0.95)';
+              const texto = estaTapada ? '#fff' : color;
+              
+              return `
+                <div style="
+                  background: ${fondo};
+                  border: 2px solid ${estaTapada ? '#f39c12' : '#bdc3c7'};
+                  border-radius: 5px;
+                  padding: 8px 2px;
+                  text-align: center;
+                  font-size: ${carta.valor.length > 2 ? '0.7em' : '0.9em'};
+                  font-weight: bold;
+                  color: ${texto};
+                  min-height: 45px;
+                  display: flex;
+                  align-items: center;
+                  justify-content: center;
+                  cursor: pointer;
+                  transition: all 0.2s;
+                " onclick="ui.taparCartaDesdeModal(${carton.numero}, ${index})"
+                title="${carta.codigo} - Click para ${estaTapada ? 'destapar' : 'tapar'}"
+                >
+                  ${estaTapada ? '✓' : carta.valor + carta.palo}
+                </div>
+              `;
+            }).join('')}
+          </div>
+          
+          <p style="text-align: center; color: #fff; font-size: 0.85em; margin: 10px 0 0 0;">
+            💡 Toca una carta para taparla/destaparla
+          </p>
+        </div>
+      `;
+    });
+    
+    return html;
+  },
+
+  // ✅ NUEVA FUNCIÓN: Tapar carta desde modal
+  taparCartaDesdeModal: function(numeroCarton, index) {
+    console.log('👆 Tapando carta desde modal - Cartón:', numeroCarton, 'Índice:', index);
+    
+    if (!window.app.emailActual) {
+      alert('Debes iniciar sesión primero');
+      return;
+    }
+    
+    // Emitir evento para tapar/destapar
+    socket.emit('taparCarta', numeroCarton, index, window.app.emailActual);
+    
+    // Cerrar modal después de 500ms para ver el cambio
+    setTimeout(() => {
+      const modal = document.getElementById('modalSeccion');
+      if (modal) {
+        modal.classList.add('hidden');
+      }
+    }, 500);
   },
 
   obtenerContenidoPozos: function() {
