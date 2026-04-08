@@ -1321,10 +1321,19 @@ io.on('connection', function(socket) {
 // ⏰ KEEP-ALIVE PARA EVITAR TIMEOUT DE RENDER
 // ============================================================================
 
-// Enviar ping cada 5 minutos para mantener el servidor activo
+// ✅ Enviar ping cada 3 minutos para mantener el servidor activo
+// (Render free tier duerme apps después de 15 min de inactividad)
 setInterval(function() {
-  console.log('⏰ Keep-alive ping - Servidor activo - Partida:', gameState.partidaActual);
-}, 300000);  // 5 minutos
+  console.log('⏰ Keep-alive ping - Servidor activo - Partida:', gameState.partidaActual, '- Jugadores:', Object.keys(gameState.jugadores).length);
+  
+  // ✅ Emitir evento de "latido" a todos los clientes conectados
+  io.emit('heartbeat', {
+    timestamp: Date.now(),
+    partida: gameState.partidaActual,
+    mensaje: '💓 Servidor activo'
+  });
+}, 180000);  // ✅ 3 minutos (180000 ms) en lugar de 5
+
 // ============================================================================
 // 🚀 INICIAR SERVIDOR
 // ============================================================================
