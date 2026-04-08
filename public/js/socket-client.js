@@ -26,11 +26,17 @@ const socketClient = {
       if (window.ui) window.ui.actualizarEstadoConexion(false);
     });
     
-    socket.on('disconnect', function() {
-      console.log('❌ Socket desconectado - reconectando...');
-      if (window.app) window.app.socketConectado = false;
+    socket.on('disconnect', function(reason) {
+      console.log('❌ Socket desconectado - razón:', reason, '- reconectando...');
+      if (window.app) {
+        window.app.socketConectado = false;
+        // ✅ Intentar reconexión automática
+        if (window.app.manejarReconexion) {
+          window.app.manejarReconexion();
+        }
+      }
       if (window.ui) window.ui.actualizarEstadoConexion(false);
-    });
+    });    
     
     socket.on('reconnect', function(attemptNumber) {
       console.log('✅ Reconectado después de ' + attemptNumber + ' intentos');
@@ -266,6 +272,12 @@ const socketClient = {
           'success'
         );
       }
+    });
+
+    // ✅ HEARTBEAT - Mantener conexión activa
+    socket.on('heartbeat', function(data) {
+      // Solo loguear en modo debug, no mostrar notificación al usuario
+      console.log('💓 Heartbeat recibido:', data);
     });
     
     // ✅ ERROR DEL SERVIDOR
