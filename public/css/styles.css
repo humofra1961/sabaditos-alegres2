@@ -1408,7 +1408,7 @@ button.apostar {
   right: 0;
   background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
   display: none; /* Solo visible en móvil */
-  padding: 10px 0;
+  padding: 8px 0;
   z-index: 1000;
   box-shadow: 0 -2px 10px rgba(0,0,0,0.3);
 }
@@ -1424,7 +1424,7 @@ button.apostar {
   background: rgba(255,255,255,0.1);
   border: none;
   color: white;
-  padding: 8px 12px;
+  padding: 6px 8px;
   border-radius: 10px;
   cursor: pointer;
   display: flex;
@@ -1432,7 +1432,8 @@ button.apostar {
   align-items: center;
   gap: 3px;
   transition: all 0.3s;
-  min-width: 60px;
+  min-width: 55px;
+  font-size: 0.85em;
 }
 
 .nav-btn:active {
@@ -1441,11 +1442,11 @@ button.apostar {
 }
 
 .nav-icon {
-  font-size: 1.5em;
+  font-size: 1.4em;
 }
 
 .nav-label {
-  font-size: 0.7em;
+  font-size: 0.65em;
   font-weight: 600;
 }
 
