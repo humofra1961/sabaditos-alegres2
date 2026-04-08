@@ -111,6 +111,25 @@ const app = {
       }
     }, 1500);
   }
+
+  manejarReconexion: function() {
+    console.log('🔄 Intentando reconectar...');
+    
+    // Mostrar indicador visual
+    const estadoEl = document.getElementById('estadoConexion');
+    if (estadoEl) {
+      estadoEl.className = 'status reconnecting';
+      estadoEl.innerHTML = '🔄 Reconectando...';
+      estadoEl.style.background = 'linear-gradient(135deg, #f39c12, #e67e22)';
+    }
+    
+    // Intentar reconectar después de 2 segundos
+    setTimeout(function() {
+      if (window.socketClient) {
+        window.socketClient.conectar();
+      }
+    }, 2000);
+  }
 };
 
 window.app = app;
