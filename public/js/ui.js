@@ -781,6 +781,142 @@ const ui = {
       panel.style.display = 'block';
     }
   }
+  // ✅ NUEVA FUNCIÓN: Mostrar panel de apuestas en modal
+  mostrarPanelApuestasModal: function() {
+    console.log('🎰 Mostrando panel de apuestas en modal');
+    
+    const modal = document.getElementById('modalSeccion');
+    const titulo = document.getElementById('modalTitulo');
+    const contenido = document.getElementById('modalContenido');
+    
+    if (!modal || !titulo || !contenido) return;
+    
+    titulo.textContent = '🎰 Haz tu Apuesta';
+    
+    // Obtener el panel de apuestas original
+    const panelOriginal = document.getElementById('panelApuestas');
+    if (panelOriginal) {
+      // Clonar el contenido
+      contenido.innerHTML = panelOriginal.innerHTML;
+      
+      // Mostrar el modal
+      modal.classList.remove('hidden');
+      
+      // Si el panel original está oculto, mostrar el modal
+      if (panelOriginal.style.display === 'none') {
+        // Verificar si puede apostar
+        this.verificarPanelApuestas();
+      }
+    } else {
+      contenido.innerHTML = '<p style="text-align: center; padding: 20px;">⚠️ El panel de apuestas no está disponible.<br><br>Por favor, selecciona al menos 1 cartón primero.</p>';
+      modal.classList.remove('hidden');
+    }
+  },
+
+  // ✅ MODIFICAR: mostrarSeccion para incluir "apostar"
+  mostrarSeccion: function(seccion) {
+    console.log('📱 Mostrando sección:', seccion);
+    
+    // Caso especial: Apostar
+    if (seccion === 'apostar') {
+      this.mostrarPanelApuestasModal();
+      return;
+    }
+    
+    const modal = document.getElementById('modalSeccion');
+    const titulo = document.getElementById('modalTitulo');
+    const contenido = document.getElementById('modalContenido');
+    
+    if (!modal || !contenido) return;
+    
+    this.actualizarHeaderMovil();
+    
+    switch(seccion) {
+      case 'misCartones':
+        titulo.textContent = '🎴 Mis Cartones';
+        contenido.innerHTML = this.obtenerContenidoMisCartones();
+        break;
+        
+      case 'pozos':
+        titulo.textContent = '🏆 Los 6 Pozos';
+        contenido.innerHTML = this.obtenerContenidoPozos();
+        break;
+        
+      case 'cartasCantadas':
+        titulo.textContent = '🃏 Cartas Cantadas';
+        contenido.innerHTML = this.obtenerContenidoCartasCantadas();
+        break;
+        
+      case 'billetera':
+        titulo.textContent = '💰 Mi Billetera';
+        contenido.innerHTML = this.obtenerContenidoBilletera();
+        break;
+        
+      case 'estadisticas':
+        titulo.textContent = '📊 Mis Estadísticas';
+        contenido.innerHTML = this.obtenerContenidoEstadisticas();
+        break;
+    }
+    
+    modal.classList.remove('hidden');
+  },
+
+  // ✅ MODIFICAR: obtenerContenidoMisCartones para incluir última carta
+  obtenerContenidoMisCartones: function() {
+    let html = '';
+    
+    // ✅ AGREGAR: Última Carta Cantada (visible para todos)
+    if (window.app.gameState && window.app.gameState.ultimaCarta) {
+      const ultimaCarta = window.app.gameState.ultimaCarta;
+      html += `
+        <div style="background: linear-gradient(135deg, #f39c12, #e67e22); padding: 20px; margin: 10px 0; border-radius: 10px; text-align: center; border: 3px solid #fff;">
+          <h4 style="margin: 0 0 10px 0; font-size: 1.1em;">🃏 Última Carta Cantada</h4>
+          <div style="font-size: 4em; font-weight: bold; margin: 10px 0; color: ${ultimaCarta.color === 'red' ? '#e74c3c' : '#2c3e50'};">
+            ${ultimaCarta.valor}${ultimaCarta.palo}
+          </div>
+          <p style="margin: 5px 0; font-size: 0.9em;">Total cantadas: ${window.app.gameState.cartasCantadas ? window.app.gameState.cartasCantadas.length : 0}</p>
+        </div>
+      `;
+    } else {
+      html += `
+        <div style="background: rgba(255,255,255,0.1); padding: 20px; margin: 10px 0; border-radius: 10px; text-align: center;">
+          <h4 style="margin: 0 0 10px 0;">🃏 Última Carta Cantada</h4>
+          <p style="font-size: 1.2em; color: #95a5a6;">-</p>
+        </div>
+      `;
+    }
+    
+    // Cartones del jugador
+    if (!window.app.gameState || !window.app.gameState.cartones) {
+      html += '<p style="text-align: center; padding: 15px;">No hay cartones disponibles</p>';
+      return html;
+    }
+    
+    const misCartones = window.app.gameState.cartones.filter(c => c.dueño === window.app.emailActual);
+    
+    if (misCartones.length === 0) {
+      html += '<p style="text-align: center; padding: 15px;">🎴 No has seleccionado ningún cartón<br><br><small>Selecciona al menos 1 cartón para poder apostar</small></p>';
+      return html;
+    }
+    
+    html += '<h4 style="margin: 20px 0 10px 0; border-bottom: 2px solid rgba(255,255,255,0.3); padding-bottom: 10px;">📋 Tus Cartones (' + misCartones.length + ')</h4>';
+    
+    misCartones.forEach(carton => {
+      html += `
+        <div style="background: rgba(255,255,255,0.1); padding: 15px; margin: 10px 0; border-radius: 10px;">
+          <h4 style="margin: 0 0 10px 0; color: #f39c12;">${carton.nombre}</h4>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 0.9em;">
+            <div><strong>Número:</strong> ${carton.numero}</div>
+            <div><strong>Poker:</strong> ${carton.valorPoker || 'N/A'}</div>
+            <div><strong>Full:</strong> ${carton.valorFull2 || 'N/A'} + ${carton.valorFull3 || 'N/A'}</div>
+            <div><strong>Fila Poker:</strong> ${carton.pokerFila || 'N/A'}</div>
+          </div>
+        </div>
+      `;
+    });
+    
+    return html;
+  },
   
 };  // ← CIERRA EL OBJETO ui AQUÍ
 
