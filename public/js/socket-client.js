@@ -67,6 +67,37 @@ const socketClient = {
           window.cartones.renderizarGrid();
         }
       }, 500);
+
+    // ✅ BLOQUEAR BOTÓN CANTAR
+    socket.on('bloquearCantar', function(data) {
+      console.log('🔒 Bloqueando botón Cantar:', data);
+      const btn = document.getElementById('btnCantar');
+      if (btn) {
+        btn.disabled = true;
+        btn.style.opacity = '0.5';
+        btn.style.cursor = 'not-allowed';
+        btn.title = data.mensaje;
+      }
+      if (window.ui) {
+        window.ui.mostrarNotificacion(data.mensaje, 'warning');
+      }
+    });
+    
+    // ✅ DESBLOQUEAR BOTÓN CANTAR
+    socket.on('desbloquearCantar', function(data) {
+      console.log('🔓 Desbloqueando botón Cantar:', data);
+      const btn = document.getElementById('btnCantar');
+      if (btn) {
+        btn.disabled = false;
+        btn.style.opacity = '1';
+        btn.style.cursor = 'pointer';
+        btn.title = '';
+      }
+      if (window.ui) {
+        window.ui.mostrarNotificacion(data.mensaje, 'success');
+      }
+    });
+      
     });
     
     // ✅ ACTUALIZAR JUGADORES - CON BILLETERA INMEDIATA
