@@ -9,6 +9,12 @@ const cantador = {
   },
   
   cantarCarta: function() {
+    // ✅ Verificar si el botón está deshabilitado
+    const btn = document.getElementById('btnCantar');
+    if (btn && btn.disabled) {
+      console.log('❌ Botón Cantar deshabilitado');
+      return;
+    }
     console.log('🃏 Cantando carta...');
     socket.emit('cantarCartaAleatoria', window.app.emailActual);
   },
