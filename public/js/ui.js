@@ -1,6 +1,6 @@
 // ===================================================================
 // 🎨 UI - RENDERIZADO DE INTERFAZ
-// ===================================================================
+// ============================================================================
 
 const ui = {
   
@@ -55,7 +55,6 @@ const ui = {
 
     if (contador) contador.textContent = Object.keys(jugadores).length;
     
-    // ✅ CORRECCIÓN: Actualizar billetera del jugador actual cuando se renderizan jugadores
     if (window.app.emailActual && jugadores[window.app.emailActual]) {
       ui.actualizarMonedas(jugadores[window.app.emailActual].monedas);
     }
@@ -81,17 +80,14 @@ const ui = {
     const monedasEl = document.getElementById('misMonedas');
     const valorEl = document.getElementById('misMonedasValor');
     
-    // Actualizar display de monedas
     if (monedasEl) monedasEl.textContent = monedas || 0;
     if (valorEl) valorEl.textContent = (monedas || 0) * 50;
     
-    // ✅ CORRECCIÓN: Actualizar header de fichas si existe
     const fichasHeader = document.querySelector('.fichas-header');
     if (fichasHeader) {
       fichasHeader.innerHTML = '💰 Fichas: ' + (monedas || 0) + ' ($' + ((monedas || 0) * 50) + ' COP)';
     }
     
-    // ✅ CORRECCIÓN: Actualizar display de fichas en player-info si existe
     const fichasDisplay = document.getElementById('fichasDisplay');
     if (fichasDisplay) {
       fichasDisplay.textContent = '💰 Fichas: ' + (monedas || 0) + ' ($' + ((monedas || 0) * 50) + ' COP)';
@@ -112,7 +108,6 @@ const ui = {
     const porPintas = { '♠': [], '♥': [], '♦': [], '♣': [] };
     const colores = { '♠': 'black', '♥': 'red', '♦': 'red', '♣': 'black' };
     
-    // ✅ ACTUALIZAR CONTADOR DE CARTAS
     const contadorEl = document.getElementById('contadorCartas');
     if (contadorEl) {
       contadorEl.textContent = cartas.length;
@@ -157,7 +152,6 @@ const ui = {
   // ============================================================================
   
   actualizarFaseJuego: function(fase) {
-    // Actualizar header móvil
     this.actualizarHeaderMovil();
     const indicator = document.getElementById('faseJuego');
     const seleccion = document.getElementById('seleccionCartones');
@@ -173,14 +167,12 @@ const ui = {
       if (seleccion) seleccion.classList.add('hidden');
     }
     
-    // ✅ ACTUALIZAR CONTADOR DE PARTIDAS
     const partidaEl = document.getElementById('partidaActual');
     if (partidaEl && window.app.gameState) {
       partidaEl.textContent = window.app.gameState.partidaActual || 1;
     }
   },
   
-  // ✅ FUNCIÓN PARA MOSTRAR JUEGO INICIADO
   mostrarJuegoIniciado: function(data) {
     console.log('🎮 Juego iniciado:', data);
     if (window.ui) window.ui.mostrarNotificacion(data.mensaje, 'success');
@@ -259,14 +251,9 @@ const ui = {
     }
   },
   
-  // ============================================================================
-  // CREAR PANEL DE VERIFICACIÓN DINÁMICAMENTE
-  // ============================================================================
-  
   crearPanelVerificacion: function() {
     console.log('🔨 Creando panel de verificación...');
     
-    // Crear overlay
     const overlay = document.createElement('div');
     overlay.id = 'panelVerificacionOverlay';
     overlay.className = 'panel-verificacion-overlay';
@@ -275,7 +262,6 @@ const ui = {
     };
     document.body.appendChild(overlay);
     
-    // Crear panel
     const panel = document.createElement('div');
     panel.id = 'panelVerificacionApuestas';
     panel.className = 'panel-verificacion-apuestas';
@@ -292,10 +278,6 @@ const ui = {
     console.log('✅ Panel de verificación creado');
   },
   
-  // ============================================================================
-  // MOSTRAR ESTADO DE APUESTAS (VERIFICACIÓN DEL CANTADOR)
-  // ============================================================================
-
   mostrarEstadoApuestas: function(data) {
     console.log('📋 Estado de apuestas:', data);
     
@@ -310,7 +292,6 @@ const ui = {
       return;
     }
     
-    // Mostrar overlay y panel
     if (overlay) {
       overlay.classList.remove('hidden');
       overlay.style.display = 'block';
@@ -322,7 +303,6 @@ const ui = {
     
     console.log('✅ Panel de verificación mostrado');
     
-    // Encabezado con resumen
     let html = '<div style="background: rgba(0,0,0,0.3); padding: 15px; border-radius: 10px; margin-bottom: 15px;">';
     html += '<h4 style="margin: 0 0 10px 0; color: #f39c12;">📊 RESUMEN DE LA PARTIDA</h4>';
     html += '<div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;">';
@@ -334,7 +314,6 @@ const ui = {
     html += '</div>';
     
     if (data.todosListos) {
-      // ✅ TODOS LISTOS
       html += '<div style="background: linear-gradient(135deg, #27ae60, #219a52); padding: 20px; border-radius: 10px; text-align: center;">';
       html += '<h3 style="margin: 0; color: white;">✅ ¡TODOS LISTOS PARA JUGAR!</h3>';
       html += '<p style="margin: 10px 0 0 0; color: white; font-size: 1.1em;">' + data.resumen + '</p>';
@@ -345,13 +324,11 @@ const ui = {
         mensaje.innerHTML = '<span style="color: #27ae60; font-weight: bold; font-size: 1.2em;">✅ Todos los ' + (data.listos || []).length + ' jugadores están listos</span>';
       }
     } else {
-      // ❌ FALTAN REQUISITOS
       html += '<div style="background: linear-gradient(135deg, #e74c3c, #c0392b); padding: 15px; border-radius: 10px; margin-bottom: 15px;">';
       html += '<h4 style="margin: 0 0 10px 0; color: white;">❌ FALTAN REQUISITOS</h4>';
       html += '<p style="margin: 0; color: #fff;">' + (data.noListos || []).length + ' de ' + (data.totalJugadores || 0) + ' jugadores NO están listos</p>';
       html += '</div>';
       
-      // Lista de jugadores NO listos con detalle
       html += '<div style="margin-bottom: 15px;">';
       html += '<h4 style="color: #e74c3c; margin-bottom: 10px;">⚠️ Jugadores que deben completar requisitos:</h4>';
       (data.noListos || []).forEach(function(j) {
@@ -370,7 +347,6 @@ const ui = {
         html += '🎰 Apuesta: ' + j.fichasApostadas + ' / ' + j.fichasDeberianApostar + ' fichas';
         html += '</div>';
         
-        // Mensaje específico según nivel
         if (j.nivel === 1) {
           html += '<div style="margin-top: 8px; padding: 8px; background: rgba(231, 76, 60, 0.3); border-radius: 5px; font-size: 0.85em; color: #ffcccc;">';
           html += '⚠️ Este jugador debe COMPRAR al menos 40 fichas antes de apostar';
@@ -389,7 +365,6 @@ const ui = {
       });
       html += '</div>';
       
-      // Lista de jugadores listos
       if (data.listos && data.listos.length > 0) {
         html += '<div>';
         html += '<h4 style="color: #27ae60; margin-bottom: 10px;">✅ Jugadores Listos:</h4>';
@@ -412,7 +387,6 @@ const ui = {
       }
     }
     
-    // Actualizar botón Iniciar
     const btnIniciar = document.getElementById('btnIniciarJuego');
     if (btnIniciar) {
       if (data.todosListos) {
@@ -428,10 +402,6 @@ const ui = {
       }
     }
   },
-  
-  // ============================================================================
-  // CERRAR PANEL DE VERIFICACIÓN
-  // ============================================================================
   
   cerrarPanelVerificacion: function() {
     console.log('🔒 Cerrando panel de verificación...');
@@ -452,10 +422,6 @@ const ui = {
     }
   },
   
-  // ============================================================================
-  // NOTIFICACIONES
-  // ============================================================================
-
   mostrarNotificacion: function(mensaje, tipo, especial) {
     const notif = document.createElement('div');
     notif.className = 'notificacion ' + (especial ? 'especial' : '');
@@ -464,10 +430,6 @@ const ui = {
     document.body.appendChild(notif);
     setTimeout(function() { notif.remove(); }, 5000);
   },
-
-  // ============================================================================
-  // MODALES
-  // ============================================================================
 
   mostrarModalSolicitud: function() {
     document.getElementById('modalSolicitud').classList.add('active');
@@ -505,10 +467,6 @@ const ui = {
     };
   },
 
-  // ============================================================================
-  // ESTADÍSTICAS
-  // ============================================================================
-
   renderizarEstadisticas: function() {
     const container = document.getElementById('estadisticas');
     if (!container) return;
@@ -518,10 +476,6 @@ const ui = {
                           '<div class="stats-row"><span>Partidas Ganadas:</span><span style="color: #27ae60;">' + (stats.ganadas || 0) + '</span></div>' +
                           '<div class="stats-row"><span>Pozos Ganados:</span><span style="color: #f39c12;">' + ((stats.pozosGanados || []).length) + '</span></div>';
   },
-
-  // ============================================================================
-  // 🎤 PANEL CANTADOR ARRASTRABLE
-  // ============================================================================
 
   panelCantadorDraggable: function() {
     const panel = document.getElementById('panelCantadorFijo');
@@ -591,246 +545,243 @@ const ui = {
     }
   },
   
-};
+  // ============================================================================
+  // 📱 NAVEGACIÓN MÓVIL OPTIMIZADA - FUNCIONES DENTRO DEL OBJETO UI
+  // ============================================================================
 
-window.ui = ui;
-
-// ============================================================================
-// 📱 NAVEGACIÓN MÓVIL OPTIMIZADA
-// ============================================================================
-
-mostrarSeccion: function(seccion) {
-  console.log('📱 Mostrando sección:', seccion);
-  
-  const modal = document.getElementById('modalSeccion');
-  const titulo = document.getElementById('modalTitulo');
-  const contenido = document.getElementById('modalContenido');
-  
-  if (!modal || !contenido) return;
-  
-  // Actualizar header con info actual
-  this.actualizarHeaderMovil();
-  
-  // Contenido según sección
-  switch(seccion) {
-    case 'misCartones':
-      titulo.textContent = '🎴 Mis Cartones';
-      contenido.innerHTML = this.obtenerContenidoMisCartones();
-      break;
-      
-    case 'pozos':
-      titulo.textContent = '🏆 Los 6 Pozos';
-      contenido.innerHTML = this.obtenerContenidoPozos();
-      break;
-      
-    case 'cartasCantadas':
-      titulo.textContent = '🃏 Cartas Cantadas';
-      contenido.innerHTML = this.obtenerContenidoCartasCantadas();
-      break;
-      
-    case 'billetera':
-      titulo.textContent = '💰 Mi Billetera';
-      contenido.innerHTML = this.obtenerContenidoBilletera();
-      break;
-      
-    case 'estadisticas':
-      titulo.textContent = '📊 Mis Estadísticas';
-      contenido.innerHTML = this.obtenerContenidoEstadisticas();
-      break;
-  }
-  
-  modal.classList.remove('hidden');
-},
-
-cerrarSeccion: function() {
-  const modal = document.getElementById('modalSeccion');
-  if (modal) {
-    modal.classList.add('hidden');
-  }
-},
-
-actualizarHeaderMovil: function() {
-  const headerMonedas = document.getElementById('headerMonedas');
-  const headerPartida = document.getElementById('headerPartida');
-  const headerCartones = document.getElementById('headerCartones');
-  
-  if (window.app.gameState && window.app.gameState.jugadores && window.app.emailActual) {
-    const jugador = window.app.gameState.jugadores[window.app.emailActual];
+  mostrarSeccion: function(seccion) {
+    console.log('📱 Mostrando sección:', seccion);
     
-    if (headerMonedas) {
-      headerMonedas.textContent = jugador.monedas || 0;
+    const modal = document.getElementById('modalSeccion');
+    const titulo = document.getElementById('modalTitulo');
+    const contenido = document.getElementById('modalContenido');
+    
+    if (!modal || !contenido) return;
+    
+    this.actualizarHeaderMovil();
+    
+    switch(seccion) {
+      case 'misCartones':
+        titulo.textContent = '🎴 Mis Cartones';
+        contenido.innerHTML = this.obtenerContenidoMisCartones();
+        break;
+        
+      case 'pozos':
+        titulo.textContent = '🏆 Los 6 Pozos';
+        contenido.innerHTML = this.obtenerContenidoPozos();
+        break;
+        
+      case 'cartasCantadas':
+        titulo.textContent = '🃏 Cartas Cantadas';
+        contenido.innerHTML = this.obtenerContenidoCartasCantadas();
+        break;
+        
+      case 'billetera':
+        titulo.textContent = '💰 Mi Billetera';
+        contenido.innerHTML = this.obtenerContenidoBilletera();
+        break;
+        
+      case 'estadisticas':
+        titulo.textContent = '📊 Mis Estadísticas';
+        contenido.innerHTML = this.obtenerContenidoEstadisticas();
+        break;
     }
     
-    if (headerCartones) {
-      headerCartones.textContent = (jugador.cartones || []).length;
+    modal.classList.remove('hidden');
+  },
+
+  cerrarSeccion: function() {
+    const modal = document.getElementById('modalSeccion');
+    if (modal) {
+      modal.classList.add('hidden');
     }
-  }
-  
-  if (window.app.gameState && headerPartida) {
-    headerPartida.textContent = (window.app.gameState.partidaActual || 1) + '/6';
-  }
-},
+  },
 
-obtenerContenidoMisCartones: function() {
-  if (!window.app.gameState || !window.app.gameState.cartones) {
-    return '<p>No hay cartones disponibles</p>';
-  }
-  
-  const misCartones = window.app.gameState.cartones.filter(c => c.dueño === window.app.emailActual);
-  
-  if (misCartones.length === 0) {
-    return '<p>No has seleccionado ningún cartón</p>';
-  }
-  
-  return misCartones.map(carton => `
-    <div style="background: rgba(255,255,255,0.1); padding: 15px; margin: 10px 0; border-radius: 10px;">
-      <h4 style="margin: 0 0 10px 0;">${carton.nombre}</h4>
-      <p style="margin: 5px 0;">Número: ${carton.numero}</p>
-      <p style="margin: 5px 0;">Poker: ${carton.valorPoker || 'N/A'}</p>
-      <p style="margin: 5px 0;">Full: ${carton.valorFull2 || 'N/A'} + ${carton.valorFull3 || 'N/A'}</p>
-    </div>
-  `).join('');
-},
+  actualizarHeaderMovil: function() {
+    const headerMonedas = document.getElementById('headerMonedas');
+    const headerPartida = document.getElementById('headerPartida');
+    const headerCartones = document.getElementById('headerCartones');
+    
+    if (window.app.gameState && window.app.gameState.jugadores && window.app.emailActual) {
+      const jugador = window.app.gameState.jugadores[window.app.emailActual];
+      
+      if (headerMonedas) {
+        headerMonedas.textContent = jugador.monedas || 0;
+      }
+      
+      if (headerCartones) {
+        headerCartones.textContent = (jugador.cartones || []).length;
+      }
+    }
+    
+    if (window.app.gameState && headerPartida) {
+      headerPartida.textContent = (window.app.gameState.partidaActual || 1) + '/6';
+    }
+  },
 
-obtenerContenidoPozos: function() {
-  if (!window.app.gameState || !window.app.gameState.pozosDinamicos) {
-    return '<p>No hay información de pozos</p>';
-  }
-  
-  const pozos = window.app.gameState.pozosDinamicos;
-  const nombresPozos = {
-    pokino: 'POKINO',
-    cuatroEsquinas: '4 ESQUINAS',
-    full: 'FULL',
-    poker: 'POKER',
-    centro: 'CENTRO',
-    especial: 'ESPECIAL'
-  };
-  
-  return Object.keys(pozos).map(key => `
-    <div style="background: rgba(255,255,255,0.1); padding: 15px; margin: 10px 0; border-radius: 10px;">
-      <h4 style="margin: 0 0 10px 0; color: #f39c12;">${nombresPozos[key] || key}</h4>
-      <p style="margin: 5px 0;">💰 $${pozos[key].total || 0} COP</p>
-      <p style="margin: 5px 0;">🎰 ${pozos[key].fichas || 0} fichas</p>
-    </div>
-  `).join('');
-},
-
-obtenerContenidoCartasCantadas: function() {
-  if (!window.app.gameState || !window.app.gameState.cartasCantadas) {
-    return '<p>No hay cartas cantadas</p>';
-  }
-  
-  const cartas = window.app.gameState.cartasCantadas;
-  const ultimaCarta = window.app.gameState.ultimaCarta;
-  
-  let html = '';
-  
-  if (ultimaCarta) {
-    html += `
-      <div style="background: linear-gradient(135deg, #f39c12, #e67e22); padding: 20px; margin: 10px 0; border-radius: 10px; text-align: center;">
-        <h4 style="margin: 0 0 10px 0;">Última Carta</h4>
-        <div style="font-size: 3em; font-weight: bold;">${ultimaCarta.valor}${ultimaCarta.palo}</div>
+  obtenerContenidoMisCartones: function() {
+    if (!window.app.gameState || !window.app.gameState.cartones) {
+      return '<p>No hay cartones disponibles</p>';
+    }
+    
+    const misCartones = window.app.gameState.cartones.filter(c => c.dueño === window.app.emailActual);
+    
+    if (misCartones.length === 0) {
+      return '<p>No has seleccionado ningún cartón</p>';
+    }
+    
+    return misCartones.map(carton => `
+      <div style="background: rgba(255,255,255,0.1); padding: 15px; margin: 10px 0; border-radius: 10px;">
+        <h4 style="margin: 0 0 10px 0;">${carton.nombre}</h4>
+        <p style="margin: 5px 0;">Número: ${carton.numero}</p>
+        <p style="margin: 5px 0;">Poker: ${carton.valorPoker || 'N/A'}</p>
+        <p style="margin: 5px 0;">Full: ${carton.valorFull2 || 'N/A'} + ${carton.valorFull3 || 'N/A'}</p>
       </div>
-    `;
-  }
-  
-  html += `<p style="margin: 15px 0;"><strong>Total cantadas:</strong> ${cartas.length}</p>`;
-  
-  // Agrupar por palos
-  const porPalo = { '♠': [], '♥': [], '♦': [], '♣': [] };
-  cartas.forEach(carta => {
-    if (porPalo[carta.palo]) {
-      porPalo[carta.palo].push(carta);
+    `).join('');
+  },
+
+  obtenerContenidoPozos: function() {
+    if (!window.app.gameState || !window.app.gameState.pozosDinamicos) {
+      return '<p>No hay información de pozos</p>';
     }
-  });
-  
-  Object.keys(porPalo).forEach(palo => {
-    if (porPalo[palo].length > 0) {
-      const color = palo === '♥' || palo === '♦' ? '#e74c3c' : '#2c3e50';
+    
+    const pozos = window.app.gameState.pozosDinamicos;
+    const nombresPozos = {
+      pokino: 'POKINO',
+      cuatroEsquinas: '4 ESQUINAS',
+      full: 'FULL',
+      poker: 'POKER',
+      centro: 'CENTRO',
+      especial: 'ESPECIAL'
+    };
+    
+    return Object.keys(pozos).map(key => `
+      <div style="background: rgba(255,255,255,0.1); padding: 15px; margin: 10px 0; border-radius: 10px;">
+        <h4 style="margin: 0 0 10px 0; color: #f39c12;">${nombresPozos[key] || key}</h4>
+        <p style="margin: 5px 0;">💰 $${pozos[key].total || 0} COP</p>
+        <p style="margin: 5px 0;">🎰 ${pozos[key].fichas || 0} fichas</p>
+      </div>
+    `).join('');
+  },
+
+  obtenerContenidoCartasCantadas: function() {
+    if (!window.app.gameState || !window.app.gameState.cartasCantadas) {
+      return '<p>No hay cartas cantadas</p>';
+    }
+    
+    const cartas = window.app.gameState.cartasCantadas;
+    const ultimaCarta = window.app.gameState.ultimaCarta;
+    
+    let html = '';
+    
+    if (ultimaCarta) {
       html += `
-        <div style="background: rgba(255,255,255,0.1); padding: 10px; margin: 10px 0; border-radius: 10px;">
-          <h4 style="color: ${color}; margin: 0 0 10px 0;">${palo} (${porPalo[palo].length})</h4>
-          <div style="display: flex; flex-wrap: wrap; gap: 5px;">
-            ${porPalo[palo].map(c => `<span style="background: rgba(255,255,255,0.2); padding: 5px 10px; border-radius: 5px; font-weight: bold;">${c.valor}</span>`).join('')}
-          </div>
+        <div style="background: linear-gradient(135deg, #f39c12, #e67e22); padding: 20px; margin: 10px 0; border-radius: 10px; text-align: center;">
+          <h4 style="margin: 0 0 10px 0;">Última Carta</h4>
+          <div style="font-size: 3em; font-weight: bold;">${ultimaCarta.valor}${ultimaCarta.palo}</div>
         </div>
       `;
     }
-  });
-  
-  return html;
-},
-
-obtenerContenidoBilletera: function() {
-  if (!window.app.gameState || !window.app.gameState.jugadores || !window.app.emailActual) {
-    return '<p>No hay información de billetera</p>';
-  }
-  
-  const jugador = window.app.gameState.jugadores[window.app.emailActual];
-  
-  return `
-    <div style="background: linear-gradient(135deg, #27ae60, #219a52); padding: 20px; margin: 10px 0; border-radius: 10px; text-align: center;">
-      <h3 style="margin: 0 0 10px 0;">💰 Tu Billetera</h3>
-      <div style="font-size: 2.5em; font-weight: bold; margin: 15px 0;">${jugador.monedas || 0}</div>
-      <p style="margin: 5px 0;">fichas</p>
-      <p style="margin: 5px 0; font-size: 1.2em;">$${(jugador.monedas || 0) * 50} COP</p>
-    </div>
     
-    <div style="background: rgba(255,255,255,0.1); padding: 15px; margin: 10px 0; border-radius: 10px;">
-      <h4 style="margin: 0 0 10px 0;">📊 Resumen</h4>
-      <p style="margin: 5px 0;">🎰 Fichas apostadas: ${jugador.fichasApostadas || 0}</p>
-      <p style="margin: 5px 0;">🎴 Cartones: ${(jugador.cartones || []).length}</p>
-      <p style="margin: 5px 0;">🏆 Pozos ganados: ${(jugador.pozosGanados || []).length}</p>
-      <p style="margin: 5px 0;">💵 Fichas ganadas: ${jugador.fichasGanadas || 0}</p>
-    </div>
-  `;
-},
+    html += `<p style="margin: 15px 0;"><strong>Total cantadas:</strong> ${cartas.length}</p>`;
+    
+    const porPalo = { '♠': [], '♥': [], '♦': [], '♣': [] };
+    cartas.forEach(carta => {
+      if (porPalo[carta.palo]) {
+        porPalo[carta.palo].push(carta);
+      }
+    });
+    
+    Object.keys(porPalo).forEach(palo => {
+      if (porPalo[palo].length > 0) {
+        const color = palo === '♥' || palo === '♦' ? '#e74c3c' : '#2c3e50';
+        html += `
+          <div style="background: rgba(255,255,255,0.1); padding: 10px; margin: 10px 0; border-radius: 10px;">
+            <h4 style="color: ${color}; margin: 0 0 10px 0;">${palo} (${porPalo[palo].length})</h4>
+            <div style="display: flex; flex-wrap: wrap; gap: 5px;">
+              ${porPalo[palo].map(c => `<span style="background: rgba(255,255,255,0.2); padding: 5px 10px; border-radius: 5px; font-weight: bold;">${c.valor}</span>`).join('')}
+            </div>
+          </div>
+        `;
+      }
+    });
+    
+    return html;
+  },
 
-obtenerContenidoEstadisticas: function() {
-  if (!window.app.gameState || !window.app.gameState.estadisticas || !window.app.emailActual) {
-    return '<p>No hay estadísticas disponibles</p>';
-  }
-  
-  const stats = window.app.gameState.estadisticas[window.app.emailActual];
-  
-  if (!stats) {
-    return '<p>Aún no tienes estadísticas</p>';
-  }
-  
-  return `
-    <div style="background: rgba(255,255,255,0.1); padding: 15px; margin: 10px 0; border-radius: 10px;">
-      <h4 style="margin: 0 0 15px 0;">📊 Tus Estadísticas</h4>
+  obtenerContenidoBilletera: function() {
+    if (!window.app.gameState || !window.app.gameState.jugadores || !window.app.emailActual) {
+      return '<p>No hay información de billetera</p>';
+    }
+    
+    const jugador = window.app.gameState.jugadores[window.app.emailActual];
+    
+    return `
+      <div style="background: linear-gradient(135deg, #27ae60, #219a52); padding: 20px; margin: 10px 0; border-radius: 10px; text-align: center;">
+        <h3 style="margin: 0 0 10px 0;">💰 Tu Billetera</h3>
+        <div style="font-size: 2.5em; font-weight: bold; margin: 15px 0;">${jugador.monedas || 0}</div>
+        <p style="margin: 5px 0;">fichas</p>
+        <p style="margin: 5px 0; font-size: 1.2em;">$${(jugador.monedas || 0) * 50} COP</p>
+      </div>
       
-      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-        <div style="background: rgba(255,255,255,0.1); padding: 10px; border-radius: 8px; text-align: center;">
-          <div style="font-size: 1.5em; font-weight: bold; color: #3498db;">${(stats.ganadas || 0) + (stats.perdidas || 0)}</div>
-          <div style="font-size: 0.8em;">Partidas</div>
-        </div>
+      <div style="background: rgba(255,255,255,0.1); padding: 15px; margin: 10px 0; border-radius: 10px;">
+        <h4 style="margin: 0 0 10px 0;">📊 Resumen</h4>
+        <p style="margin: 5px 0;">🎰 Fichas apostadas: ${jugador.fichasApostadas || 0}</p>
+        <p style="margin: 5px 0;">🎴 Cartones: ${(jugador.cartones || []).length}</p>
+        <p style="margin: 5px 0;">🏆 Pozos ganados: ${(jugador.pozosGanados || []).length}</p>
+        <p style="margin: 5px 0;">💵 Fichas ganadas: ${jugador.fichasGanadas || 0}</p>
+      </div>
+    `;
+  },
+
+  obtenerContenidoEstadisticas: function() {
+    if (!window.app.gameState || !window.app.gameState.estadisticas || !window.app.emailActual) {
+      return '<p>No hay estadísticas disponibles</p>';
+    }
+    
+    const stats = window.app.gameState.estadisticas[window.app.emailActual];
+    
+    if (!stats) {
+      return '<p>Aún no tienes estadísticas</p>';
+    }
+    
+    return `
+      <div style="background: rgba(255,255,255,0.1); padding: 15px; margin: 10px 0; border-radius: 10px;">
+        <h4 style="margin: 0 0 15px 0;">📊 Tus Estadísticas</h4>
         
-        <div style="background: rgba(255,255,255,0.1); padding: 10px; border-radius: 8px; text-align: center;">
-          <div style="font-size: 1.5em; font-weight: bold; color: #27ae60;">${stats.ganadas || 0}</div>
-          <div style="font-size: 0.8em;">Ganadas</div>
-        </div>
-        
-        <div style="background: rgba(255,255,255,0.1); padding: 10px; border-radius: 8px; text-align: center;">
-          <div style="font-size: 1.5em; font-weight: bold; color: #f39c12;">${(stats.pozosGanados || []).length}</div>
-          <div style="font-size: 0.8em;">Pozos</div>
-        </div>
-        
-        <div style="background: rgba(255,255,255,0.1); padding: 10px; border-radius: 8px; text-align: center;">
-          <div style="font-size: 1.5em; font-weight: bold; color: #9b59b6;">${stats.fichasGanadas || 0}</div>
-          <div style="font-size: 0.8em;">Fichas</div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+          <div style="background: rgba(255,255,255,0.1); padding: 10px; border-radius: 8px; text-align: center;">
+            <div style="font-size: 1.5em; font-weight: bold; color: #3498db;">${(stats.ganadas || 0) + (stats.perdidas || 0)}</div>
+            <div style="font-size: 0.8em;">Partidas</div>
+          </div>
+          
+          <div style="background: rgba(255,255,255,0.1); padding: 10px; border-radius: 8px; text-align: center;">
+            <div style="font-size: 1.5em; font-weight: bold; color: #27ae60;">${stats.ganadas || 0}</div>
+            <div style="font-size: 0.8em;">Ganadas</div>
+          </div>
+          
+          <div style="background: rgba(255,255,255,0.1); padding: 10px; border-radius: 8px; text-align: center;">
+            <div style="font-size: 1.5em; font-weight: bold; color: #f39c12;">${(stats.pozosGanados || []).length}</div>
+            <div style="font-size: 0.8em;">Pozos</div>
+          </div>
+          
+          <div style="background: rgba(255,255,255,0.1); padding: 10px; border-radius: 8px; text-align: center;">
+            <div style="font-size: 1.5em; font-weight: bold; color: #9b59b6;">${stats.fichasGanadas || 0}</div>
+            <div style="font-size: 0.8em;">Fichas</div>
+          </div>
         </div>
       </div>
-    </div>
-  `;
-},
+    `;
+  },
 
-mostrarPanelCantador: function() {
-  const panel = document.getElementById('panelCantadorFijo');
-  if (panel) {
-    panel.classList.remove('hidden');
-    panel.style.display = 'block';
+  mostrarPanelCantador: function() {
+    const panel = document.getElementById('panelCantadorFijo');
+    if (panel) {
+      panel.classList.remove('hidden');
+      panel.style.display = 'block';
+    }
   }
-}
+  
+};  // ← CIERRA EL OBJETO ui AQUÍ
+
+window.ui = ui;
