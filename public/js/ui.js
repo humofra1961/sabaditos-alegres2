@@ -755,7 +755,7 @@ const ui = {
     }, 300);
   },  
 
-  // ✅ NUEVA FUNCIÓN: Tapar carta desde modal
+  /*// ✅ NUEVA FUNCIÓN: Tapar carta desde modal
   taparCartaDesdeModal: function(numeroCarton, index) {
     console.log('👆 Tapando carta desde modal - Cartón:', numeroCarton, 'Índice:', index);
     
@@ -774,7 +774,7 @@ const ui = {
         modal.classList.add('hidden');
       }
     }, 500);
-  },
+  },**/
 
   obtenerContenidoPozos: function() {
     if (!window.app.gameState || !window.app.gameState.pozosDinamicos) {
