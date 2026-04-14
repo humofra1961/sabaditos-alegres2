@@ -757,8 +757,10 @@ const ui = {
   },
 
   obtenerContenidoCartasCantadas: function() {
+    console.log('🃏 [DEBUG] obtenerContenidoCartasCantadas iniciado');
+    
     if (!window.app.gameState || !window.app.gameState.cartasCantadas) {
-      return '<p>No hay cartas cantadas</p>';
+      return '<p style="text-align: center; padding: 20px; color: #fff;">⏳ No hay cartas cantadas aún</p>';
     }
     
     const cartas = window.app.gameState.cartasCantadas;
@@ -766,65 +768,76 @@ const ui = {
     
     let html = '';
     
+    // ✅ 1. ÚLTIMA CARTA CANTADA (DESTACADA)
     if (ultimaCarta) {
+      const colorTexto = ultimaCarta.color === 'red' ? '#e74c3c' : '#2c3e50';
       html += `
-        <div style="background: linear-gradient(135deg, #f39c12, #e67e22); padding: 20px; margin: 10px 0; border-radius: 10px; text-align: center;">
-          <h4 style="margin: 0 0 10px 0;">Última Carta</h4>
-          <div style="font-size: 3em; font-weight: bold;">${ultimaCarta.valor}${ultimaCarta.palo}</div>
+        <div style="background: linear-gradient(135deg, #f39c12, #e67e22); padding: 20px; margin: 10px 0; border-radius: 10px; text-align: center; border: 3px solid #fff;">
+          <h4 style="margin: 0 0 10px 0; font-size: 1.1em; color: #fff;">🃏 Última Carta Cantada</h4>
+          <div style="font-size: 4em; font-weight: bold; margin: 10px 0; color: ${colorTexto}; background: rgba(255,255,255,0.95); border-radius: 10px; padding: 15px; display: inline-block; box-shadow: 0 4px 15px rgba(0,0,0,0.2);">
+            ${ultimaCarta.valor}${ultimaCarta.palo}
+          </div>
+          <p style="margin: 10px 0 0 0; font-size: 0.9em; color: #fff;">Total cantadas: <strong>${cartas.length}</strong> de 52</p>
         </div>
       `;
+      console.log('🃏 [DEBUG] Última carta:', ultimaCarta.codigo);
     }
     
-    html += `<p style="margin: 15px 0;"><strong>Total cantadas:</strong> ${cartas.length}</p>`;
+    // ✅ 2. TOTAL DE CARTAS
+    html += `<h4 style="margin: 20px 0 10px 0; border-bottom: 2px solid rgba(255,255,255,0.3); padding-bottom: 10px; color: #fff;">📋 Todas las Cartas (${cartas.length})</h4>`;
     
+    // ✅ 3. AGRUPAR POR PALOS
     const porPalo = { '♠': [], '♥': [], '♦': [], '♣': [] };
+    const colores = { '♠': '#2c3e50', '♥': '#e74c3c', '♦': '#e74c3c', '♣': '#2c3e50' };
+    const iconos = { '♠': '♠', '♥': '♥', '♦': '♦', '♣': '' };
+    
     cartas.forEach(carta => {
-      if (porPalo[carta.palo]) {
+      if (carta && carta.palo && porPalo[carta.palo]) {
         porPalo[carta.palo].push(carta);
       }
     });
     
+    // ✅ 4. MOSTRAR CADA PALO
     Object.keys(porPalo).forEach(palo => {
       if (porPalo[palo].length > 0) {
-        const color = palo === '♥' || palo === '♦' ? '#e74c3c' : '#2c3e50';
+        const color = colores[palo];
+        const icono = iconos[palo];
+        
         html += `
-          <div style="background: rgba(255,255,255,0.1); padding: 10px; margin: 10px 0; border-radius: 10px;">
-            <h4 style="color: ${color}; margin: 0 0 10px 0;">${palo} (${porPalo[palo].length})</h4>
-            <div style="display: flex; flex-wrap: wrap; gap: 5px;">
-              ${porPalo[palo].map(c => `<span style="background: rgba(255,255,255,0.2); padding: 5px 10px; border-radius: 5px; font-weight: bold;">${c.valor}</span>`).join('')}
+          <div style="background: rgba(255,255,255,0.1); padding: 12px; margin: 10px 0; border-radius: 10px; border-left: 4px solid ${color};">
+            <h5 style="color: ${color}; margin: 0 0 10px 0; font-size: 1em; display: flex; align-items: center; gap: 8px;">
+              <span style="font-size: 1.3em;">${icono}</span>
+              <span>${palo} (${porPalo[palo].length})</span>
+            </h5>
+            <div style="display: flex; flex-wrap: wrap; gap: 6px;">
+              ${porPalo[palo].map(carta => {
+                const cartaColor = carta.color === 'red' ? '#e74c3c' : '#2c3e50';
+                return `
+                  <span style="
+                    background: rgba(255,255,255,0.95);
+                    color: ${cartaColor};
+                    padding: 6px 10px;
+                    border-radius: 6px;
+                    font-weight: bold;
+                    font-size: 0.9em;
+                    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+                    display: inline-flex;
+                    align-items: center;
+                    gap: 3px;
+                  ">
+                    ${carta.valor}${carta.palo}
+                  </span>
+                `;
+              }).join('')}
             </div>
           </div>
         `;
       }
     });
     
+    console.log('🃏 [DEBUG] Contenido generado, total cartas:', cartas.length);
     return html;
-  },
-
-  obtenerContenidoBilletera: function() {
-    if (!window.app.gameState || !window.app.gameState.jugadores || !window.app.emailActual) {
-      return '<p>No hay información de billetera</p>';
-    }
-    
-    const jugador = window.app.gameState.jugadores[window.app.emailActual];
-    
-    return `
-      <div style="background: linear-gradient(135deg, #27ae60, #219a52); padding: 20px; margin: 10px 0; border-radius: 10px; text-align: center;">
-        <h3 style="margin: 0 0 10px 0;">💰 Tu Billetera</h3>
-        <div style="font-size: 2.5em; font-weight: bold; margin: 15px 0;">${jugador.monedas || 0}</div>
-        <p style="margin: 5px 0;">fichas</p>
-        <p style="margin: 5px 0; font-size: 1.2em;">$${(jugador.monedas || 0) * 50} COP</p>
-      </div>
-      
-      <div style="background: rgba(255,255,255,0.1); padding: 15px; margin: 10px 0; border-radius: 10px;">
-        <h4 style="margin: 0 0 10px 0;">📊 Resumen</h4>
-        <p style="margin: 5px 0;">🎰 Fichas apostadas: ${jugador.fichasApostadas || 0}</p>
-        <p style="margin: 5px 0;">🎴 Cartones: ${(jugador.cartones || []).length}</p>
-        <p style="margin: 5px 0;">🏆 Pozos ganados: ${(jugador.pozosGanados || []).length}</p>
-        <p style="margin: 5px 0;">💵 Fichas ganadas: ${jugador.fichasGanadas || 0}</p>
-      </div>
-    `;
-  },
+  },  
 
   obtenerContenidoEstadisticas: function() {
     if (!window.app.gameState || !window.app.gameState.estadisticas || !window.app.emailActual) {
