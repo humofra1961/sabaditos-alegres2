@@ -711,7 +711,7 @@ const ui = {
     return html;
   },
 
-  // ✅ TAPAR CARTA DESDE MODAL
+  // ✅ TAPAR CARTA DESDE MODAL - VERSIÓN MÓVIL COMPATIBLE
   taparCartaDesdeModal: function(numeroCarton, index) {
     console.log('👆 [DEBUG] taparCartaDesdeModal - Cartón:', numeroCarton, 'Índice:', index);
     
@@ -720,17 +720,33 @@ const ui = {
       return;
     }
     
+    // ✅ Emitir evento para tapar/destapar
     socket.emit('taparCarta', numeroCarton, index, window.app.emailActual);
     
-    // Recargar modal después de 300ms
-    setTimeout(() => {
+    // ✅ Recargar modal DESPUÉS de que el servidor confirme el cambio
+    // Usamos un listener temporal para asegurar que se actualice con los datos reales
+    const onCartonUpdated = function() {
       const modal = document.getElementById('modalSeccion');
       const contenido = document.getElementById('modalContenido');
-      if (modal && contenido && window.app.emailActual) {
+      if (modal && contenido && window.app.emailActual && !modal.classList.contains('hidden')) {
         contenido.innerHTML = ui.obtenerContenidoMisCartones();
       }
-    }, 300);
-  },    
+      // Remover el listener después de ejecutar
+      socket.off('updateCartones', onCartonUpdated);
+    };
+    
+    socket.on('updateCartones', onCartonUpdated);
+    
+    // Fallback: si no llega updateCartones en 500ms, recargar igual
+    setTimeout(() => {
+      socket.off('updateCartones', onCartonUpdated);
+      const modal = document.getElementById('modalSeccion');
+      const contenido = document.getElementById('modalContenido');
+      if (modal && contenido && window.app.emailActual && !modal.classList.contains('hidden')) {
+        contenido.innerHTML = ui.obtenerContenidoMisCartones();
+      }
+    }, 500);
+  },  
 
   obtenerContenidoPozos: function() {
     if (!window.app.gameState || !window.app.gameState.pozosDinamicos) {
@@ -918,6 +934,47 @@ const ui = {
       modal.classList.remove('hidden');
     }
   }
+
+  // ✅ ACTUALIZAR MODALES CUANDO LLEGA NUEVA CARTA O SE ACTUALIZAN CARTONES
+  inicializarActualizacionModales: function() {
+    console.log('🔄 [DEBUG] Inicializando actualización de modales');
+    
+    // Escuchar cuando llega una nueva carta cantada
+    socket.on('updateUltimaCarta', function(carta) {
+      console.log('🃏 [DEBUG] Nueva última carta en modal:', carta ? carta.codigo : 'null');
+      
+      // Si el modal está abierto, actualizarlo según la sección
+      const modal = document.getElementById('modalSeccion');
+      const titulo = document.getElementById('modalTitulo');
+      const contenido = document.getElementById('modalContenido');
+      
+      if (modal && !modal.classList.contains('hidden') && titulo && contenido) {
+        if (titulo.textContent.includes('Cartas Cantadas')) {
+          console.log('🔄 [DEBUG] Actualizando modal Cartas Cantadas');
+          contenido.innerHTML = ui.obtenerContenidoCartasCantadas();
+        } else if (titulo.textContent.includes('Mis Cartones')) {
+          console.log('🔄 [DEBUG] Actualizando modal Mis Cartones');
+          contenido.innerHTML = ui.obtenerContenidoMisCartones();
+        }
+      }
+    });
+    
+    // Escuchar cuando se actualizan cartones (para tapar cartas)
+    socket.on('updateCartones', function(cartones) {
+      console.log('🎴 [DEBUG] Cartones actualizados, verificando modales');
+      
+      const modal = document.getElementById('modalSeccion');
+      const titulo = document.getElementById('modalTitulo');
+      const contenido = document.getElementById('modalContenido');
+      
+      if (modal && !modal.classList.contains('hidden') && titulo && contenido) {
+        if (titulo.textContent.includes('Mis Cartones')) {
+          console.log('🔄 [DEBUG] Actualizando Mis Cartones con nuevos estados');
+          contenido.innerHTML = ui.obtenerContenidoMisCartones();
+        }
+      }
+    });
+  },  
   
 };  // ← CIERRA EL OBJETO ui AQUÍ
 
