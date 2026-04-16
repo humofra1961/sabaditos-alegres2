@@ -4,6 +4,10 @@
 
 const ui = {
   
+  // ============================================================================
+  // ESTADO DE CONEXIÓN
+  // ============================================================================
+  
   actualizarEstadoConexion: function(conectado) {
     const estadoEl = document.getElementById('estadoConexion');
     if (estadoEl) {
@@ -12,6 +16,10 @@ const ui = {
       estadoEl.style.background = conectado ? 'linear-gradient(135deg, #27ae60, #219a52)' : 'linear-gradient(135deg, #e74c3c, #c0392b)';
     }
   },
+
+  // ============================================================================
+  // RENDERIZADO GENERAL
+  // ============================================================================
 
   renderizarTodo: function() {
     this.renderizarJugadores();
@@ -22,6 +30,10 @@ const ui = {
     this.actualizarBanco(window.app.gameState ? window.app.gameState.banco : null);
     this.actualizarMonedas(window.app.gameState && window.app.gameState.jugadores && window.app.gameState.jugadores[window.app.emailActual] ? window.app.gameState.jugadores[window.app.emailActual].monedas : 0);
   },
+
+  // ============================================================================
+  // JUGADORES
+  // ============================================================================
 
   renderizarJugadores: function() {
     const lista = document.getElementById('listaJugadores');
@@ -60,7 +72,9 @@ const ui = {
     }).join('');
   },
 
+  // ✅ CORRECCIÓN: Actualizar billetera en TODAS las ubicaciones
   actualizarMonedas: function(monedas) {
+    // Actualizar header móvil
     this.actualizarHeaderMovil();
 
     const monedasEl = document.getElementById('misMonedas');
@@ -81,6 +95,10 @@ const ui = {
     
     console.log('💰 Billetera actualizada:', monedas, 'fichas ($' + ((monedas || 0) * 50) + ' COP)');
   },
+  
+  // ============================================================================
+  // CARTAS CANTADAS
+  // ============================================================================
   
   renderizarCartasPorPintas: function() {
     const container = document.getElementById('cartasPorPintas');
@@ -129,6 +147,10 @@ const ui = {
     }
   },
   
+  // ============================================================================
+  // FASE DEL JUEGO
+  // ============================================================================
+  
   actualizarFaseJuego: function(fase) {
     this.actualizarHeaderMovil();
     const indicator = document.getElementById('faseJuego');
@@ -156,6 +178,10 @@ const ui = {
     if (window.ui) window.ui.mostrarNotificacion(data.mensaje, 'success');
   },
   
+  // ============================================================================
+  // PANEL DEL CANTADOR
+  // ============================================================================
+
   actualizarPanelCantador: function(email) {
     const panel = document.getElementById('panelCantador');
     const panelFijo = document.getElementById('panelCantadorFijo');
@@ -182,6 +208,10 @@ const ui = {
     }
   },
 
+  // ============================================================================
+  // BANCO
+  // ============================================================================
+
   actualizarBanco: function(banco) {
     if (!banco) return;
     const recaudadoEl = document.getElementById('bancoRecaudado');
@@ -189,6 +219,10 @@ const ui = {
     if (recaudadoEl) recaudadoEl.textContent = banco.totalRecaudado || 0;
     if (pagadoEl) pagadoEl.textContent = banco.totalPagado || 0;
   },
+
+  // ============================================================================
+  // VALIDACIÓN DE APUESTAS
+  // ============================================================================
 
   mostrarValidacionFallida: function(data) {
     this.mostrarNotificacion(data.mensaje, 'error', true);
@@ -512,23 +546,17 @@ const ui = {
   },
   
   // ============================================================================
-  // 📱 NAVEGACIÓN MÓVIL OPTIMIZADA
+  // 📱 NAVEGACIÓN MÓVIL OPTIMIZADA - FUNCIONES DENTRO DEL OBJETO UI
   // ============================================================================
 
   mostrarSeccion: function(seccion) {
     console.log('📱 Mostrando sección:', seccion);
     
-    // Caso especial: Apostar
-    if (seccion === 'apostar') {
-      this.mostrarPanelApuestasModal();
-      return;
-    }
-    
     const modal = document.getElementById('modalSeccion');
     const titulo = document.getElementById('modalTitulo');
     const contenido = document.getElementById('modalContenido');
     
-    if (!modal || !titulo || !contenido) return;
+    if (!modal || !contenido) return;
     
     this.actualizarHeaderMovil();
     
@@ -732,6 +760,27 @@ const ui = {
     }, 300);
   },    
 
+  /*// ✅ NUEVA FUNCIÓN: Tapar carta desde modal
+  taparCartaDesdeModal: function(numeroCarton, index) {
+    console.log('👆 Tapando carta desde modal - Cartón:', numeroCarton, 'Índice:', index);
+    
+    if (!window.app.emailActual) {
+      alert('Debes iniciar sesión primero');
+      return;
+    }
+    
+    // Emitir evento para tapar/destapar
+    socket.emit('taparCarta', numeroCarton, index, window.app.emailActual);
+    
+    // Cerrar modal después de 500ms para ver el cambio
+    setTimeout(() => {
+      const modal = document.getElementById('modalSeccion');
+      if (modal) {
+        modal.classList.add('hidden');
+      }
+    }, 500);
+  },**/
+
   obtenerContenidoPozos: function() {
     if (!window.app.gameState || !window.app.gameState.pozosDinamicos) {
       return '<p>No hay información de pozos</p>';
@@ -757,10 +806,8 @@ const ui = {
   },
 
   obtenerContenidoCartasCantadas: function() {
-    console.log('🃏 [DEBUG] obtenerContenidoCartasCantadas iniciado');
-    
     if (!window.app.gameState || !window.app.gameState.cartasCantadas) {
-      return '<p style="text-align: center; padding: 20px; color: #fff;">⏳ No hay cartas cantadas aún</p>';
+      return '<p>No hay cartas cantadas</p>';
     }
     
     const cartas = window.app.gameState.cartasCantadas;
@@ -768,76 +815,65 @@ const ui = {
     
     let html = '';
     
-    // ✅ 1. ÚLTIMA CARTA CANTADA (DESTACADA)
     if (ultimaCarta) {
-      const colorTexto = ultimaCarta.color === 'red' ? '#e74c3c' : '#2c3e50';
       html += `
-        <div style="background: linear-gradient(135deg, #f39c12, #e67e22); padding: 20px; margin: 10px 0; border-radius: 10px; text-align: center; border: 3px solid #fff;">
-          <h4 style="margin: 0 0 10px 0; font-size: 1.1em; color: #fff;">🃏 Última Carta Cantada</h4>
-          <div style="font-size: 4em; font-weight: bold; margin: 10px 0; color: ${colorTexto}; background: rgba(255,255,255,0.95); border-radius: 10px; padding: 15px; display: inline-block; box-shadow: 0 4px 15px rgba(0,0,0,0.2);">
-            ${ultimaCarta.valor}${ultimaCarta.palo}
-          </div>
-          <p style="margin: 10px 0 0 0; font-size: 0.9em; color: #fff;">Total cantadas: <strong>${cartas.length}</strong> de 52</p>
+        <div style="background: linear-gradient(135deg, #f39c12, #e67e22); padding: 20px; margin: 10px 0; border-radius: 10px; text-align: center;">
+          <h4 style="margin: 0 0 10px 0;">Última Carta</h4>
+          <div style="font-size: 3em; font-weight: bold;">${ultimaCarta.valor}${ultimaCarta.palo}</div>
         </div>
       `;
-      console.log('🃏 [DEBUG] Última carta:', ultimaCarta.codigo);
     }
     
-    // ✅ 2. TOTAL DE CARTAS
-    html += `<h4 style="margin: 20px 0 10px 0; border-bottom: 2px solid rgba(255,255,255,0.3); padding-bottom: 10px; color: #fff;">📋 Todas las Cartas (${cartas.length})</h4>`;
+    html += `<p style="margin: 15px 0;"><strong>Total cantadas:</strong> ${cartas.length}</p>`;
     
-    // ✅ 3. AGRUPAR POR PALOS
     const porPalo = { '♠': [], '♥': [], '♦': [], '♣': [] };
-    const colores = { '♠': '#2c3e50', '♥': '#e74c3c', '♦': '#e74c3c', '♣': '#2c3e50' };
-    const iconos = { '♠': '♠', '♥': '♥', '♦': '♦', '♣': '' };
-    
     cartas.forEach(carta => {
-      if (carta && carta.palo && porPalo[carta.palo]) {
+      if (porPalo[carta.palo]) {
         porPalo[carta.palo].push(carta);
       }
     });
     
-    // ✅ 4. MOSTRAR CADA PALO
     Object.keys(porPalo).forEach(palo => {
       if (porPalo[palo].length > 0) {
-        const color = colores[palo];
-        const icono = iconos[palo];
-        
+        const color = palo === '♥' || palo === '♦' ? '#e74c3c' : '#2c3e50';
         html += `
-          <div style="background: rgba(255,255,255,0.1); padding: 12px; margin: 10px 0; border-radius: 10px; border-left: 4px solid ${color};">
-            <h5 style="color: ${color}; margin: 0 0 10px 0; font-size: 1em; display: flex; align-items: center; gap: 8px;">
-              <span style="font-size: 1.3em;">${icono}</span>
-              <span>${palo} (${porPalo[palo].length})</span>
-            </h5>
-            <div style="display: flex; flex-wrap: wrap; gap: 6px;">
-              ${porPalo[palo].map(carta => {
-                const cartaColor = carta.color === 'red' ? '#e74c3c' : '#2c3e50';
-                return `
-                  <span style="
-                    background: rgba(255,255,255,0.95);
-                    color: ${cartaColor};
-                    padding: 6px 10px;
-                    border-radius: 6px;
-                    font-weight: bold;
-                    font-size: 0.9em;
-                    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-                    display: inline-flex;
-                    align-items: center;
-                    gap: 3px;
-                  ">
-                    ${carta.valor}${carta.palo}
-                  </span>
-                `;
-              }).join('')}
+          <div style="background: rgba(255,255,255,0.1); padding: 10px; margin: 10px 0; border-radius: 10px;">
+            <h4 style="color: ${color}; margin: 0 0 10px 0;">${palo} (${porPalo[palo].length})</h4>
+            <div style="display: flex; flex-wrap: wrap; gap: 5px;">
+              ${porPalo[palo].map(c => `<span style="background: rgba(255,255,255,0.2); padding: 5px 10px; border-radius: 5px; font-weight: bold;">${c.valor}</span>`).join('')}
             </div>
           </div>
         `;
       }
     });
     
-    console.log('🃏 [DEBUG] Contenido generado, total cartas:', cartas.length);
     return html;
-  },  
+  },
+
+  obtenerContenidoBilletera: function() {
+    if (!window.app.gameState || !window.app.gameState.jugadores || !window.app.emailActual) {
+      return '<p>No hay información de billetera</p>';
+    }
+    
+    const jugador = window.app.gameState.jugadores[window.app.emailActual];
+    
+    return `
+      <div style="background: linear-gradient(135deg, #27ae60, #219a52); padding: 20px; margin: 10px 0; border-radius: 10px; text-align: center;">
+        <h3 style="margin: 0 0 10px 0;">💰 Tu Billetera</h3>
+        <div style="font-size: 2.5em; font-weight: bold; margin: 15px 0;">${jugador.monedas || 0}</div>
+        <p style="margin: 5px 0;">fichas</p>
+        <p style="margin: 5px 0; font-size: 1.2em;">$${(jugador.monedas || 0) * 50} COP</p>
+      </div>
+      
+      <div style="background: rgba(255,255,255,0.1); padding: 15px; margin: 10px 0; border-radius: 10px;">
+        <h4 style="margin: 0 0 10px 0;">📊 Resumen</h4>
+        <p style="margin: 5px 0;">🎰 Fichas apostadas: ${jugador.fichasApostadas || 0}</p>
+        <p style="margin: 5px 0;">🎴 Cartones: ${(jugador.cartones || []).length}</p>
+        <p style="margin: 5px 0;">🏆 Pozos ganados: ${(jugador.pozosGanados || []).length}</p>
+        <p style="margin: 5px 0;">💵 Fichas ganadas: ${jugador.fichasGanadas || 0}</p>
+      </div>
+    `;
+  },
 
   obtenerContenidoEstadisticas: function() {
     if (!window.app.gameState || !window.app.gameState.estadisticas || !window.app.emailActual) {
@@ -886,7 +922,6 @@ const ui = {
       panel.style.display = 'block';
     }
   },
-
   // ✅ NUEVA FUNCIÓN: Mostrar panel de apuestas en modal
   mostrarPanelApuestasModal: function() {
     console.log('🎰 Mostrando panel de apuestas en modal');
@@ -917,7 +952,112 @@ const ui = {
       contenido.innerHTML = '<p style="text-align: center; padding: 20px;">⚠️ El panel de apuestas no está disponible.<br><br>Por favor, selecciona al menos 1 cartón primero.</p>';
       modal.classList.remove('hidden');
     }
-  }
+  },
+
+  // ✅ MODIFICAR: mostrarSeccion para incluir "apostar"
+  mostrarSeccion: function(seccion) {
+    console.log('📱 Mostrando sección:', seccion);
+    
+    // Caso especial: Apostar
+    if (seccion === 'apostar') {
+      this.mostrarPanelApuestasModal();
+      return;
+    }
+    
+    const modal = document.getElementById('modalSeccion');
+    const titulo = document.getElementById('modalTitulo');
+    const contenido = document.getElementById('modalContenido');
+    
+    if (!modal || !contenido) return;
+    
+    this.actualizarHeaderMovil();
+    
+    switch(seccion) {
+      case 'misCartones':
+        titulo.textContent = '🎴 Mis Cartones';
+        contenido.innerHTML = this.obtenerContenidoMisCartones();
+        break;
+        
+      case 'pozos':
+        titulo.textContent = '🏆 Los 6 Pozos';
+        contenido.innerHTML = this.obtenerContenidoPozos();
+        break;
+        
+      case 'cartasCantadas':
+        titulo.textContent = '🃏 Cartas Cantadas';
+        contenido.innerHTML = this.obtenerContenidoCartasCantadas();
+        break;
+        
+      case 'billetera':
+        titulo.textContent = '💰 Mi Billetera';
+        contenido.innerHTML = this.obtenerContenidoBilletera();
+        break;
+        
+      case 'estadisticas':
+        titulo.textContent = '📊 Mis Estadísticas';
+        contenido.innerHTML = this.obtenerContenidoEstadisticas();
+        break;
+    }
+    
+    modal.classList.remove('hidden');
+  },
+
+  // ✅ MODIFICAR: obtenerContenidoMisCartones para incluir última carta
+  obtenerContenidoMisCartones: function() {
+    let html = '';
+    
+    // ✅ AGREGAR: Última Carta Cantada (visible para todos)
+    if (window.app.gameState && window.app.gameState.ultimaCarta) {
+      const ultimaCarta = window.app.gameState.ultimaCarta;
+      html += `
+        <div style="background: linear-gradient(135deg, #f39c12, #e67e22); padding: 20px; margin: 10px 0; border-radius: 10px; text-align: center; border: 3px solid #fff;">
+          <h4 style="margin: 0 0 10px 0; font-size: 1.1em;">🃏 Última Carta Cantada</h4>
+          <div style="font-size: 4em; font-weight: bold; margin: 10px 0; color: ${ultimaCarta.color === 'red' ? '#e74c3c' : '#2c3e50'};">
+            ${ultimaCarta.valor}${ultimaCarta.palo}
+          </div>
+          <p style="margin: 5px 0; font-size: 0.9em;">Total cantadas: ${window.app.gameState.cartasCantadas ? window.app.gameState.cartasCantadas.length : 0}</p>
+        </div>
+      `;
+    } else {
+      html += `
+        <div style="background: rgba(255,255,255,0.1); padding: 20px; margin: 10px 0; border-radius: 10px; text-align: center;">
+          <h4 style="margin: 0 0 10px 0;">🃏 Última Carta Cantada</h4>
+          <p style="font-size: 1.2em; color: #95a5a6;">-</p>
+        </div>
+      `;
+    }
+    
+    // Cartones del jugador
+    if (!window.app.gameState || !window.app.gameState.cartones) {
+      html += '<p style="text-align: center; padding: 15px;">No hay cartones disponibles</p>';
+      return html;
+    }
+    
+    const misCartones = window.app.gameState.cartones.filter(c => c.dueño === window.app.emailActual);
+    
+    if (misCartones.length === 0) {
+      html += '<p style="text-align: center; padding: 15px;">🎴 No has seleccionado ningún cartón<br><br><small>Selecciona al menos 1 cartón para poder apostar</small></p>';
+      return html;
+    }
+    
+    html += '<h4 style="margin: 20px 0 10px 0; border-bottom: 2px solid rgba(255,255,255,0.3); padding-bottom: 10px;">📋 Tus Cartones (' + misCartones.length + ')</h4>';
+    
+    misCartones.forEach(carton => {
+      html += `
+        <div style="background: rgba(255,255,255,0.1); padding: 15px; margin: 10px 0; border-radius: 10px;">
+          <h4 style="margin: 0 0 10px 0; color: #f39c12;">${carton.nombre}</h4>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 0.9em;">
+            <div><strong>Número:</strong> ${carton.numero}</div>
+            <div><strong>Poker:</strong> ${carton.valorPoker || 'N/A'}</div>
+            <div><strong>Full:</strong> ${carton.valorFull2 || 'N/A'} + ${carton.valorFull3 || 'N/A'}</div>
+            <div><strong>Fila Poker:</strong> ${carton.pokerFila || 'N/A'}</div>
+          </div>
+        </div>
+      `;
+    });
+    
+    return html;
+  },
   
 };  // ← CIERRA EL OBJETO ui AQUÍ
 
