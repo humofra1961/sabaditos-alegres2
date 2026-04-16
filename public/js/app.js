@@ -29,6 +29,11 @@ const app = {
     
     console.log('✅ Sesión iniciada:', email);
   },
+
+    // ✅ Inicializar actualización de modales en tiempo real
+    if (window.ui && window.ui.inicializarActualizacionModales) {
+      window.ui.inicializarActualizacionModales();
+    }
   
   cerrarSesion: function() {
     location.reload();
