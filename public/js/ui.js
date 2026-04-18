@@ -591,32 +591,73 @@ const ui = {
     }
   },
 
-  // ✅ OBTENER CONTENIDO MIS CARTONES - VERSIÓN ROBUSTA
+  // ✅ OBTENER CONTENIDO MIS CARTONES - CON CARTAS CANTADAS Y ÚLTIMA CARTA
   obtenerContenidoMisCartones: function() {
     console.log('🎴 [DEBUG] obtenerContenidoMisCartones iniciado');
     
     let html = '';
     
-    // ✅ 1. ÚLTIMA CARTA CANTADA
+    // ✅ 1. ÚLTIMA CARTA CANTADA (SIEMPRE VISIBLE)
     if (window.app.gameState && window.app.gameState.ultimaCarta) {
       const uc = window.app.gameState.ultimaCarta;
       const colorTexto = uc.color === 'red' ? '#e74c3c' : '#2c3e50';
       html += `
         <div style="background: linear-gradient(135deg, #f39c12, #e67e22); padding: 15px; margin: 10px 0; border-radius: 10px; text-align: center; border: 3px solid #fff;">
-          <h4 style="margin: 0 0 8px 0; font-size: 1em; color: #fff;">🃏 Última Carta</h4>
-          <div style="font-size: 3em; font-weight: bold; margin: 5px 0; color: ${colorTexto}; background: rgba(255,255,255,0.9); border-radius: 8px; padding: 10px; display: inline-block;">
+          <h4 style="margin: 0 0 8px 0; font-size: 1em; color: #fff;">🃏 Última Carta Cantada</h4>
+          <div style="font-size: 3em; font-weight: bold; margin: 5px 0; color: ${colorTexto}; background: rgba(255,255,255,0.95); border-radius: 8px; padding: 10px; display: inline-block; box-shadow: 0 4px 15px rgba(0,0,0,0.3);">
             ${uc.valor}${uc.palo}
           </div>
-          <p style="margin: 5px 0; font-size: 0.85em; color: #fff;">Total: ${window.app.gameState.cartasCantadas ? window.app.gameState.cartasCantadas.length : 0}</p>
+          <p style="margin: 5px 0; font-size: 0.85em; color: #fff;">Total cantadas: <strong>${window.app.gameState.cartasCantadas ? window.app.gameState.cartasCantadas.length : 0}</strong></p>
         </div>
       `;
       console.log('🎴 [DEBUG] Última carta agregada:', uc.codigo);
+    } else {
+      html += `
+        <div style="background: rgba(255,255,255,0.1); padding: 15px; margin: 10px 0; border-radius: 10px; text-align: center;">
+          <h4 style="margin: 0 0 8px 0; font-size: 1em; color: #fff;">🃏 Última Carta Cantada</h4>
+          <p style="font-size: 2em; color: #95a5a6;">-</p>
+          <p style="margin: 5px 0; font-size: 0.85em; color: #95a5a6;">Total cantadas: <strong>0</strong></p>
+        </div>
+      `;
     }
     
-    // ✅ 2. VALIDAR DATOS
+    // ✅ 2. CARTAS CANTADAS RECIENTES (ÚLTIMAS 10)
+    if (window.app.gameState && window.app.gameState.cartasCantadas && window.app.gameState.cartasCantadas.length > 0) {
+      const cartasCantadas = window.app.gameState.cartasCantadas;
+      const ultimasCartas = cartasCantadas.slice(-10); // Últimas 10 cartas
+      
+      html += `
+        <div style="background: rgba(255,255,255,0.1); padding: 12px; margin: 10px 0; border-radius: 10px;">
+          <h4 style="margin: 0 0 10px 0; font-size: 0.95em; color: #fff; border-bottom: 2px solid rgba(255,255,255,0.3); padding-bottom: 8px;">
+            📋 Últimas Cartas Cantadas (${ultimasCartas.length})
+          </h4>
+          <div style="display: flex; flex-wrap: wrap; gap: 6px; justify-content: center;">
+            ${ultimasCartas.map(carta => {
+              const cartaColor = carta.color === 'red' ? '#e74c3c' : '#2c3e50';
+              return `
+                <span style="
+                  background: rgba(255,255,255,0.95);
+                  color: ${cartaColor};
+                  padding: 5px 8px;
+                  border-radius: 5px;
+                  font-weight: bold;
+                  font-size: 0.85em;
+                  box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+                ">
+                  ${carta.valor}${carta.palo}
+                </span>
+              `;
+            }).join('')}
+          </div>
+        </div>
+      `;
+      console.log('🎴 [DEBUG] Cartas cantadas agregadas:', ultimasCartas.length);
+    }
+    
+    // ✅ 3. VALIDAR DATOS DE CARTONES
     if (!window.app.gameState || !window.app.gameState.cartones) {
       console.log('🎴 [DEBUG] No hay gameState o cartones');
-      html += '<p style="text-align: center; padding: 15px; color: #fff;">⏳ Cargando...</p>';
+      html += '<p style="text-align: center; padding: 15px; color: #fff;">⏳ Cargando cartones...</p>';
       return html;
     }
     
@@ -635,7 +676,7 @@ const ui = {
     
     html += `<h4 style="margin: 20px 0 10px 0; border-bottom: 2px solid rgba(255,255,255,0.3); padding-bottom: 10px; color: #fff;">📋 Tus Cartones (${misCartones.length})</h4>`;
     
-    // ✅ 3. MOSTRAR CADA CARTÓN CON GRID VISUAL
+    // ✅ 4. MOSTRAR CADA CARTÓN CON GRID VISUAL
     misCartones.forEach((carton, idx) => {
       console.log(`🎴 [DEBUG] Procesando cartón ${idx+1}:`, carton.numero, carton.nombre);
       console.log('  - carton.cartas:', carton.cartas ? carton.cartas.length : 'NO EXISTE');
