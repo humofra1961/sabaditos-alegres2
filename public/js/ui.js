@@ -978,23 +978,20 @@ const ui = {
 
   // ✅ ACTUALIZAR MODALES CUANDO LLEGA NUEVA CARTA O SE ACTUALIZAN CARTONES
   inicializarActualizacionModales: function() {
-    console.log('🔄 [DEBUG] Inicializando actualización de modales');
+    console.log('🔄 [DEBUG] Inicializando actualización de modales en tiempo real');
     
     // Escuchar cuando llega una nueva carta cantada
     socket.on('updateUltimaCarta', function(carta) {
-      console.log('🃏 [DEBUG] Nueva última carta en modal:', carta ? carta.codigo : 'null');
+      console.log('🃏 [DEBUG] Nueva última carta recibida:', carta ? carta.codigo : 'null');
       
-      // Si el modal está abierto, actualizarlo según la sección
+      // Si el modal "Mis Cartones" está abierto, actualizarlo
       const modal = document.getElementById('modalSeccion');
       const titulo = document.getElementById('modalTitulo');
       const contenido = document.getElementById('modalContenido');
       
       if (modal && !modal.classList.contains('hidden') && titulo && contenido) {
-        if (titulo.textContent.includes('Cartas Cantadas')) {
-          console.log('🔄 [DEBUG] Actualizando modal Cartas Cantadas');
-          contenido.innerHTML = ui.obtenerContenidoCartasCantadas();
-        } else if (titulo.textContent.includes('Mis Cartones')) {
-          console.log('🔄 [DEBUG] Actualizando modal Mis Cartones');
+        if (titulo.textContent.includes('Mis Cartones')) {
+          console.log('🔄 [DEBUG] Actualizando modal Mis Cartones con nueva carta');
           contenido.innerHTML = ui.obtenerContenidoMisCartones();
         }
       }
@@ -1015,7 +1012,25 @@ const ui = {
         }
       }
     });
-  }
+    
+    // Escuchar cuando se actualizan cartas cantadas
+    socket.on('updateCartasCantadas', function(cartas) {
+      console.log('📋 [DEBUG] Cartas cantadas actualizadas:', cartas.length);
+      
+      const modal = document.getElementById('modalSeccion');
+      const titulo = document.getElementById('modalTitulo');
+      const contenido = document.getElementById('modalContenido');
+      
+      if (modal && !modal.classList.contains('hidden') && titulo && contenido) {
+        if (titulo.textContent.includes('Mis Cartones')) {
+          console.log('🔄 [DEBUG] Actualizando Mis Cartones con nuevas cartas cantadas');
+          contenido.innerHTML = ui.obtenerContenidoMisCartones();
+        }
+      }
+    });
+    
+    console.log('✅ [DEBUG] Listeners de actualización de modales inicializados');
+  },
   
 };  // ← CIERRA EL OBJETO ui AQUÍ
 
