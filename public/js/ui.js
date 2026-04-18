@@ -594,31 +594,35 @@ const ui = {
   // ✅ OBTENER CONTENIDO MIS CARTONES - CON CARTAS CANTADAS Y ÚLTIMA CARTA
   obtenerContenidoMisCartones: function() {
     console.log('🎴 [DEBUG] obtenerContenidoMisCartones iniciado');
+    console.log('🎴 [DEBUG] gameState:', window.app.gameState ? 'existe' : 'NO existe');
+    console.log('🎴 [DEBUG] ultimaCarta:', window.app.gameState && window.app.gameState.ultimaCarta ? window.app.gameState.ultimaCarta.codigo : 'NO existe');
     
     let html = '';
     
     // ✅ 1. ÚLTIMA CARTA CANTADA (SIEMPRE VISIBLE)
-    if (window.app.gameState && window.app.gameState.ultimaCarta) {
-      const uc = window.app.gameState.ultimaCarta;
-      const colorTexto = uc.color === 'red' ? '#e74c3c' : '#2c3e50';
+    const ultimaCarta = window.app.gameState && window.app.gameState.ultimaCarta ? window.app.gameState.ultimaCarta : null;
+    
+    if (ultimaCarta) {
+      const colorTexto = ultimaCarta.color === 'red' ? '#e74c3c' : '#2c3e50';
       html += `
         <div style="background: linear-gradient(135deg, #f39c12, #e67e22); padding: 15px; margin: 10px 0; border-radius: 10px; text-align: center; border: 3px solid #fff;">
           <h4 style="margin: 0 0 8px 0; font-size: 1em; color: #fff;">🃏 Última Carta Cantada</h4>
           <div style="font-size: 3em; font-weight: bold; margin: 5px 0; color: ${colorTexto}; background: rgba(255,255,255,0.95); border-radius: 8px; padding: 10px; display: inline-block; box-shadow: 0 4px 15px rgba(0,0,0,0.3);">
-            ${uc.valor}${uc.palo}
+            ${ultimaCarta.valor}${ultimaCarta.palo}
           </div>
           <p style="margin: 5px 0; font-size: 0.85em; color: #fff;">Total cantadas: <strong>${window.app.gameState.cartasCantadas ? window.app.gameState.cartasCantadas.length : 0}</strong></p>
         </div>
       `;
-      console.log('🎴 [DEBUG] Última carta agregada:', uc.codigo);
+      console.log('🎴 [DEBUG] ✅ Última carta agregada:', ultimaCarta.codigo);
     } else {
       html += `
         <div style="background: rgba(255,255,255,0.1); padding: 15px; margin: 10px 0; border-radius: 10px; text-align: center;">
           <h4 style="margin: 0 0 8px 0; font-size: 1em; color: #fff;">🃏 Última Carta Cantada</h4>
           <p style="font-size: 2em; color: #95a5a6;">-</p>
-          <p style="margin: 5px 0; font-size: 0.85em; color: #95a5a6;">Total cantadas: <strong>0</strong></p>
+          <p style="margin: 5px 0; font-size: 0.85em; color: #95a5a6;">Total cantadas: <strong>${window.app.gameState && window.app.gameState.cartasCantadas ? window.app.gameState.cartasCantadas.length : 0}</strong></p>
         </div>
       `;
+      console.log('🎴 [DEBUG] ❌ NO hay última carta');
     }
     
     // ✅ 2. CARTAS CANTADAS RECIENTES (ÚLTIMAS 10)
@@ -651,7 +655,7 @@ const ui = {
           </div>
         </div>
       `;
-      console.log('🎴 [DEBUG] Cartas cantadas agregadas:', ultimasCartas.length);
+      console.log('🎴 [DEBUG] ✅ Cartas cantadas agregadas:', ultimasCartas.length);
     }
     
     // ✅ 3. VALIDAR DATOS DE CARTONES
@@ -750,7 +754,7 @@ const ui = {
     
     console.log('🎴 [DEBUG] Contenido generado, longitud:', html.length);
     return html;
-  },
+  },  
 
   // ✅ TAPAR CARTA DESDE MODAL - VERSIÓN MÓVIL COMPATIBLE
   taparCartaDesdeModal: function(numeroCarton, index) {
