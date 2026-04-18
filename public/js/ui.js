@@ -746,7 +746,7 @@ const ui = {
         contenido.innerHTML = ui.obtenerContenidoMisCartones();
       }
     }, 500);
-  },  
+  },    
 
   obtenerContenidoPozos: function() {
     if (!window.app.gameState || !window.app.gameState.pozosDinamicos) {
@@ -933,7 +933,7 @@ const ui = {
       contenido.innerHTML = '<p style="text-align: center; padding: 20px;">⚠️ El panel de apuestas no está disponible.<br><br>Por favor, selecciona al menos 1 cartón primero.</p>';
       modal.classList.remove('hidden');
     }
-  }
+  },
 
   // ✅ ACTUALIZAR MODALES CUANDO LLEGA NUEVA CARTA O SE ACTUALIZAN CARTONES
   inicializarActualizacionModales: function() {
@@ -974,7 +974,7 @@ const ui = {
         }
       }
     });
-  },  
+  }
   
 };  // ← CIERRA EL OBJETO ui AQUÍ
 
